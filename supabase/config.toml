@@ -1,1 +1,7 @@
 project_id = "fmvbzhlqzzwzciqgbzgp"
+
+[functions]
+enabled = true
+
+[functions.generate-suggestion]
+verify_jwt = true

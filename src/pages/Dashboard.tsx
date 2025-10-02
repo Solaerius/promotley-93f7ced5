@@ -14,6 +14,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { AISuggestions } from "@/components/AISuggestions";
 
 // Demo data
 const stats = [
@@ -97,41 +98,9 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Quick actions */}
-        <div className="grid md:grid-cols-2 gap-4 mb-8">
-          <Card className="p-6 bg-gradient-hero border-primary/20">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <h3 className="font-semibold text-lg">Generera innehåll</h3>
-                <p className="text-sm text-muted-foreground">
-                  Få AI-genererade förslag med captions och hashtags
-                </p>
-              </div>
-              <Sparkles className="w-6 h-6 text-primary" />
-            </div>
-            <Button variant="gradient" className="mt-4">
-              Skapa förslag
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Card>
-
-          <Card className="p-6">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <h3 className="font-semibold text-lg">Krediter kvar</h3>
-                <p className="text-3xl font-bold text-primary">1</p>
-                <p className="text-sm text-muted-foreground">
-                  gratis AI-förslag återstår
-                </p>
-              </div>
-              <TrendingUp className="w-6 h-6 text-accent" />
-            </div>
-            <Link to="/auth">
-              <Button variant="outline" className="mt-4 w-full">
-                Uppgradera till Pro
-              </Button>
-            </Link>
-          </Card>
+        {/* AI Suggestions */}
+        <div className="mb-8">
+          <AISuggestions />
         </div>
 
         {/* Platform stats */}
