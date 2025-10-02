@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      connections: {
+        Row: {
+          account_id: string
+          connected_at: string
+          id: string
+          provider: Database["public"]["Enums"]["social_provider"]
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          account_id: string
+          connected_at?: string
+          id?: string
+          provider: Database["public"]["Enums"]["social_provider"]
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          account_id?: string
+          connected_at?: string
+          id?: string
+          provider?: Database["public"]["Enums"]["social_provider"]
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consents: {
         Row: {
           consented_at: string
@@ -36,6 +71,54 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "consents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metrics: {
+        Row: {
+          captured_at: string
+          connection_id: string
+          id: string
+          metric_type: string
+          period: string | null
+          provider: Database["public"]["Enums"]["social_provider"]
+          user_id: string
+          value: number
+        }
+        Insert: {
+          captured_at?: string
+          connection_id: string
+          id?: string
+          metric_type: string
+          period?: string | null
+          provider: Database["public"]["Enums"]["social_provider"]
+          user_id: string
+          value: number
+        }
+        Update: {
+          captured_at?: string
+          connection_id?: string
+          id?: string
+          metric_type?: string
+          period?: string | null
+          provider?: Database["public"]["Enums"]["social_provider"]
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metrics_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metrics_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -80,6 +163,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tokens: {
+        Row: {
+          access_token_enc: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          provider: Database["public"]["Enums"]["social_provider"]
+          refresh_token_enc: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_enc: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          provider: Database["public"]["Enums"]["social_provider"]
+          refresh_token_enc?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_enc?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          provider?: Database["public"]["Enums"]["social_provider"]
+          refresh_token_enc?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tokens_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -134,6 +258,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      social_provider: "meta_ig" | "meta_fb" | "tiktok"
       user_plan: "free_trial" | "pro" | "pro_xl" | "pro_unlimited"
     }
     CompositeTypes: {
@@ -262,6 +387,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      social_provider: ["meta_ig", "meta_fb", "tiktok"],
       user_plan: ["free_trial", "pro", "pro_xl", "pro_unlimited"],
     },
   },
