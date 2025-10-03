@@ -17,6 +17,7 @@ import { Link } from "react-router-dom";
 import { AISuggestions } from "@/components/AISuggestions";
 import { ConnectionManager } from "@/components/ConnectionManager";
 import { useAuth } from "@/hooks/useAuth";
+import logo from "@/assets/logo.png";
 
 // Demo data
 const stats = [
@@ -75,9 +76,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src={logo} alt="Promotely Logo" className="w-10 h-10" />
               <span>Promotely</span>
             </Link>
             <div className="flex items-center gap-3">
