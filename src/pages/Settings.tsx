@@ -1,11 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Download, Trash2, Link as LinkIcon, Instagram, Music2, Facebook } from "lucide-react";
+import { Sparkles, Download, Trash2, Link as LinkIcon, Instagram, Music2, Facebook, Sun, Moon, Monitor } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "next-themes";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   const handleDownloadData = () => {
     toast({
@@ -63,6 +65,33 @@ const Settings = () => {
         </div>
 
         <div className="space-y-6">
+          {/* Appearance */}
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Utseende</h2>
+            <p className="text-muted-foreground mb-6">
+              Välj mellan ljust, mörkt eller systemets tema
+            </p>
+
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { value: "light", label: "Ljust", icon: Sun },
+                { value: "dark", label: "Mörkt", icon: Moon },
+                { value: "system", label: "System", icon: Monitor },
+              ].map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setTheme(value)}
+                  className={`p-4 border rounded-lg transition-all hover:border-primary ${
+                    theme === value ? "border-primary bg-primary/5" : "border-border"
+                  }`}
+                >
+                  <Icon className="w-6 h-6 mx-auto mb-2" />
+                  <p className="text-sm font-medium">{label}</p>
+                </button>
+              ))}
+            </div>
+          </Card>
+
           {/* Account info */}
           <Card className="p-6">
             <h2 className="text-2xl font-bold mb-4">Kontoinformation</h2>
