@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Slider } from "@/components/ui/slider";
 
 const BeforeAfterSlider = () => {
-  const [sliderValue, setSliderValue] = useState([50]);
+  const [sliderValue, setSliderValue] = useState([0]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const beforeStats = {
