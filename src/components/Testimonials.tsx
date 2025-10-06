@@ -5,25 +5,25 @@ const testimonials = [
   {
     name: "Emma Andersson",
     company: "GreenTech UF",
-    text: "Vi gick från 300 till 12 000 visningar på två veckor! AI:n gav oss exakt vad vi behövde.",
+    text: "Promotley skapade en postningsplan som passade vår budget perfekt. Vi gick från 300 till 12 000 visningar på två veckor!",
     rating: 5,
   },
   {
     name: "Oscar Nilsson",
     company: "StreetStyle AB",
-    text: "Promotley är som att ha en marknadsförare som jobbar 24/7. Spartid och får bättre resultat!",
+    text: "Äntligen vet jag exakt när och hur ofta jag ska posta. Ingen gissning längre - bara en strategi som funkar!",
     rating: 5,
   },
   {
     name: "Lisa Bergström",
     company: "FoodieBox UF",
-    text: "Hashtag-förslagen var spot on! Vårt engagemang har mer än fördubblats sedan vi började.",
+    text: "De anpassade strategin efter vår bransch och budget på 400 kr/mån. Vårt engagemang har mer än fördubblats!",
     rating: 5,
   },
   {
     name: "Viktor Larsson",
     company: "TechHub Startup",
-    text: "AI-analyserna hjälpte oss hitta rätt målgrupp. Nu växer vi exponentiellt varje vecka.",
+    text: "Komplett innehållskalender varje vecka, anpassad efter hur mycket tid vi har. Sparat oss timmar av planering!",
     rating: 5,
   },
 ];

@@ -32,13 +32,13 @@ const ResultsSection = () => {
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold text-white">
-            Riktiga resultat för{" "}
+            När strategi möter{" "}
             <span className="text-primary-glow">
-              riktiga företag
+              verkliga resultat
             </span>
           </h2>
           <p className="text-xl text-white/80">
-            Så här mycket växer våra användare i genomsnitt
+            Resultat från företag som följde sin personliga Promotley-strategi
           </p>
         </div>
 

@@ -9,11 +9,11 @@ const plans = [
     price: "49",
     credits: "100",
     features: [
-      "100 krediter per månad",
-      "Analys av alla plattformar",
-      "AI-genererade förslag",
-      "Hashtag-optimering",
-      "Bästa postningstider",
+      "Personlig postningsstrategi",
+      "Budgetbaserad innehållsplan",
+      "Veckovis innehållskalender",
+      "Branschanpassade strategier",
+      "Optimal frekvens & tidpunkter",
     ],
     popular: false,
   },
@@ -22,11 +22,11 @@ const plans = [
     price: "99",
     credits: "300",
     features: [
-      "300 krediter per månad",
       "Allt från Start",
+      "Flera plattformar samtidigt",
+      "Konkurrentanalys inkluderad",
       "Prioriterad support",
-      "Avancerad analys",
-      "Historisk data",
+      "Månatliga strategijusteringar",
     ],
     popular: true,
   },
@@ -35,10 +35,10 @@ const plans = [
     price: "199",
     credits: "∞",
     features: [
-      "Obegränsade krediter",
-      "Allt från Growth",
-      "Dedikerad support",
-      "Anpassad AI-modell",
+      "Obegränsade strategier",
+      "Dedikerad strategikonsult",
+      "Anpassad AI för din bransch",
+      "Daglig innehållsproduktion",
       "API-tillgång",
     ],
     popular: false,
@@ -126,7 +126,7 @@ const Pricing = () => {
 
         {/* Bottom note */}
         <p className="text-center text-muted-foreground mt-12 text-lg">
-          Börja gratis med 1 AI-förslag · Ingen betalmetod krävs · Avsluta när du vill
+          Skapa din första strategi gratis · Ingen betalmetod krävs · Avsluta när du vill
         </p>
       </div>
     </section>

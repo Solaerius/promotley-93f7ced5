@@ -28,7 +28,7 @@ const Hero = () => {
 
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto leading-relaxed animate-slide-up font-medium">
-            AI som hjälper UF- och startupföretag att växa på sociala medier
+            AI som skapar din personliga innehållsstrategi baserat på budget, företagstyp och optimal postningsfrekvens
           </p>
 
           {/* CTA Buttons */}

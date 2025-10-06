@@ -4,20 +4,20 @@ import { Link2, BarChart3, Lightbulb } from "lucide-react";
 const steps = [
   {
     icon: Link2,
-    title: "Koppla dina sociala medier",
-    description: "Anslut Instagram, TikTok och Facebook på några sekunder. Helt säkert och krypterat.",
+    title: "Berätta om ditt företag",
+    description: "Budget, bransch, målgrupp och hur mycket tid du har. Promotley anpassar strategin efter just dig.",
     gradient: "from-primary to-primary-glow",
   },
   {
     icon: BarChart3,
-    title: "AI analyserar din statistik",
-    description: "Vår AI scannar dina inlägg, engagemang och tillväxt för att hitta mönster och möjligheter.",
+    title: "Koppla dina sociala medier",
+    description: "AI:n analyserar dina konton och konkurrenterna för att hitta de bästa möjligheterna.",
     gradient: "from-accent to-primary",
   },
   {
     icon: Lightbulb,
-    title: "Få förslag som ökar visningar",
-    description: "Konkreta AI-förslag på innehåll, hashtags och postningstider som ger verklig effekt.",
+    title: "Få din personliga strategi",
+    description: "Komplett plan med exakt när, hur ofta och vad du ska posta - anpassat efter din budget och tid.",
     gradient: "from-primary-glow to-accent",
   },
 ];
@@ -29,13 +29,13 @@ const HowItWorks = () => {
         {/* Section header */}
         <div className="max-w-3xl mx-auto text-center mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold">
-            Så enkelt{" "}
+            Från företagsidé till{" "}
             <span className="text-transparent bg-clip-text bg-gradient-primary">
-              funkar det
+              färdig strategi
             </span>
           </h2>
           <p className="text-xl text-muted-foreground">
-            Från noll till AI-drivna insights på mindre än 5 minuter
+            Få din personliga innehållsplan på under 5 minuter
           </p>
         </div>
 

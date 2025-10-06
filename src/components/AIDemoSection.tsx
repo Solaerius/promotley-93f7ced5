@@ -12,14 +12,17 @@ const AIDemoSection = () => {
           <div className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-primary rounded-full text-white text-sm font-semibold mb-4">
               <Brain className="w-4 h-4" />
-              AI i Aktion
+              Personlig Strategi
             </div>
             <h2 className="text-4xl md:text-5xl font-bold">
-              Se hur vår{" "}
+              Din kompletta{" "}
               <span className="text-transparent bg-clip-text bg-gradient-primary">
-                AI arbetar
+                innehållsstrategi
               </span>
             </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Ingen gissningar - bara en skräddarsydd plan baserad på din budget, bransch och tillgängliga tid
+            </p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -59,14 +62,14 @@ const AIDemoSection = () => {
               </div>
             </Card>
 
-            {/* Right - AI suggestions */}
+            {/* Right - AI strategy output */}
             <div className="space-y-6">
               <div className="flex items-start gap-4 p-6 rounded-xl bg-gradient-hero border-2 border-primary/20 animate-fade-in">
                 <Sparkles className="w-6 h-6 text-primary shrink-0 animate-pulse" />
                 <div className="space-y-2">
-                  <div className="font-bold text-lg">Promotley föreslår:</div>
+                  <div className="font-bold text-lg">Din postningsstrategi:</div>
                   <p className="text-foreground leading-relaxed">
-                    "Dina Reels får <span className="font-bold text-primary">3× mer engagemang</span> än vanliga inlägg. Lägg upp fler Reels mellan 18-20 när din publik är mest aktiv."
+                    "Baserat på din budget (500 kr/mån) och tillgänglig tid: <span className="font-bold text-primary">Posta 3 gånger/vecka på Instagram Reels</span> - måndagar 18:00, onsdagar 19:30, fredagar 17:00."
                   </p>
                 </div>
               </div>
@@ -74,9 +77,9 @@ const AIDemoSection = () => {
               <div className="flex items-start gap-4 p-6 rounded-xl bg-gradient-hero border-2 border-primary/20 animate-fade-in" style={{ animationDelay: "0.2s" }}>
                 <Sparkles className="w-6 h-6 text-accent shrink-0 animate-pulse" />
                 <div className="space-y-2">
-                  <div className="font-bold text-lg">Innehållsidé:</div>
+                  <div className="font-bold text-lg">Innehållsplan denna vecka:</div>
                   <p className="text-foreground leading-relaxed">
-                    "Skapa en 'bakom kulisserna'-serie. Inlägg med #ufföretag och #entrepren&ouml;r får <span className="font-bold text-accent">+240% mer räckvidd</span> i din nisch."
+                    "Måndag: Produktlansering (15s Reel). Onsdag: Kundcase/testimonial (Story + Reel). Fredag: Bakom kulisserna (30s Reel). <span className="font-bold text-accent">Allt innehåll förberett av AI</span>."
                   </p>
                 </div>
               </div>
@@ -84,9 +87,9 @@ const AIDemoSection = () => {
               <div className="flex items-start gap-4 p-6 rounded-xl bg-gradient-hero border-2 border-primary/20 animate-fade-in" style={{ animationDelay: "0.4s" }}>
                 <Sparkles className="w-6 h-6 text-primary-glow shrink-0 animate-pulse" />
                 <div className="space-y-2">
-                  <div className="font-bold text-lg">Optimering:</div>
+                  <div className="font-bold text-lg">Branschanpassning:</div>
                   <p className="text-foreground leading-relaxed">
-                    "Lägg till en tydligare call-to-action i din bio. Profiler med CTA får <span className="font-bold text-primary-glow">+180% fler klick</span>."
+                    "Som UF-företag inom <span className="font-bold text-primary-glow">hållbara produkter</span>: Fokusera på #hållbarhet #ufföretag2025 och samarbeta med eco-influencers inom din budget."
                   </p>
                 </div>
               </div>
@@ -99,7 +102,7 @@ const AIDemoSection = () => {
                     size="lg" 
                     className="w-full text-lg py-6 shadow-glow hover:scale-105 transition-transform"
                   >
-                    Få ditt första AI-förslag gratis
+                    Skapa min personliga strategi
                   </Button>
                 </Link>
               </div>

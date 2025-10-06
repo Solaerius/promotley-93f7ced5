@@ -24,11 +24,11 @@ const ProblemSection = () => {
               
               <ul className="space-y-4">
                 {[
-                  "Osäker på vad du ska posta",
+                  "Vet inte när eller hur ofta du ska posta",
+                  "Ingen koll på budget för marknadsföring",
                   "Låga visningar och engagemang",
-                  "Svårt att förstå statistiken",
-                  "Ingen tid för innehållsplanering",
-                  "Gissar vilka hashtags som funkar",
+                  "Saknar strategi för innehållsplanering",
+                  "Osäker på vad som funkar för din bransch",
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3 text-muted-foreground">
                     <span className="text-destructive text-xl shrink-0">✗</span>
@@ -47,11 +47,11 @@ const ProblemSection = () => {
               
               <ul className="space-y-4">
                 {[
-                  "Färdiga inläggsförslag med AI",
-                  "Ökad räckvidd och engagemang",
-                  "Tydliga insikter & recommendations",
-                  "Automatiserad innehållsplanering",
-                  "Optimerade hashtags för din nisch",
+                  "Personlig postningsstrategi (tid & frekvens)",
+                  "Budgetanpassad innehållsplan",
+                  "Skräddarsytt för din bransch och målgrupp",
+                  "Komplett innehållskalender varje vecka",
+                  "AI-genererat innehåll redo att publicera",
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3 text-foreground">
                     <span className="text-primary text-xl shrink-0">✓</span>

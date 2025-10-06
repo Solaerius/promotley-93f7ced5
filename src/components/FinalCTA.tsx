@@ -29,7 +29,7 @@ const FinalCTA = () => {
 
           {/* Subtext */}
           <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto">
-            Gå med 100+ UF-företag som redan växer snabbare med AI-driven marknadsföring
+            Få din personliga innehållsstrategi - anpassad efter din budget, bransch och tillgängliga tid
           </p>
 
           {/* CTA Button */}
@@ -48,7 +48,7 @@ const FinalCTA = () => {
           {/* Social proof */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8 text-white/80">
             <div className="flex items-center gap-2">
-              <span className="font-medium">1 gratis AI-förslag</span>
+              <span className="font-medium">Gratis strategisession</span>
             </div>
             <div className="hidden sm:block w-1 h-1 rounded-full bg-white/40" />
             <div className="flex items-center gap-2">
