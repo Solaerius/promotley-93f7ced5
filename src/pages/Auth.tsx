@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { authSchema } from "@/lib/validations";
 import logo from "@/assets/logo.png";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import PasswordRequirements from "@/components/PasswordRequirements";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -215,11 +216,7 @@ const Auth = () => {
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password}</p>
             )}
-            {!isLogin && (
-              <p className="text-xs text-muted-foreground">
-                Minst 8 tecken, innehåller stor och liten bokstav samt siffra
-              </p>
-            )}
+            {!isLogin && <PasswordRequirements password={password} />}
           </div>
 
           {!isLogin && (
