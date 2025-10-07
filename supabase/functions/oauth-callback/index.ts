@@ -160,6 +160,60 @@ Deno.serve(async (req) => {
       username = userData.name;
 
       console.log('Facebook user info retrieved:', { accountId, username });
+    } else if (provider === 'tiktok') {
+      const tiktokClientKey = Deno.env.get('TIKTOK_CLIENT_KEY');
+      const tiktokClientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET');
+      const redirectUri = `${supabaseUrl}/functions/v1/oauth-callback?provider=tiktok`;
+
+      if (!tiktokClientKey || !tiktokClientSecret) {
+        throw new Error('TikTok app credentials not configured');
+      }
+
+      // Exchange code for token
+      const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_key: tiktokClientKey,
+          client_secret: tiktokClientSecret,
+          code: code,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri,
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const error = await tokenResponse.text();
+        console.error('TikTok token exchange failed:', error);
+        throw new Error('Failed to exchange code for token');
+      }
+
+      const tokenData = await tokenResponse.json();
+      accessToken = tokenData.data.access_token;
+      refreshToken = tokenData.data.refresh_token || null;
+      expiresIn = tokenData.data.expires_in;
+
+      console.log('TikTok access token obtained, expires in:', expiresIn);
+
+      // Get user info
+      const userResponse = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to get TikTok user info');
+      }
+
+      const userData = await userResponse.json();
+      accountId = userData.data.user.open_id;
+      username = userData.data.user.display_name;
+
+      console.log('TikTok user info retrieved:', { accountId, username });
     } else {
       throw new Error(`Provider ${provider} not supported yet`);
     }

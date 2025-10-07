@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Facebook, CheckCircle2, Link as LinkIcon } from "lucide-react";
+import { Facebook, CheckCircle2, Link as LinkIcon, Music } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Connection {
@@ -127,6 +127,43 @@ export const ConnectionManager = () => {
     }
   };
 
+  const connectTikTok = async () => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Inte inloggad",
+          description: "Du måste vara inloggad för att ansluta konton",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Call edge function to initiate TikTok OAuth
+      const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error || !data?.url) {
+        throw new Error('Could not initialize TikTok OAuth');
+      }
+
+      // Redirect to TikTok OAuth
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Error connecting TikTok:', error);
+      toast({
+        title: "Fel vid anslutning",
+        description: "Kunde inte ansluta till TikTok",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
   const disconnectProvider = async (provider: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -219,10 +256,53 @@ export const ConnectionManager = () => {
           )}
         </div>
 
-        {/* More platforms can be added here */}
+        {/* TikTok */}
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-black via-gray-800 to-cyan-500 flex items-center justify-center">
+              <Music className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-medium">TikTok</p>
+              {isConnected('tiktok') ? (
+                <p className="text-sm text-muted-foreground">
+                  Ansluten som {getConnection('tiktok')?.username || 'Okänd'}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Inte ansluten
+                </p>
+              )}
+            </div>
+          </div>
+          
+          {isConnected('tiktok') ? (
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-accent" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => disconnectProvider('tiktok')}
+              >
+                Koppla från
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="gradient"
+              size="sm"
+              onClick={connectTikTok}
+              disabled={loading}
+            >
+              {loading ? "Ansluter..." : "Anslut"}
+            </Button>
+          )}
+        </div>
+
+        {/* More platforms */}
         <div className="p-4 border border-dashed rounded-lg text-center text-muted-foreground">
           <p className="text-sm">Fler plattformar kommer snart...</p>
-          <p className="text-xs mt-1">Instagram, TikTok, LinkedIn, Twitter</p>
+          <p className="text-xs mt-1">Instagram, LinkedIn, Twitter</p>
         </div>
       </CardContent>
     </Card>
