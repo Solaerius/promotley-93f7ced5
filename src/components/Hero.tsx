@@ -11,12 +11,12 @@ const Hero = () => {
         <img 
           src={gamlastan} 
           alt="Stockholm Gamla Stan background" 
-          className="w-full h-full object-cover blur-sm opacity-30"
+          className="w-full h-full object-cover blur-[2px] opacity-60"
         />
       </div>
       
       {/* Animated gradient background overlay */}
-      <div className="absolute inset-0 bg-gradient-warm opacity-80" />
+      <div className="absolute inset-0 bg-gradient-warm opacity-50" />
       
       {/* Floating glow elements */}
       <div className="absolute top-20 left-10 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-float" />
