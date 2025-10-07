@@ -213,13 +213,25 @@ const TermsOfService = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-4">14. Kontaktinformation</h2>
             <p>Om du har frågor om dessa användarvillkor, vänligen kontakta oss på:</p>
-            <p className="mt-4">
-              E-post: support@promotley.se
-              <br />
-              Juridiska frågor: uf@promotley.se
-              <br />
-              Adress: Promotley, Stockholm, Sverige
-            </p>
+            <div className="mt-4 space-y-2">
+              <p>
+                <strong>E-post (Allmänt):</strong> uf@promotley.se
+              </p>
+              <p>
+                <strong>Support:</strong> support@promotley.se
+              </p>
+              <p>
+                <strong>Kontaktpersoner:</strong>
+              </p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>Jonas.khaldi@promotley.se</li>
+                <li>Thami.Alami@promotley.se</li>
+                <li>Eddie.Ervenius@promotley.se</li>
+              </ul>
+              <p className="mt-4">
+                <strong>Adress:</strong> Borgarfjordsgatan 6C, 164 40 Kista, Sverige
+              </p>
+            </div>
           </section>
 
           <section className="pt-8 border-t">

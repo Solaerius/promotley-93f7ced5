@@ -12,7 +12,7 @@ const stats = [
     icon: Users,
     value: "10×",
     label: "Mer engagemang",
-    color: "text-accent",
+    color: "text-primary",
   },
   {
     icon: Clock,

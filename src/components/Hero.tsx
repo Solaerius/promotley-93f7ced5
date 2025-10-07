@@ -43,7 +43,7 @@ const Hero = () => {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <Link to="#demo">
+            <Link to="/#how-it-works">
               <Button 
                 variant="outline" 
                 size="lg" 

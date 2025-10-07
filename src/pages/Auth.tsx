@@ -3,18 +3,24 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { authSchema } from "@/lib/validations";
 import logo from "@/assets/logo.png";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -34,6 +40,13 @@ const Auth = () => {
     setIsSubmitting(true);
 
     try {
+      // Check password confirmation for signup
+      if (!isLogin && password !== confirmPassword) {
+        setErrors({ confirmPassword: "Lösenorden matchar inte" });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Validate input
       const validation = authSchema.safeParse({
         email,
@@ -75,6 +88,9 @@ const Auth = () => {
           description: errorMessage,
           variant: "destructive",
         });
+      } else if (!isLogin) {
+        // Redirect to onboarding after successful signup
+        navigate("/onboarding");
       }
     } catch (error) {
       toast({
@@ -115,6 +131,14 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero px-4 py-12">
       <Card className="w-full max-w-md p-8 shadow-elegant">
+        {/* Back button */}
+        <Link to="/">
+          <Button variant="ghost" size="sm" className="mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Tillbaka till startsidan
+          </Button>
+        </Link>
+
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <Link to="/" className="flex items-center gap-2 font-bold text-2xl">
@@ -169,15 +193,25 @@ const Auth = () => {
 
           <div className="space-y-2">
             <Label htmlFor="password">Lösenord</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isSubmitting}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isSubmitting}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password}</p>
             )}
@@ -188,12 +222,63 @@ const Auth = () => {
             )}
           </div>
 
+          {!isLogin && (
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Bekräfta lösenord</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={isSubmitting}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+              )}
+            </div>
+          )}
+
+          {!isLogin && (
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="terms" 
+                checked={acceptedTerms}
+                onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
+              />
+              <label
+                htmlFor="terms"
+                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Jag accepterar{" "}
+                <Link to="/terms-of-service" className="text-primary hover:underline">
+                  användarvillkoren
+                </Link>{" "}
+                och{" "}
+                <Link to="/privacy-policy" className="text-primary hover:underline">
+                  integritetspolicyn
+                </Link>
+              </label>
+            </div>
+          )}
+
           <Button 
             type="submit" 
             variant="gradient" 
             className="w-full" 
             size="lg"
-            disabled={isSubmitting}
+            disabled={isSubmitting || (!isLogin && !acceptedTerms)}
           >
             {isSubmitting ? "Laddar..." : isLogin ? "Logga in" : "Skapa konto"}
           </Button>
@@ -260,12 +345,6 @@ const Auth = () => {
           </button>
         </div>
 
-        {/* Note */}
-        {!isLogin && (
-          <p className="text-xs text-muted-foreground text-center mt-6">
-            Genom att skapa ett konto godkänner du våra villkor och integritetspolicy
-          </p>
-        )}
       </Card>
     </div>
   );
