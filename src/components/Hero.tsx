@@ -43,7 +43,7 @@ const Hero = () => {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <Link to="/#how-it-works">
+            <a href="#how-it-works">
               <Button 
                 variant="outline" 
                 size="lg" 
@@ -51,7 +51,7 @@ const Hero = () => {
               >
                 Se hur det funkar
               </Button>
-            </Link>
+            </a>
           </div>
 
           {/* Social proof badge */}
