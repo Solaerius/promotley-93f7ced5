@@ -96,7 +96,7 @@ const AIDemoSection = () => {
 
               {/* CTA */}
               <div className="pt-4">
-                <Link to="/auth">
+                <Link to="/auth?from=demo">
                   <Button 
                     variant="gradient" 
                     size="lg" 

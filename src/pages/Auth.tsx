@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,8 +12,13 @@ import { authSchema } from "@/lib/validations";
 import logo from "@/assets/logo.png";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import PasswordRequirements from "@/components/PasswordRequirements";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const Auth = () => {
+  const [searchParams] = useSearchParams();
+  const fromDemo = searchParams.get('from') === 'demo';
+  
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -159,6 +164,16 @@ const Auth = () => {
               : "Skapa ditt konto och få 1 gratis AI-förslag"}
           </p>
         </div>
+
+        {/* Demo notice */}
+        {fromDemo && !isLogin && (
+          <Alert className="mb-6 bg-gradient-primary/10 border-primary/20">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Skapa ett konto</strong> för att testa demon och få din personliga AI-strategi
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
