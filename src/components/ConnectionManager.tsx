@@ -28,6 +28,18 @@ export const ConnectionManager = () => {
         title: "✓ Ansluten!",
         description: `${connected} har kopplats till ditt konto`,
       });
+      
+      // Show additional info for TikTok about limited scopes
+      if (connected.toLowerCase() === 'tiktok') {
+        setTimeout(() => {
+          toast({
+            title: "ℹ️ Begränsad åtkomst",
+            description: "För full statistikåtkomst krävs TikTok API-behörigheterna video.query och video.data. Ansök via TikTok Developer Portal.",
+            duration: 8000,
+          });
+        }, 2000);
+      }
+      
       // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
       loadConnections();

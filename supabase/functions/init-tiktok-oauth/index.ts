@@ -80,7 +80,7 @@ serve(async (req) => {
 
     // Build TikTok authorization URL
     const redirectUri = `${supabaseUrl}/functions/v1/oauth-callback`;
-    const scope = 'user.info.basic,user.info.stats,video.list,video.query,video.data';
+    const scope = 'user.info.basic,user.info.stats,video.list';
     
     const authUrl = new URL('https://www.tiktok.com/v2/auth/authorize/');
     authUrl.searchParams.set('client_key', tiktokClientKey);
