@@ -355,7 +355,6 @@ Deno.serve(async (req) => {
     // Redirect back to app
     // Use custom domain if configured, otherwise fall back to lovable.app
     let customDomain = Deno.env.get("CUSTOM_DOMAIN");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
 
     // Sanitize and normalize the custom domain
     if (customDomain) {
