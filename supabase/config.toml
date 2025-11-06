@@ -24,5 +24,8 @@ verify_jwt = true
 [functions.fetch-tiktok-data]
 verify_jwt = true
 
+[functions.fetch-meta-data]
+verify_jwt = true
+
 [functions.init-tiktok-oauth]
 verify_jwt = true

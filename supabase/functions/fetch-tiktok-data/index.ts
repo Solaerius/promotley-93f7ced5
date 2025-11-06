@@ -48,14 +48,22 @@ Deno.serve(async (req) => {
     // Get user ID from JWT
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      console.error('Missing authorization header');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing authorization header' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
-      throw new Error('Unauthorized');
+      console.error('Unauthorized:', userError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Fetching TikTok data for user:', user.id);
@@ -66,23 +74,40 @@ Deno.serve(async (req) => {
       .select('*')
       .eq('user_id', user.id)
       .eq('provider', 'tiktok')
-      .single();
+      .maybeSingle();
 
-    if (tokenError || !tokenData) {
-      throw new Error('TikTok connection not found');
+    if (tokenError) {
+      console.error('Error fetching token:', tokenError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Database error fetching token' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!tokenData) {
+      console.log('No TikTok connection found for user');
+      return new Response(
+        JSON.stringify({ success: false, error: 'TikTok connection not found. Please connect your account.' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Check if token is expired or expires soon
     const expiresAt = new Date(tokenData.expires_at);
     const now = new Date();
     if (expiresAt <= now) {
-      throw new Error('Token expired, please refresh');
+      console.error('Token expired');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token expired. Please reconnect your TikTok account.' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Decrypt access token
     const encryptionKey = await getEncryptionKey();
     const accessToken = await decryptToken(tokenData.access_token_enc, encryptionKey);
 
+    console.log('Fetching TikTok user info...');
     // Fetch user info
     const userInfoResponse = await fetch(
       'https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name,bio_description,profile_deep_link,follower_count,following_count,likes_count,video_count',
@@ -95,18 +120,42 @@ Deno.serve(async (req) => {
     );
 
     const userInfoText = await userInfoResponse.text();
-    console.log('TikTok user info response:', userInfoText);
+    console.log('TikTok user info response:', { status: userInfoResponse.status, text: userInfoText });
 
     if (!userInfoResponse.ok) {
-      throw new Error(`Failed to fetch user info: ${userInfoText}`);
+      console.error('Failed to fetch user info');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Failed to fetch user info from TikTok: ${userInfoText}. You may need to reconnect your account.` 
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const userInfo = JSON.parse(userInfoText);
+    let userInfo;
+    try {
+      userInfo = JSON.parse(userInfoText);
+    } catch (e) {
+      console.error('Failed to parse user info JSON:', e);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid response from TikTok API' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (userInfo.error && userInfo.error.code !== 'ok') {
-      throw new Error(`TikTok API error: ${userInfo.error.message}`);
+      console.error('TikTok API error:', userInfo.error);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `TikTok API error: ${userInfo.error.message || userInfo.error.code}` 
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
+    console.log('Fetching TikTok video list...');
     // Fetch video list (last 20 videos)
     const videoListResponse = await fetch(
       'https://open.tiktokapis.com/v2/video/list/?fields=id,create_time,cover_image_url,share_url,video_description,duration,height,width,title,embed_html,embed_link,like_count,comment_count,share_count,view_count',
@@ -123,13 +172,17 @@ Deno.serve(async (req) => {
     );
 
     const videoListText = await videoListResponse.text();
-    console.log('TikTok video list response status:', videoListResponse.status);
+    console.log('TikTok video list response:', { status: videoListResponse.status, text: videoListText });
 
     let videos = [];
     if (videoListResponse.ok) {
-      const videoListData = JSON.parse(videoListText);
-      if (videoListData.data && videoListData.data.videos) {
-        videos = videoListData.data.videos;
+      try {
+        const videoListData = JSON.parse(videoListText);
+        if (videoListData.data && videoListData.data.videos) {
+          videos = videoListData.data.videos;
+        }
+      } catch (e) {
+        console.warn('Could not parse video list:', e);
       }
     } else {
       console.warn('Could not fetch videos:', videoListText);
@@ -148,11 +201,12 @@ Deno.serve(async (req) => {
       totalComments += video.comment_count || 0;
     });
 
-    const avgEngagementRate = videos.length > 0 
+    const avgEngagementRate = videos.length > 0 && totalViews > 0
       ? ((totalLikes + totalComments + totalShares) / totalViews * 100).toFixed(2)
       : '0';
 
     const response = {
+      success: true,
       user: userInfo.data?.user || userInfo.user,
       videos: videos,
       stats: {
@@ -165,9 +219,11 @@ Deno.serve(async (req) => {
       },
     };
 
+    console.log('Successfully fetched TikTok data');
+
     return new Response(
       JSON.stringify(response),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
@@ -175,9 +231,9 @@ Deno.serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ success: false, error: errorMessage }),
       { 
-        status: 400,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

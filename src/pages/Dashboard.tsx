@@ -18,6 +18,7 @@ import { AISuggestions } from "@/components/AISuggestions";
 import { ConnectionManager } from "@/components/ConnectionManager";
 import { useAuth } from "@/hooks/useAuth";
 import { useTikTokData } from "@/hooks/useTikTokData";
+import { useMetaData } from "@/hooks/useMetaData";
 import { useConnections } from "@/hooks/useConnections";
 import logo from "@/assets/logo.png";
 
@@ -58,26 +59,48 @@ const Dashboard = () => {
   const { signOut } = useAuth();
   const { isConnected } = useConnections();
   const tiktokData = useTikTokData();
+  const metaData = useMetaData();
 
   // Build stats array dynamically based on connected platforms
   const stats: PlatformStat[] = [];
 
-  // Instagram (demo data for now)
-  if (isConnected('meta_ig')) {
+  // Instagram (real data)
+  if (isConnected('meta_ig') && metaData.instagram && !metaData.instagram.error) {
     stats.push({
       platform: "Instagram",
       icon: Instagram,
       color: "from-pink-500 to-purple-500",
+      username: metaData.instagram.username,
       metrics: [
-        { label: "Följare", value: "2,847", change: "+12%", trending: "up" },
-        { label: "Engagemang", value: "8.4%", change: "+2.1%", trending: "up" },
-        { label: "Räckvidd", value: "15.2k", change: "-3%", trending: "down" },
-        { label: "CTR", value: "2.8%", change: "+0.5%", trending: "up" },
+        { 
+          label: "Följare", 
+          value: formatNumber(metaData.instagram.followers_count || 0), 
+          change: "", 
+          trending: "neutral" as const
+        },
+        { 
+          label: "Följer", 
+          value: formatNumber(metaData.instagram.follows_count || 0), 
+          change: "", 
+          trending: "neutral" as const
+        },
+        { 
+          label: "Inlägg", 
+          value: formatNumber(metaData.instagram.media_count || 0), 
+          change: "", 
+          trending: "neutral" as const
+        },
+        { 
+          label: "Namn", 
+          value: metaData.instagram.name || "N/A", 
+          change: "", 
+          trending: "neutral" as const
+        },
       ],
       aiInsight: {
-        metric: "CTR",
-        message: "Prova en tydligare CTA i början av dina Reels för att öka CTR",
-        type: "suggestion"
+        metric: "Följare",
+        message: `Du har ${formatNumber(metaData.instagram.followers_count || 0)} följare på Instagram!`,
+        type: "success" as const
       }
     });
   }
@@ -123,18 +146,44 @@ const Dashboard = () => {
     });
   }
 
-  // Facebook (demo data for now)
-  if (isConnected('meta_fb')) {
+  // Facebook (real data)
+  if (isConnected('meta_fb') && metaData.facebook && !metaData.facebook.error) {
     stats.push({
       platform: "Facebook",
       icon: Facebook,
       color: "from-blue-600 to-blue-400",
+      username: metaData.facebook.name,
       metrics: [
-        { label: "Följare", value: "1,234", change: "+5%", trending: "up" },
-        { label: "Interaktioner", value: "892", change: "-8%", trending: "down" },
-        { label: "Sidvisningar", value: "2.1k", change: "+12%", trending: "up" },
-        { label: "Post räckvidd", value: "4.5k", change: "+3%", trending: "up" },
+        { 
+          label: "Följare", 
+          value: formatNumber(metaData.facebook.followers_count || 0), 
+          change: "", 
+          trending: "neutral" as const
+        },
+        { 
+          label: "Sidnamn", 
+          value: metaData.facebook.name || "N/A", 
+          change: "", 
+          trending: "neutral" as const
+        },
+        { 
+          label: "Sida ID", 
+          value: metaData.facebook.page_id || metaData.facebook.user_id || "N/A", 
+          change: "", 
+          trending: "neutral" as const
+        },
+        { 
+          label: "Status", 
+          value: "Ansluten", 
+          change: "", 
+          trending: "neutral" as const
+        },
       ],
+      aiInsight: {
+        metric: "Följare",
+        message: `Din Facebook-sida är ansluten med ${formatNumber(metaData.facebook.followers_count || 0)} följare!`,
+        type: "success" as const
+      }
     });
   }
 

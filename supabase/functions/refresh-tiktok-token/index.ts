@@ -67,14 +67,22 @@ Deno.serve(async (req) => {
     // Get user ID from JWT
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      console.error('Missing authorization header');
+      return new Response(
+        JSON.stringify({ success: false, message: 'Missing authorization header' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
-      throw new Error('Unauthorized');
+      console.error('Unauthorized:', userError);
+      return new Response(
+        JSON.stringify({ success: false, message: 'Unauthorized' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Refreshing TikTok token for user:', user.id);
@@ -85,10 +93,22 @@ Deno.serve(async (req) => {
       .select('*')
       .eq('user_id', user.id)
       .eq('provider', 'tiktok')
-      .single();
+      .maybeSingle();
 
-    if (tokenError || !tokenData) {
-      throw new Error('TikTok connection not found');
+    if (tokenError) {
+      console.error('Error fetching token:', tokenError);
+      return new Response(
+        JSON.stringify({ success: false, message: 'Database error fetching token' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!tokenData) {
+      console.log('No TikTok connection found');
+      return new Response(
+        JSON.stringify({ success: false, message: 'TikTok connection not found' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Check if token needs refresh (refresh if expires in less than 1 day)
@@ -99,8 +119,8 @@ Deno.serve(async (req) => {
     if (expiresAt > oneDayFromNow) {
       console.log('Token still valid, no refresh needed');
       return new Response(
-        JSON.stringify({ message: 'Token still valid', expires_at: tokenData.expires_at }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: true, message: 'Token still valid', expires_at: tokenData.expires_at }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -114,7 +134,11 @@ Deno.serve(async (req) => {
     const tiktokClientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET');
 
     if (!tiktokClientKey || !tiktokClientSecret) {
-      throw new Error('TikTok credentials not configured');
+      console.error('TikTok credentials not configured');
+      return new Response(
+        JSON.stringify({ success: false, message: 'TikTok credentials not configured' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Refresh the token
@@ -135,13 +159,33 @@ Deno.serve(async (req) => {
     console.log('TikTok refresh response:', responseText);
 
     if (!refreshResponse.ok) {
-      throw new Error(`Token refresh failed: ${responseText}`);
+      console.error('Token refresh failed');
+      return new Response(
+        JSON.stringify({ success: false, message: `Token refresh failed: ${responseText}` }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const refreshData = JSON.parse(responseText);
+    let refreshData;
+    try {
+      refreshData = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse refresh response:', e);
+      return new Response(
+        JSON.stringify({ success: false, message: 'Invalid response from TikTok' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (refreshData.error) {
-      throw new Error(`TikTok error: ${refreshData.error} - ${refreshData.error_description || ''}`);
+      console.error('TikTok error:', refreshData.error);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: `TikTok error: ${refreshData.error} - ${refreshData.error_description || ''}` 
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Extract new tokens
@@ -178,7 +222,11 @@ Deno.serve(async (req) => {
       .eq('provider', 'tiktok');
 
     if (updateError) {
-      throw updateError;
+      console.error('Failed to update token:', updateError);
+      return new Response(
+        JSON.stringify({ success: false, message: 'Failed to update token in database' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Token refreshed successfully, new expiry:', newExpiresAt);
@@ -189,7 +237,7 @@ Deno.serve(async (req) => {
         message: 'Token refreshed successfully',
         expires_at: newExpiresAt 
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
@@ -197,9 +245,9 @@ Deno.serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ success: false, message: errorMessage }),
       { 
-        status: 400,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

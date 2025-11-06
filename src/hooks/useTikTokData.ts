@@ -57,6 +57,8 @@ export const useTikTokData = () => {
 
       if (refreshResponse.error) {
         console.warn('Token refresh check failed:', refreshResponse.error);
+      } else if (refreshResponse.data && !refreshResponse.data.success) {
+        console.warn('Token refresh returned failure:', refreshResponse.data.message);
       } else {
         console.log('Token refresh check completed:', refreshResponse.data);
       }
@@ -73,7 +75,13 @@ export const useTikTokData = () => {
       );
 
       if (fetchError) {
-        throw fetchError;
+        console.error('Fetch error:', fetchError);
+        throw new Error(fetchError.message || 'Failed to fetch TikTok data');
+      }
+
+      // Check if the response indicates failure
+      if (tiktokData && !tiktokData.success) {
+        throw new Error(tiktokData.error || 'Failed to fetch TikTok data');
       }
 
       console.log('TikTok data fetched successfully:', tiktokData);
