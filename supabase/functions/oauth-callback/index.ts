@@ -373,7 +373,21 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('OAuth callback error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Extract detailed error information
+    let errorMessage = 'Unknown error';
+    let errorDetails: any = {};
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails.message = error.message;
+      errorDetails.stack = error.stack;
+    } else if (typeof error === 'object' && error !== null) {
+      errorDetails = error;
+      errorMessage = JSON.stringify(error);
+    }
+    
+    console.error('Detailed error information:', JSON.stringify(errorDetails, null, 2));
     
     // Log security event for failed OAuth
     try {
@@ -384,7 +398,7 @@ Deno.serve(async (req) => {
       await supabase.rpc('log_security_event', {
         _user_id: null,
         _event_type: 'oauth_callback_failed',
-        _event_details: { error: errorMessage },
+        _event_details: { error: errorMessage, details: errorDetails },
         _ip_address: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
         _user_agent: req.headers.get('user-agent') || 'unknown',
       });
@@ -393,7 +407,10 @@ Deno.serve(async (req) => {
     }
     
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: errorDetails
+      }),
       { 
         status: 400,
         headers: { ...corsHeaders, ...securityHeaders, 'Content-Type': 'application/json' }

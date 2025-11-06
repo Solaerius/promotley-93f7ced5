@@ -355,10 +355,7 @@ export type Database = {
         Args: { _endpoint: string; _user_id: string }
         Returns: boolean
       }
-      cleanup_expired_oauth_states: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_expired_oauth_states: { Args: never; Returns: undefined }
       log_security_event: {
         Args: {
           _event_details?: Json
