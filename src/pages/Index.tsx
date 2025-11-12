@@ -8,6 +8,8 @@ import Pricing from "@/components/Pricing";
 import Testimonials from "@/components/Testimonials";
 import TrustSection from "@/components/TrustSection";
 import FinalCTA from "@/components/FinalCTA";
+import CookieConsent from "@/components/CookieConsent";
+import AnimatedSection from "@/components/AnimatedSection";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -15,14 +17,36 @@ const Index = () => {
     <div className="min-h-screen">
       <Navbar />
       <Hero />
-      <ProblemSection />
-      <HowItWorks />
+      
+      <AnimatedSection animation="slide-up">
+        <ProblemSection />
+      </AnimatedSection>
+      
+      <AnimatedSection animation="fade-in-scale" delay={100}>
+        <HowItWorks />
+      </AnimatedSection>
+      
       <ResultsSection />
-      <AIDemoSection />
-      <Pricing />
-      <Testimonials />
-      <TrustSection />
+      
+      <AnimatedSection animation="slide-up" delay={100}>
+        <AIDemoSection />
+      </AnimatedSection>
+      
+      <AnimatedSection animation="fade-in" delay={100}>
+        <Pricing />
+      </AnimatedSection>
+      
+      <AnimatedSection animation="slide-up">
+        <Testimonials />
+      </AnimatedSection>
+      
+      <AnimatedSection animation="fade-in-scale" delay={100}>
+        <TrustSection />
+      </AnimatedSection>
+      
       <FinalCTA />
+      
+      <CookieConsent />
       
       {/* Footer */}
       <footer className="border-t py-12 px-4 bg-background">
