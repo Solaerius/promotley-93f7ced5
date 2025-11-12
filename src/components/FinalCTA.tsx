@@ -39,7 +39,7 @@ const FinalCTA = () => {
                 size="lg"
                 className="text-xl px-12 py-8 bg-white text-primary hover:bg-white/90 hover:scale-110 transition-all duration-300 shadow-glow font-bold"
               >
-                Kom igång nu
+                Starta gratis
                 <ArrowRight className="w-6 h-6 ml-2" />
               </Button>
             </Link>

@@ -8,6 +8,7 @@ const plans = [
     name: "Start",
     price: "49",
     credits: "100",
+    description: "Perfekt för nya UF-företag som precis börjat",
     features: [
       "Personlig postningsstrategi",
       "Budgetbaserad innehållsplan",
@@ -21,6 +22,7 @@ const plans = [
     name: "Growth",
     price: "99",
     credits: "300",
+    description: "Idealisk för snabbväxande UF-team",
     features: [
       "Allt från Start",
       "Flera plattformar samtidigt",
@@ -34,6 +36,7 @@ const plans = [
     name: "Pro",
     price: "199",
     credits: "∞",
+    description: "För etablerade företag med stora ambitioner",
     features: [
       "Obegränsade strategier",
       "Dedikerad strategikonsult",
@@ -73,17 +76,20 @@ const Pricing = () => {
                   : "border-2 border-border/50 hover:border-primary/30"
               }`}
             >
-              {plan.popular && (
+                {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-gradient-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                    Mest populär
+                  <span className="bg-gradient-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
+                    ⭐ Mest populär
                   </span>
                 </div>
               )}
 
               <div className="space-y-6">
                 {/* Plan name */}
-                <h3 className="text-2xl font-bold">{plan.name}</h3>
+                <div>
+                  <h3 className="text-2xl font-bold">{plan.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
+                </div>
 
                 {/* Price */}
                 <div className="flex items-baseline gap-2">

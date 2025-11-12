@@ -38,26 +38,38 @@ const Hero = () => {
 
           {/* Subheadline */}
           <p className="text-base md:text-2xl text-white/90 max-w-2xl mx-auto leading-relaxed animate-slide-up font-medium px-4 md:px-0">
-            AI som skapar din personliga innehållsstrategi baserat på budget, företagstyp och optimal postningsfrekvens
+            Få AI-genererade innehållsförslag som ökar engagemang med 30% på 4 veckor
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-6 md:pt-8 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-            <Link to="/auth">
+          {/* Email Capture */}
+          <div className="max-w-md mx-auto pt-6 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+            <form className="flex flex-col sm:flex-row gap-3" onSubmit={(e) => { e.preventDefault(); window.location.href = '/auth'; }}>
+              <input
+                type="email"
+                placeholder="Din e-postadress"
+                required
+                className="flex-1 px-6 py-4 rounded-lg bg-white/95 backdrop-blur-sm text-foreground placeholder:text-muted-foreground border-2 border-transparent focus:border-primary focus:outline-none transition-all text-base font-medium"
+              />
               <Button 
+                type="submit"
                 variant="default" 
                 size="lg" 
-                className="text-base md:text-lg px-6 py-5 md:px-8 md:py-6 bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-glow font-semibold w-full sm:w-auto"
+                className="text-base md:text-lg px-6 py-4 md:px-8 bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-glow font-semibold whitespace-nowrap"
               >
-                Testa gratis
+                Starta gratis
                 <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2" />
               </Button>
-            </Link>
-            <a href="#how-it-works" className="w-full sm:w-auto">
+            </form>
+            <p className="text-xs md:text-sm text-white/70 mt-3 text-center">Ingen betalmetod krävs · Avsluta när du vill</p>
+          </div>
+
+          {/* Secondary CTA */}
+          <div className="pt-4 animate-slide-up" style={{ animationDelay: "0.3s" }}>
+            <a href="#how-it-works">
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-base md:text-lg px-6 py-5 md:px-8 md:py-6 border-2 border-white/40 !text-white hover:bg-white/10 backdrop-blur-sm hover:scale-105 transition-all duration-300 font-semibold w-full"
+                className="text-base px-6 py-3 border-2 border-white/40 !text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 font-medium"
               >
                 Se hur det funkar
               </Button>
