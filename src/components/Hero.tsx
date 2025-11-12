@@ -53,11 +53,10 @@ const Hero = () => {
               <Button 
                 type="submit"
                 variant="gradient" 
-                size="lg" 
-                className="text-base md:text-lg px-6 py-4 md:px-8 hover:scale-105 transition-all duration-300 shadow-glow font-semibold whitespace-nowrap"
+                className="text-base px-6 py-4 hover:scale-105 transition-all duration-300 shadow-glow font-semibold whitespace-nowrap h-[52px]"
               >
                 Starta gratis
-                <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2" />
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </form>
             <p className="text-xs md:text-sm text-white/70 mt-3 text-center">Ingen betalmetod krävs · Avsluta när du vill</p>
