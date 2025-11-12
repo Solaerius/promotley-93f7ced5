@@ -60,7 +60,7 @@ serve(async (req) => {
 
     // Generate CSRF state token
     const stateToken = crypto.randomUUID();
-    console.log('Generated state token:', stateToken);
+    console.log('Generated state token (length):', stateToken.length);
 
     // Store state in database with 10-minute expiration
     const { error: insertError } = await supabase

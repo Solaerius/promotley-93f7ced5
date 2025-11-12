@@ -36,5 +36,18 @@ export const suggestionSchema = z.object({
     .optional(),
 });
 
+export const onboardingSchema = z.object({
+  industry: z
+    .string()
+    .trim()
+    .min(1, { message: "Bransch krävs" })
+    .max(100, { message: "Bransch får vara max 100 tecken" }),
+  keywords: z
+    .string()
+    .trim()
+    .max(500, { message: "Nyckelord får vara max 500 tecken" }),
+});
+
 export type AuthFormData = z.infer<typeof authSchema>;
 export type SuggestionFormData = z.infer<typeof suggestionSchema>;
+export type OnboardingFormData = z.infer<typeof onboardingSchema>;

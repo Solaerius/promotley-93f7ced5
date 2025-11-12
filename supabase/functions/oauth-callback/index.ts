@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Validate state token and get user ID (don't filter by provider yet - get it from the state)
-    console.log("Looking up state token:", stateToken);
+    console.log("Looking up state token (length):", stateToken?.length);
     const { data: stateData, error: stateError } = await supabase
       .from("oauth_states")
       .select("*")
@@ -195,14 +195,12 @@ Deno.serve(async (req) => {
 
       const responseText = await tokenResponse.text();
       console.log("TikTok token response status:", tokenResponse.status);
-      console.log("TikTok token response body:", responseText);
 
       if (!tokenResponse.ok) {
         console.error("TikTok token exchange failed:", {
           status: tokenResponse.status,
-          body: responseText,
         });
-        throw new Error(`Failed to exchange code for token: ${responseText}`);
+        throw new Error(`Failed to exchange code for token`);
       }
 
       let tokenData;
@@ -213,7 +211,12 @@ Deno.serve(async (req) => {
         throw new Error("Invalid JSON response from TikTok");
       }
 
-      console.log("TikTok token data structure:", JSON.stringify(tokenData, null, 2));
+      console.log("Token received:", {
+        hasAccessToken: !!tokenData.access_token,
+        hasRefreshToken: !!tokenData.refresh_token,
+        expiresIn: tokenData.expires_in,
+        scopes: tokenData.scope,
+      });
       
       // Check if TikTok returned an error
       if (tokenData.error) {

@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { onboardingSchema } from "@/lib/validations";
 import logo from "@/assets/logo.png";
 
 const Onboarding = () => {
@@ -37,12 +38,25 @@ const Onboarding = () => {
     setIsSubmitting(true);
 
     try {
+      // Validate input
+      const result = onboardingSchema.safeParse({ industry, keywords });
+      if (!result.success) {
+        const errors = result.error.errors.map(e => e.message).join(", ");
+        toast({
+          title: "Valideringsfel",
+          description: errors,
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Update user profile with onboarding data
       const { error } = await supabase
         .from("users")
         .update({
-          industry,
-          keywords: keywords.split(",").map((k) => k.trim()).filter(Boolean),
+          industry: result.data.industry,
+          keywords: result.data.keywords.split(",").map((k) => k.trim()).filter(Boolean),
         })
         .eq("id", user.id);
 
