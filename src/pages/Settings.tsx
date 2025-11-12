@@ -16,8 +16,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
 
 const Settings = () => {
   const { toast } = useToast();
@@ -25,6 +26,29 @@ const Settings = () => {
   const { signOut, user } = useAuth();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  const [originalCompanyName, setOriginalCompanyName] = useState("");
+  const [isSavingCompanyName, setIsSavingCompanyName] = useState(false);
+
+  // Fetch user's company name
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user?.id) return;
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select('company_name, email')
+        .eq('id', user.id)
+        .single();
+      
+      if (!error && data) {
+        setCompanyName(data.company_name || "");
+        setOriginalCompanyName(data.company_name || "");
+      }
+    };
+    
+    fetchUserData();
+  }, [user]);
 
   const handleDownloadData = () => {
     toast({
@@ -79,6 +103,43 @@ const Settings = () => {
         variant: "destructive",
       });
       setIsDeleting(false);
+    }
+  };
+
+  const handleSaveCompanyName = async () => {
+    if (!user?.id || !companyName.trim()) {
+      toast({
+        title: "Fel",
+        description: "Företagsnamn kan inte vara tomt",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingCompanyName(true);
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ company_name: companyName.trim() })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setOriginalCompanyName(companyName);
+      toast({
+        title: "Namn uppdaterat",
+        description: "Ditt företagsnamn har uppdaterats",
+      });
+    } catch (error) {
+      console.error('Error updating company name:', error);
+      toast({
+        title: "Fel",
+        description: "Kunde inte uppdatera företagsnamn",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingCompanyName(false);
     }
   };
 
@@ -144,17 +205,33 @@ const Settings = () => {
           {/* Account info */}
           <Card className="p-6">
             <h2 className="text-2xl font-bold mb-4">Kontoinformation</h2>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">E-post</p>
-                <p className="font-medium">exempel@mittuf.se</p>
+                <p className="text-sm text-muted-foreground mb-1">E-post</p>
+                <p className="font-medium">{user?.email || "exempel@mittuf.se"}</p>
               </div>
+              
               <div>
-                <p className="text-sm text-muted-foreground">Företagsnamn</p>
-                <p className="font-medium">Mitt UF-företag</p>
+                <p className="text-sm text-muted-foreground mb-2">Företagsnamn</p>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Mitt UF-företag"
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleSaveCompanyName}
+                    disabled={isSavingCompanyName || companyName === originalCompanyName}
+                  >
+                    {isSavingCompanyName ? "Sparar..." : "Spara"}
+                  </Button>
+                </div>
               </div>
+              
               <div>
-                <p className="text-sm text-muted-foreground">Plan</p>
+                <p className="text-sm text-muted-foreground mb-1">Plan</p>
                 <p className="font-medium">Gratis (1 kredit kvar)</p>
               </div>
             </div>
