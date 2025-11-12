@@ -253,10 +253,10 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Top nav with bubble animation */}
       <nav 
-        className={`border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10 transition-all duration-[750ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ${
+        className={`border-b backdrop-blur-sm sticky top-0 z-10 transition-all duration-[750ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ${
           isHeaderBubble 
-            ? 'mt-2 mx-4 md:mx-6 lg:mx-12 rounded-[18px] md:rounded-[22px] lg:rounded-[24px] bg-[rgba(53,20,29,0.78)] backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.05)] translate-y-[6px]' 
-            : 'mt-0 mx-0 rounded-none'
+            ? 'mt-2 mx-4 md:mx-6 lg:mx-12 rounded-[18px] md:rounded-[22px] lg:rounded-[24px] bg-card/80 backdrop-blur-xl shadow-elegant translate-y-[6px]' 
+            : 'mt-0 mx-0 rounded-none bg-card/50'
         }`}
         style={{
           transitionProperty: 'margin, border-radius, background-color, backdrop-filter, box-shadow, opacity, transform'
@@ -284,7 +284,7 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Hero Header */}
         <div className="mb-12 text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
             Maximize your social growth with AI-driven content insights
           </h1>
           <p className="text-lg text-muted-foreground">

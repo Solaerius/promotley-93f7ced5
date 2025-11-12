@@ -26,10 +26,10 @@ const Hero = () => {
       <div className="container relative z-10 px-4 py-20 md:py-32 mx-auto">
         <div className="max-w-4xl mx-auto text-center space-y-6 md:space-y-8">
           {/* Main Headline */}
-          <h1 className="text-4xl md:text-7xl lg:text-8xl font-extrabold tracking-tight animate-fade-in text-white leading-tight">
+          <h1 className="text-4xl md:text-7xl lg:text-8xl font-extrabold tracking-tight animate-fade-in text-hero-foreground leading-tight">
             Bli företaget alla{" "}
             <span className="relative inline-block">
-              <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-white via-primary-glow to-white">
+              <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-hero-foreground via-primary-glow to-hero-foreground">
                 pratar om
               </span>
               <span className="absolute inset-0 blur-xl bg-gradient-to-r from-primary via-accent to-primary opacity-50" />
@@ -37,7 +37,7 @@ const Hero = () => {
           </h1>
 
           {/* Subheadline */}
-          <p className="text-base md:text-2xl text-white/90 max-w-2xl mx-auto leading-relaxed animate-slide-up font-medium px-4 md:px-0">
+          <p className="text-base md:text-2xl text-hero-muted max-w-2xl mx-auto leading-relaxed animate-slide-up font-medium px-4 md:px-0">
             AI som hjälper UF-företag och startups att växa snabbare på sociala medier
           </p>
 
@@ -48,7 +48,7 @@ const Hero = () => {
                 type="email"
                 placeholder="Din e-postadress"
                 required
-                className="flex-1 px-6 py-4 rounded-lg bg-white/95 backdrop-blur-sm text-foreground placeholder:text-muted-foreground border-2 border-transparent focus:border-primary focus:outline-none transition-all text-base font-medium"
+                className="flex-1 px-6 py-4 rounded-lg bg-card/95 backdrop-blur-sm text-card-foreground placeholder:text-muted-foreground border-2 border-transparent focus:border-primary focus:outline-none transition-all text-base font-medium"
               />
               <Button 
                 type="submit"
@@ -59,7 +59,7 @@ const Hero = () => {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </form>
-            <p className="text-xs md:text-sm text-white/70 mt-3 text-center">
+            <p className="text-xs md:text-sm text-hero-muted/70 mt-3 text-center">
               Ingen kortinformation krävs. Börja på 30 sekunder.
             </p>
           </div>
@@ -70,7 +70,7 @@ const Hero = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-base px-6 py-3 border-2 border-white/40 !text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 font-medium"
+                className="text-base px-6 py-3 border-2 border-hero-foreground/40 !text-hero-foreground hover:bg-hero-foreground/10 backdrop-blur-sm transition-all duration-300 font-medium"
               >
                 Se hur det funkar
               </Button>
@@ -78,10 +78,10 @@ const Hero = () => {
           </div>
 
           {/* Social proof badge */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 pt-6 md:pt-8 text-white/80 animate-fade-in" style={{ animationDelay: "0.4s" }}>
+          <div className="flex items-center justify-center gap-2 md:gap-3 pt-6 md:pt-8 text-hero-muted animate-fade-in" style={{ animationDelay: "0.4s" }}>
             <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-primary-glow" />
             <p className="text-xs md:text-sm font-medium">
-              <span className="font-bold text-white">100+</span> UF-företag växer redan med Promotley
+              <span className="font-bold text-hero-foreground">100+</span> UF-företag växer redan med Promotley
             </p>
           </div>
         </div>

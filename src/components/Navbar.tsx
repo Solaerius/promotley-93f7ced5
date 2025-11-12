@@ -32,7 +32,7 @@ const Navbar = () => {
       id="site-header"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-[750ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ${
         isBubble 
-          ? 'mt-2 mx-4 md:mx-6 lg:mx-12 rounded-[18px] md:rounded-[22px] lg:rounded-[24px] bg-[rgba(53,20,29,0.78)] backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.05)] translate-y-[6px] opacity-100' 
+          ? 'mt-2 mx-4 md:mx-6 lg:mx-12 rounded-[18px] md:rounded-[22px] lg:rounded-[24px] bg-card/80 backdrop-blur-xl shadow-elegant translate-y-[6px] opacity-100' 
           : 'mt-0 mx-0 rounded-none bg-background/80 backdrop-blur-md border-b translate-y-0'
       }`}
       style={{

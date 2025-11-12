@@ -48,6 +48,10 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        hero: {
+          foreground: "hsl(var(--hero-foreground))",
+          muted: "hsl(var(--hero-foreground-muted))",
+        },
       },
       fontFamily: {
         'poppins': ['Poppins', 'sans-serif'],
