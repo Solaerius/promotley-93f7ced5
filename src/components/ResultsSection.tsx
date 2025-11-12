@@ -39,27 +39,27 @@ const ResultsSection = () => {
   return (
     <section 
       ref={ref as any}
-      className="relative py-24 px-4 bg-gradient-diagonal overflow-hidden font-poppins"
+      className="relative py-16 md:py-24 px-4 bg-gradient-diagonal overflow-hidden font-poppins"
     >
       {/* Decorative glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/20 rounded-full blur-3xl animate-glow-pulse" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[800px] md:h-[800px] bg-primary/20 rounded-full blur-3xl animate-glow-pulse" />
       
       <div className="container mx-auto relative z-10">
         {/* Header */}
-        <div className="max-w-3xl mx-auto text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-white">
+        <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16 space-y-3 md:space-y-4">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white px-2 leading-tight">
             När strategi möter{" "}
             <span className="text-primary-glow">
               verkliga resultat
             </span>
           </h2>
-          <p className="text-xl text-white/80">
+          <p className="text-base sm:text-lg md:text-xl text-white/80 px-4">
             Resultat från företag som följde sin personliga Promotley-strategi
           </p>
         </div>
 
         {/* Stats cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto mb-12 md:mb-16">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             const count = useCountUp({ 

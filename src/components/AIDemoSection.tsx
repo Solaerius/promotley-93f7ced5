@@ -5,27 +5,27 @@ import { Link } from "react-router-dom";
 
 const AIDemoSection = () => {
   return (
-    <section id="demo" className="py-24 px-4 bg-background font-poppins">
+    <section id="demo" className="py-16 md:py-24 px-4 bg-background font-poppins">
       <div className="container mx-auto">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-primary rounded-full text-white text-sm font-semibold mb-4">
-              <Brain className="w-4 h-4" />
+          <div className="text-center mb-12 md:mb-16 space-y-3 md:space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-gradient-primary rounded-full text-white text-xs md:text-sm font-semibold mb-3 md:mb-4">
+              <Brain className="w-3.5 h-3.5 md:w-4 md:h-4" />
               Personlig Strategi
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold px-2 leading-tight">
               Din kompletta{" "}
               <span className="text-transparent bg-clip-text bg-gradient-primary">
                 innehållsstrategi
               </span>
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
               Ingen gissningar - bara en skräddarsydd plan baserad på din budget, bransch och tillgängliga tid
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
             {/* Left - Dashboard mockup */}
             <Card className="p-6 bg-gradient-hero border-2 border-primary/20 shadow-elegant">
               <div className="space-y-4">

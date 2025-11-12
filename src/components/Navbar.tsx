@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useEffect, useState } from "react";
 import { DarkModeToggle } from "./DarkModeToggle";
+import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const [isBubble, setIsBubble] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const sentinel = document.getElementById('header-bubble-sentinel');
@@ -43,12 +45,12 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-            <img src={logo} alt="Promotley Logo" className="w-10 h-10" />
+          <Link to="/" className="flex items-center gap-2 font-bold text-lg md:text-xl">
+            <img src={logo} alt="Promotley Logo" className="w-8 h-8 md:w-10 md:h-10" />
             <span>Promotley</span>
           </Link>
 
-          {/* Navigation */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
               Funktioner
@@ -61,8 +63,8 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Auth buttons */}
-          <div className="flex items-center gap-3">
+          {/* Desktop Auth buttons */}
+          <div className="hidden md:flex items-center gap-3">
             <DarkModeToggle />
             <Link to="/auth">
               <Button variant="ghost">Logga in</Button>
@@ -78,7 +80,59 @@ const Navbar = () => {
               </Button>
             </Link>
           </div>
+
+          {/* Mobile menu button */}
+          <div className="flex md:hidden items-center gap-2">
+            <DarkModeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-border/50 animate-fade-in">
+            <div className="flex flex-col space-y-3">
+              <a 
+                href="#how-it-works" 
+                className="text-muted-foreground hover:text-foreground transition-colors px-2 py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Funktioner
+              </a>
+              <a 
+                href="#pricing" 
+                className="text-muted-foreground hover:text-foreground transition-colors px-2 py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Priser
+              </a>
+              <Link 
+                to="/dashboard" 
+                className="text-muted-foreground hover:text-foreground transition-colors px-2 py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Demo
+              </Link>
+              <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
+                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">Logga in</Button>
+                </Link>
+                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="gradient" className="w-full">
+                    Starta gratis
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

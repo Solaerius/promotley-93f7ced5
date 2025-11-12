@@ -19,14 +19,14 @@ const Hero = () => {
       <div className="absolute inset-0 bg-gradient-warm opacity-50" />
       
       {/* Floating glow elements */}
-      <div className="absolute top-20 left-10 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-accent/30 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+      <div className="absolute top-20 left-5 md:left-10 w-64 h-64 md:w-96 md:h-96 bg-primary/30 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-20 right-5 md:right-10 w-80 h-80 md:w-[500px] md:h-[500px] bg-accent/30 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
       
       {/* Content */}
       <div className="container relative z-10 px-4 py-20 md:py-32 mx-auto">
-        <div className="max-w-4xl mx-auto text-center space-y-6 md:space-y-8">
+        <div className="max-w-4xl mx-auto text-center space-y-5 md:space-y-8">
           {/* Main Headline */}
-          <h1 className="text-4xl md:text-7xl lg:text-8xl font-extrabold tracking-tight animate-fade-in text-hero-foreground leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-extrabold tracking-tight animate-fade-in text-hero-foreground leading-[1.15] sm:leading-tight px-2">
             Bli företaget alla{" "}
             <span className="relative inline-block">
               <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-hero-foreground via-primary-glow to-hero-foreground">
@@ -37,40 +37,40 @@ const Hero = () => {
           </h1>
 
           {/* Subheadline */}
-          <p className="text-base md:text-2xl text-hero-muted max-w-2xl mx-auto leading-relaxed animate-slide-up font-medium px-4 md:px-0">
+          <p className="text-base sm:text-lg md:text-2xl text-hero-muted max-w-2xl mx-auto leading-relaxed animate-slide-up font-medium px-2 md:px-0">
             AI som hjälper UF-företag och startups att växa snabbare på sociala medier
           </p>
 
           {/* Email Capture */}
-          <div className="max-w-md mx-auto pt-6 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+          <div className="max-w-md mx-auto pt-4 md:pt-6 animate-slide-up px-4" style={{ animationDelay: "0.2s" }}>
             <form className="flex flex-col sm:flex-row gap-3" onSubmit={(e) => { e.preventDefault(); window.location.href = '/auth'; }}>
               <input
                 type="email"
                 placeholder="Din e-postadress"
                 required
-                className="flex-1 px-6 py-4 rounded-lg bg-card/95 backdrop-blur-sm text-card-foreground placeholder:text-muted-foreground border-2 border-transparent focus:border-primary focus:outline-none transition-all text-base font-medium"
+                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-lg bg-card/95 backdrop-blur-sm text-card-foreground placeholder:text-muted-foreground border-2 border-transparent focus:border-primary focus:outline-none transition-all text-sm sm:text-base font-medium"
               />
               <Button 
                 type="submit"
                 variant="gradient" 
-                className="text-base px-6 py-4 hover:scale-105 transition-all duration-300 shadow-glow font-semibold whitespace-nowrap h-[52px]"
+                className="text-sm sm:text-base px-5 sm:px-6 py-3 sm:py-4 hover:scale-105 transition-all duration-300 shadow-glow font-semibold whitespace-nowrap h-auto sm:h-[52px]"
               >
                 Starta gratis
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </form>
-            <p className="text-xs md:text-sm text-hero-muted/70 mt-3 text-center">
+            <p className="text-xs md:text-sm text-hero-muted/70 mt-3 text-center px-2">
               Ingen kortinformation krävs. Börja på 30 sekunder.
             </p>
           </div>
 
           {/* Secondary CTA */}
-          <div className="pt-4 animate-slide-up" style={{ animationDelay: "0.3s" }}>
+          <div className="pt-2 md:pt-4 animate-slide-up px-4" style={{ animationDelay: "0.3s" }}>
             <a href="#how-it-works">
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-base px-6 py-3 border-2 border-muted-foreground/40 text-muted-foreground hover:bg-muted/10 backdrop-blur-sm transition-all duration-300 font-medium"
+                className="text-sm sm:text-base px-5 sm:px-6 py-2.5 sm:py-3 border-2 border-muted-foreground/40 text-muted-foreground hover:bg-muted/10 backdrop-blur-sm transition-all duration-300 font-medium"
               >
                 Se hur det funkar
               </Button>
@@ -78,9 +78,9 @@ const Hero = () => {
           </div>
 
           {/* Social proof badge */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 pt-6 md:pt-8 text-hero-muted animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-primary-glow" />
-            <p className="text-xs md:text-sm font-medium">
+          <div className="flex items-center justify-center gap-2 md:gap-3 pt-4 md:pt-8 text-hero-muted animate-fade-in px-4" style={{ animationDelay: "0.4s" }}>
+            <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-primary-glow shrink-0" />
+            <p className="text-xs sm:text-sm font-medium">
               <span className="font-bold text-hero-foreground">100+</span> UF-företag växer redan med Promotley
             </p>
           </div>
