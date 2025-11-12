@@ -70,7 +70,7 @@ const Hero = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-base px-6 py-3 border-2 border-hero-foreground/40 !text-hero-foreground hover:bg-hero-foreground/10 backdrop-blur-sm transition-all duration-300 font-medium"
+                className="text-base px-6 py-3 border-2 border-muted-foreground/40 text-muted-foreground hover:bg-muted/10 backdrop-blur-sm transition-all duration-300 font-medium"
               >
                 Se hur det funkar
               </Button>
