@@ -258,33 +258,6 @@ const Dashboard = () => {
           <AISuggestions />
         </div>
 
-        {/* Social Proof Section */}
-        <Card className="mb-8 bg-gradient-to-br from-background to-muted/20 border-primary/10">
-          <CardContent className="p-8">
-            <div className="text-center mb-6">
-              <p className="text-2xl font-bold mb-2">
-                Används av 50+ UF-team för att tredubbla engagemang på 4 veckor
-              </p>
-              <p className="text-muted-foreground">
-                Tusentals innehållsförslag genererade • 95% användarnas nöjdhet
-              </p>
-            </div>
-            <div className="flex justify-center items-center gap-8 flex-wrap">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-primary">50+</p>
-                <p className="text-sm text-muted-foreground">UF-företag</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-primary">3x</p>
-                <p className="text-sm text-muted-foreground">Högre engagemang</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-primary">4v</p>
-                <p className="text-sm text-muted-foreground">Till resultat</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Platform stats */}
         <div className="space-y-6">

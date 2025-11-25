@@ -1,7 +1,8 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { useNotifications } from "@/hooks/useNotifications";
 import {
@@ -38,6 +39,22 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { notifications, unreadCount, markAsRead } = useNotifications();
+  const [companyName, setCompanyName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user?.id) return;
+      const { data } = await supabase
+        .from('users')
+        .select('company_name')
+        .eq('id', user.id)
+        .single();
+      if (data?.company_name) {
+        setCompanyName(data.company_name);
+      }
+    };
+    fetchUserData();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -237,7 +254,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <Avatar>
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {user?.email?.charAt(0).toUpperCase() || 'U'}
+                        {companyName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>

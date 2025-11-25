@@ -55,12 +55,18 @@ const Analytics = () => {
   if (isConnected('meta_ig') && metaData.instagram) {
     connectedStats.totalFollowers += metaData.instagram.followers_count || 0;
   }
-  if (isConnected('tiktok') && tiktokData.user) {
-    connectedStats.totalFollowers += tiktokData.user.follower_count || 0;
-    connectedStats.totalViews += tiktokData.stats?.totalViews || 0;
-    connectedStats.totalLikes += tiktokData.stats?.totalLikes || 0;
-    connectedStats.totalComments += tiktokData.stats?.totalComments || 0;
-    if (tiktokData.stats?.avgEngagementRate) {
+  if (isConnected('tiktok') && tiktokData.user && tiktokData.stats) {
+    const followerCount = tiktokData.user.follower_count || 0;
+    const totalViews = tiktokData.stats.totalViews || 0;
+    const totalLikes = tiktokData.stats.totalLikes || 0;
+    const totalComments = tiktokData.stats.totalComments || 0;
+    
+    if (followerCount > 0) connectedStats.totalFollowers += followerCount;
+    if (totalViews > 0) connectedStats.totalViews += totalViews;
+    if (totalLikes > 0) connectedStats.totalLikes += totalLikes;
+    if (totalComments > 0) connectedStats.totalComments += totalComments;
+    
+    if (tiktokData.stats.avgEngagementRate) {
       connectedStats.avgEngagement = parseFloat(tiktokData.stats.avgEngagementRate);
     }
   }
@@ -288,23 +294,23 @@ const Analytics = () => {
                 )}
               </TabsContent>
               <TabsContent value="tiktok" className="space-y-4 pt-4">
-                {isConnected('tiktok') && tiktokData.user ? (
+                {isConnected('tiktok') && tiktokData.user && tiktokData.stats ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="p-4 rounded-xl bg-muted">
                       <p className="text-sm text-muted-foreground mb-1">Följare</p>
-                      <p className="text-2xl font-bold">{tiktokData.user.follower_count?.toLocaleString()}</p>
+                      <p className="text-2xl font-bold">{tiktokData.user.follower_count?.toLocaleString() || 0}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-muted">
                       <p className="text-sm text-muted-foreground mb-1">Visningar</p>
-                      <p className="text-2xl font-bold">{tiktokData.stats?.totalViews.toLocaleString()}</p>
+                      <p className="text-2xl font-bold">{tiktokData.stats.totalViews?.toLocaleString() || 0}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-muted">
                       <p className="text-sm text-muted-foreground mb-1">Likes</p>
-                      <p className="text-2xl font-bold">{tiktokData.stats?.totalLikes.toLocaleString()}</p>
+                      <p className="text-2xl font-bold">{tiktokData.stats.totalLikes?.toLocaleString() || 0}</p>
                     </div>
                     <div className="p-4 rounded-xl bg-muted">
                       <p className="text-sm text-muted-foreground mb-1">Engagemang</p>
-                      <p className="text-2xl font-bold">{tiktokData.stats?.avgEngagementRate}%</p>
+                      <p className="text-2xl font-bold">{tiktokData.stats.avgEngagementRate || "0"}%</p>
                     </div>
                   </div>
                 ) : (
