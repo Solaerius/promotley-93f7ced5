@@ -17,7 +17,6 @@ interface CalendarPost {
   platform: "instagram" | "tiktok" | "facebook";
   title: string;
   description: string;
-  type?: string;
 }
 
 const Calendar = () => {
@@ -32,7 +31,6 @@ const Calendar = () => {
     platform: "",
     title: "",
     description: "",
-    type: "",
   });
 
   const platformColors = {
@@ -86,7 +84,7 @@ const Calendar = () => {
       }
       setIsDialogOpen(false);
       setEditingPost(null);
-      setFormData({ date: "", platform: "", title: "", description: "", type: "" });
+      setFormData({ date: "", platform: "", title: "", description: "" });
     } catch (error) {
       console.error('Error saving post:', error);
     }
@@ -153,7 +151,7 @@ const Calendar = () => {
             </Button>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => { setEditingPost(null); setFormData({ date: "", platform: "", title: "", description: "", type: "" }); }}>
+                <Button onClick={() => { setEditingPost(null); setFormData({ date: "", platform: "", title: "", description: "" }); }}>
                   <Plus className="w-4 h-4 mr-2" />
                   Lägg till
                 </Button>
@@ -184,15 +182,6 @@ const Calendar = () => {
                         <SelectItem value="facebook">Facebook</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="type">Typ av innehåll</Label>
-                    <Input
-                      id="type"
-                      placeholder="T.ex. Bild, Video, Story"
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    />
                   </div>
                   <div>
                     <Label htmlFor="title">Titel</Label>
@@ -345,7 +334,7 @@ const Calendar = () => {
                         <div>
                           <p className="font-semibold">{post.title}</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(post.date).toLocaleDateString('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' })} • {post.type}
+                            {new Date(post.date).toLocaleDateString('sv-SE', { year: 'numeric', month: 'long', day: 'numeric' })}
                           </p>
                         </div>
                       </div>
