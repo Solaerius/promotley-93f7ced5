@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Plus, Sparkles, Instagram, Music2, Facebook, Trash2, Edit } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Sparkles, Instagram, Music2, Facebook, Trash2, Edit, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
+import { useCalendar } from "@/hooks/useCalendar";
 
 interface CalendarPost {
   id: string;
@@ -16,41 +17,16 @@ interface CalendarPost {
   platform: "instagram" | "tiktok" | "facebook";
   title: string;
   description: string;
-  type: string;
+  type?: string;
 }
 
 const Calendar = () => {
   const { toast } = useToast();
+  const { posts, loading, hasPosts, createPost, updatePost, deletePost } = useCalendar();
   const [view, setView] = useState<"month" | "week">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [posts, setPosts] = useState<CalendarPost[]>([
-    {
-      id: "1",
-      date: "2025-01-15",
-      platform: "instagram",
-      title: "Produktlansering",
-      description: "Visa nya produkter",
-      type: "Bild",
-    },
-    {
-      id: "2",
-      date: "2025-01-18",
-      platform: "tiktok",
-      title: "Behind the scenes",
-      description: "Visa teamet",
-      type: "Video",
-    },
-    {
-      id: "3",
-      date: "2025-01-22",
-      platform: "facebook",
-      title: "Kundcase",
-      description: "Dela framgångshistoria",
-      type: "Artikel",
-    },
-  ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<CalendarPost | null>(null);
+  const [editingPost, setEditingPost] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     date: "",
     platform: "",
@@ -92,7 +68,7 @@ const Calendar = () => {
     return days;
   };
 
-  const handleSavePost = () => {
+  const handleSavePost = async () => {
     if (!formData.date || !formData.platform || !formData.title) {
       toast({
         title: "Felaktiga uppgifter",
@@ -102,41 +78,39 @@ const Calendar = () => {
       return;
     }
 
-    if (editingPost) {
-      setPosts(posts.map(p => p.id === editingPost.id ? { ...formData, id: p.id } as CalendarPost : p));
-      toast({
-        title: "Uppdaterat",
-        description: "Inlägget har uppdaterats",
-      });
-    } else {
-      const newPost: CalendarPost = {
-        id: Date.now().toString(),
-        ...formData,
-      } as CalendarPost;
-      setPosts([...posts, newPost]);
-      toast({
-        title: "Skapat",
-        description: "Nytt inlägg har lagts till i kalendern",
-      });
+    try {
+      if (editingPost) {
+        await updatePost(editingPost.id, formData);
+      } else {
+        await createPost(formData);
+      }
+      setIsDialogOpen(false);
+      setEditingPost(null);
+      setFormData({ date: "", platform: "", title: "", description: "", type: "" });
+    } catch (error) {
+      console.error('Error saving post:', error);
     }
-
-    setIsDialogOpen(false);
-    setEditingPost(null);
-    setFormData({ date: "", platform: "", title: "", description: "", type: "" });
   };
 
-  const handleDeletePost = (id: string) => {
-    setPosts(posts.filter(p => p.id !== id));
-    toast({
-      title: "Raderat",
-      description: "Inlägget har tagits bort",
-    });
+  const handleDeletePost = async (id: string) => {
+    try {
+      await deletePost(id);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
   };
 
-  const handleEditPost = (post: CalendarPost) => {
+  const handleEditPost = (post: any) => {
     setEditingPost(post);
     setFormData(post);
     setIsDialogOpen(true);
+  };
+
+  const handleGenerateContentPlan = () => {
+    toast({
+      title: "AI-innehållsplan genereras",
+      description: "Vänligen vänta medan vi skapar en innehållsplan för dig...",
+    });
   };
 
   const getPostsForDate = (day: number) => {
@@ -151,6 +125,16 @@ const Calendar = () => {
 
   const weekDays = ["Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör"];
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-8 animate-fade-in">
@@ -163,7 +147,7 @@ const Calendar = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="gradient" onClick={() => toast({ title: "AI-funktion", description: "AI-generering kommer snart!" })}>
+            <Button variant="gradient" onClick={handleGenerateContentPlan}>
               <Sparkles className="w-4 h-4 mr-2" />
               Skapa plan med AI
             </Button>

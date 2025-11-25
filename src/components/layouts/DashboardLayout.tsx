@@ -1,8 +1,19 @@
 import { ReactNode, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { useNotifications } from "@/hooks/useNotifications";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LayoutDashboard,
   BarChart3,
@@ -13,6 +24,7 @@ import {
   User,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 
@@ -22,8 +34,19 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { notifications, unreadCount, markAsRead } = useNotifications();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  const handleNotificationClick = async (notificationId: string) => {
+    await markAsRead(notificationId);
+  };
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -71,7 +94,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="p-4 border-t border-border">
             <Button
               variant="ghost"
-              onClick={signOut}
+              onClick={handleSignOut}
               className="w-full justify-start text-muted-foreground hover:text-foreground"
             >
               Logga ut
@@ -136,7 +159,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div className="p-4 border-t border-border">
             <Button
               variant="ghost"
-              onClick={signOut}
+              onClick={handleSignOut}
               className="w-full justify-start text-muted-foreground hover:text-foreground"
             >
               Logga ut
@@ -163,13 +186,80 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
             <div className="flex items-center gap-3">
               <DarkModeToggle />
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <User className="w-5 h-5" />
-              </Button>
+              
+              {/* Notifications */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                        {unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="px-4 py-2 border-b">
+                    <h3 className="font-semibold">Notiser</h3>
+                  </div>
+                  <ScrollArea className="h-[300px]">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-muted-foreground">
+                        Inga notiser
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <DropdownMenuItem
+                          key={notification.id}
+                          className="flex flex-col items-start p-4 cursor-pointer"
+                          onClick={() => handleNotificationClick(notification.id)}
+                        >
+                          <div className="flex items-start justify-between w-full">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{notification.title}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
+                            </div>
+                            {!notification.read && (
+                              <div className="h-2 w-2 bg-primary rounded-full ml-2 mt-1"></div>
+                            )}
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* User Profile */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar>
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{user?.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Inställningar
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logga ut
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>

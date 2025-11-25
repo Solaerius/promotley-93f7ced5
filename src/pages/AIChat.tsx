@@ -11,9 +11,11 @@ import {
   FileText,
   TrendingUp,
   Paperclip,
+  Loader2,
 } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
+import { useAIAssistant } from "@/hooks/useAIAssistant";
 
 interface Message {
   id: string;
@@ -24,16 +26,8 @@ interface Message {
 
 const AIChat = () => {
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      sender: "ai",
-      message: "Hej! Jag är din AI-assistent från Promotley. Jag kan hjälpa dig med:\n\n📊 Analysera din statistik\n📅 Skapa marknadsföringsplaner\n✍️ Skriva captions\n🎯 Utveckla 30-dagars strategier\n\nVad vill du ha hjälp med idag?",
-      timestamp: new Date(),
-    },
-  ]);
+  const { messages, loading, sendMessage, generatePlan, analyzeStats } = useAIAssistant();
   const [inputMessage, setInputMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const quickCommands = [
@@ -47,38 +41,33 @@ const AIChat = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isTyping]);
+  }, [messages, loading]);
 
   const handleSendMessage = async (text?: string) => {
     const messageText = text || inputMessage.trim();
-    if (!messageText) return;
+    if (!messageText || loading) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      sender: "user",
-      message: messageText,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage("");
-    setIsTyping(true);
-
-    // Simulera AI-svar (kommer ersättas med riktig OpenAI-integration)
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        sender: "ai",
-        message: "Tack för din fråga! AI-funktionaliteten kommer snart att integreras med OpenAI. Just nu kan jag ta emot dina meddelanden och vi arbetar på att göra mig ännu smartare. 🚀",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsTyping(false);
-    }, 1500);
+    try {
+      await sendMessage(messageText);
+      setInputMessage("");
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
-  const handleQuickCommand = (command: string) => {
-    handleSendMessage(command);
+  const handleQuickCommand = async (command: string) => {
+    if (loading) return;
+    
+    switch (command) {
+      case "Analysera min statistik":
+        await analyzeStats();
+        break;
+      case "Skapa marknadsföringsplan":
+        await generatePlan();
+        break;
+      default:
+        setInputMessage(command);
+    }
   };
 
   const formatTime = (date: Date) => {
@@ -125,10 +114,10 @@ const AIChat = () => {
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    <div className={`max-w-[80%] lg:max-w-[60%] ${msg.sender === "user" ? "order-2" : "order-1"}`}>
-                      {msg.sender === "ai" && (
+                    <div className={`max-w-[80%] lg:max-w-[60%] ${msg.role === "user" ? "order-2" : "order-1"}`}>
+                      {msg.role === "assistant" && (
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
                             <Sparkles className="w-4 h-4 text-white" />
@@ -138,14 +127,14 @@ const AIChat = () => {
                       )}
                       <div
                         className={`rounded-2xl p-4 shadow-soft ${
-                          msg.sender === "user"
+                          msg.role === "user"
                             ? "bg-gradient-primary text-white ml-auto"
                             : "bg-muted text-foreground"
                         }`}
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.message}</p>
-                        <p className={`text-xs mt-2 ${msg.sender === "user" ? "text-white/70" : "text-muted-foreground"}`}>
-                          {formatTime(msg.timestamp)}
+                        <p className={`text-xs mt-2 ${msg.role === "user" ? "text-white/70" : "text-muted-foreground"}`}>
+                          {formatTime(new Date(msg.timestamp))}
                         </p>
                       </div>
                     </div>
@@ -153,7 +142,7 @@ const AIChat = () => {
                 ))}
 
                 {/* Typing indicator */}
-                {isTyping && (
+                {loading && (
                   <div className="flex justify-start">
                     <div className="max-w-[80%] lg:max-w-[60%]">
                       <div className="flex items-center gap-2 mb-2">
@@ -196,9 +185,9 @@ const AIChat = () => {
                   variant="gradient"
                   size="icon"
                   onClick={() => handleSendMessage()}
-                  disabled={!inputMessage.trim() || isTyping}
+                  disabled={!inputMessage.trim() || loading}
                 >
-                  <Send className="w-4 h-4" />
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">
