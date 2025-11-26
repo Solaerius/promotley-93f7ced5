@@ -118,10 +118,10 @@ Deno.serve(async (req) => {
     let grantedScopesString = '';
     let missingOptionalScopes: string[] = [];
 
-    if (provider === "meta_fb") {
+    if (provider === "meta_fb" || provider === "meta_ig") {
       const metaAppId = Deno.env.get("META_APP_ID");
       const metaAppSecret = Deno.env.get("META_APP_SECRET");
-      const redirectUri = `${supabaseUrl}/functions/v1/oauth-callback?provider=meta_fb`;
+      const redirectUri = `${supabaseUrl}/functions/v1/oauth-callback?provider=${provider}`;
 
       if (!metaAppId || !metaAppSecret) {
         throw new Error("Meta app credentials not configured");
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
 
       if (!tokenResponse.ok) {
         const error = await tokenResponse.text();
-        console.error("Facebook token exchange failed:", error);
+        console.error("Meta token exchange failed:", error);
         throw new Error("Failed to exchange code for token");
       }
 
@@ -148,20 +148,76 @@ Deno.serve(async (req) => {
 
       console.log("Access token obtained, expires in:", expiresIn);
 
-      // Get user info
-      const userResponse = await fetch(
-        `https://graph.facebook.com/v18.0/me?fields=id,name&access_token=${accessToken}`,
-      );
+      if (provider === "meta_ig") {
+        // For Instagram, get Instagram Business Account ID
+        console.log("Fetching Instagram Business Account info...");
+        
+        // First get Facebook Pages
+        const pagesResponse = await fetch(
+          `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`,
+        );
 
-      if (!userResponse.ok) {
-        throw new Error("Failed to get user info");
+        if (!pagesResponse.ok) {
+          throw new Error("Failed to get Facebook Pages");
+        }
+
+        const pagesData = await pagesResponse.json();
+        console.log("Pages data:", pagesData);
+
+        if (!pagesData.data || pagesData.data.length === 0) {
+          throw new Error("No Facebook Pages found. You need a Facebook Page connected to an Instagram Business Account.");
+        }
+
+        const pageId = pagesData.data[0].id;
+
+        // Get Instagram Business Account from the Page
+        const igAccountResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${pageId}?fields=instagram_business_account&access_token=${accessToken}`,
+        );
+
+        if (!igAccountResponse.ok) {
+          throw new Error("Failed to get Instagram Business Account");
+        }
+
+        const igAccountData = await igAccountResponse.json();
+        console.log("Instagram account data:", igAccountData);
+
+        if (!igAccountData.instagram_business_account) {
+          throw new Error("No Instagram Business Account linked to this Facebook Page. Please connect your Instagram Business Account to your Facebook Page.");
+        }
+
+        const igBusinessId = igAccountData.instagram_business_account.id;
+
+        // Get Instagram username
+        const igUserResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${igBusinessId}?fields=username&access_token=${accessToken}`,
+        );
+
+        if (!igUserResponse.ok) {
+          throw new Error("Failed to get Instagram username");
+        }
+
+        const igUserData = await igUserResponse.json();
+        accountId = igBusinessId;
+        username = igUserData.username;
+
+        console.log("Instagram user info retrieved:", { accountId, username });
+      } else {
+        // For Facebook, get user info
+        const userResponse = await fetch(
+          `https://graph.facebook.com/v18.0/me?fields=id,name&access_token=${accessToken}`,
+        );
+
+        if (!userResponse.ok) {
+          throw new Error("Failed to get user info");
+        }
+
+        const userData = await userResponse.json();
+        accountId = userData.id;
+        username = userData.name;
+
+        console.log("Facebook user info retrieved:", { accountId, username });
       }
-
-      const userData = await userResponse.json();
-      accountId = userData.id;
-      username = userData.name;
-
-      console.log("Facebook user info retrieved:", { accountId, username });
     } else if (provider === "tiktok") {
       const tiktokClientKey = Deno.env.get("TIKTOK_CLIENT_KEY");
       const tiktokClientSecret = Deno.env.get("TIKTOK_CLIENT_SECRET");

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Facebook, CheckCircle2, Link as LinkIcon, Music, RefreshCw } from "lucide-react";
+import { Facebook, CheckCircle2, Link as LinkIcon, Music, RefreshCw, Instagram } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Connection {
@@ -133,6 +133,82 @@ export const ConnectionManager = () => {
       toast({
         title: "Fel vid anslutning",
         description: "Kunde inte ansluta till Facebook",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
+  const connectInstagram = async () => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Inte inloggad",
+          description: "Du måste vara inloggad för att ansluta konton",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Generate cryptographically secure state token
+      const stateToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      // Store state token in database
+      const { error: stateError } = await supabase
+        .from('oauth_states')
+        .insert({
+          state_token: stateToken,
+          user_id: session.user.id,
+          provider: 'meta_ig'
+        });
+
+      if (stateError) {
+        console.error('Failed to create OAuth state:', stateError);
+        toast({
+          title: "Säkerhetsfel",
+          description: "Kunde inte initiera säker anslutning.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get Meta App ID from backend
+      const { data: appIdData, error: appIdError } = await supabase.functions.invoke('get-meta-app-id');
+      
+      if (appIdError || !appIdData?.app_id) {
+        throw new Error('Could not get Meta App ID');
+      }
+
+      const metaAppId = appIdData.app_id;
+      const redirectUri = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/oauth-callback?provider=meta_ig`;
+      
+      // Permissions we need for Instagram Business
+      const permissions = [
+        'instagram_basic',
+        'instagram_manage_insights',
+        'pages_show_list',
+        'pages_read_engagement'
+      ].join(',');
+
+      // Build OAuth URL with secure state token
+      const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        `client_id=${metaAppId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=${encodeURIComponent(permissions)}&` +
+        `state=${stateToken}&` +
+        `response_type=code`;
+
+      // Redirect to Facebook OAuth (Instagram uses Facebook OAuth)
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error connecting Instagram:', error);
+      toast({
+        title: "Fel vid anslutning",
+        description: "Kunde inte ansluta till Instagram",
         variant: "destructive",
       });
       setLoading(false);
@@ -367,6 +443,51 @@ export const ConnectionManager = () => {
           )}
         </div>
 
+        {/* Instagram */}
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center">
+              <Instagram className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-medium">Instagram</p>
+              {isConnected('meta_ig') ? (
+                <p className="text-sm text-accent flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Connected as {getConnection('meta_ig')?.username || 'Okänd'}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Connect to unlock personalized insights
+                </p>
+              )}
+            </div>
+          </div>
+          
+          {isConnected('meta_ig') ? (
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-accent" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => disconnectProvider('meta_ig')}
+              >
+                Koppla från
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="gradient"
+              size="sm"
+              onClick={connectInstagram}
+              disabled={loading}
+              aria-label="Connect Instagram account"
+            >
+              {loading ? "Connecting..." : "Connect account"}
+            </Button>
+          )}
+        </div>
+
         {/* TikTok */}
         <div className="flex items-center justify-between p-4 border rounded-lg">
           <div className="flex items-center gap-3">
@@ -425,7 +546,7 @@ export const ConnectionManager = () => {
         {/* More platforms */}
         <div className="p-4 border border-dashed rounded-lg text-center text-muted-foreground">
           <p className="text-sm">Fler plattformar kommer snart...</p>
-          <p className="text-xs mt-1">Instagram, LinkedIn, Twitter</p>
+          <p className="text-xs mt-1">LinkedIn, Twitter</p>
         </div>
       </CardContent>
     </Card>

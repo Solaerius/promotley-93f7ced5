@@ -119,6 +119,65 @@ const Settings = () => {
     }
   };
 
+  const connectInstagram = async () => {
+    setConnectingProvider('instagram');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Inte inloggad",
+          description: "Du måste vara inloggad för att ansluta konton",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const stateToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      const { error: stateError } = await supabase
+        .from('oauth_states')
+        .insert({
+          state_token: stateToken,
+          user_id: session.user.id,
+          provider: 'meta_ig'
+        });
+
+      if (stateError) {
+        throw new Error('Failed to create OAuth state');
+      }
+
+      const { data: appIdData, error: appIdError } = await supabase.functions.invoke('get-meta-app-id');
+      
+      if (appIdError || !appIdData?.app_id) {
+        throw new Error('Could not get Meta App ID');
+      }
+
+      const metaAppId = appIdData.app_id;
+      const redirectUri = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/oauth-callback?provider=meta_ig`;
+      
+      const permissions = [
+        'instagram_basic',
+        'instagram_manage_insights',
+        'pages_show_list',
+        'pages_read_engagement'
+      ].join(',');
+
+      const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${metaAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${stateToken}&scope=${permissions}`;
+      
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error connecting Instagram:', error);
+      toast({
+        title: "Anslutning misslyckades",
+        description: "Kunde inte ansluta till Instagram",
+        variant: "destructive",
+      });
+      setConnectingProvider(null);
+    }
+  };
+
   const connectTikTok = async () => {
     setConnectingProvider('tiktok');
     try {
@@ -350,13 +409,15 @@ const Settings = () => {
 
             <div className="space-y-4">
               {[
+                { name: "Instagram", provider: "meta_ig" as const, icon: Instagram, color: "from-purple-600 via-pink-500 to-orange-400", connect: connectInstagram },
                 { name: "TikTok", provider: "tiktok" as const, icon: Music2, color: "from-cyan-500 to-pink-500", connect: connectTikTok },
                 { name: "Facebook", provider: "meta_fb" as const, icon: Facebook, color: "from-blue-600 to-blue-400", connect: connectFacebook },
               ].map((platform) => {
                 const Icon = platform.icon;
                 const connected = isConnected(platform.provider);
                 const connection = getConnection(platform.provider);
-                const isConnecting = connectingProvider === platform.provider.replace('meta_fb', 'facebook');
+                const providerName = platform.provider === 'meta_fb' ? 'facebook' : platform.provider === 'meta_ig' ? 'instagram' : platform.provider;
+                const isConnecting = connectingProvider === providerName;
                 
                 return (
                   <div key={platform.provider} className="flex items-center justify-between p-4 border rounded-lg">
