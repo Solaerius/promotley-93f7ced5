@@ -14,7 +14,7 @@ interface Connection {
 
 export const ConnectionManager = () => {
   const [connections, setConnections] = useState<Connection[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export const ConnectionManager = () => {
   };
 
   const connectFacebook = async () => {
-    setLoading(true);
+    setConnectingProvider('meta_fb');
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -135,12 +135,12 @@ export const ConnectionManager = () => {
         description: "Kunde inte ansluta till Facebook",
         variant: "destructive",
       });
-      setLoading(false);
+      setConnectingProvider(null);
     }
   };
 
   const connectInstagram = async () => {
-    setLoading(true);
+    setConnectingProvider('meta_ig');
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -211,12 +211,12 @@ export const ConnectionManager = () => {
         description: "Kunde inte ansluta till Instagram",
         variant: "destructive",
       });
-      setLoading(false);
+      setConnectingProvider(null);
     }
   };
 
   const connectTikTok = async () => {
-    setLoading(true);
+    setConnectingProvider('tiktok');
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -235,7 +235,7 @@ export const ConnectionManager = () => {
           description: "TikTok är redan anslutet. Koppla från och anslut igen för att uppdatera behörigheter.",
           variant: "destructive",
         });
-        setLoading(false);
+        setConnectingProvider(null);
         return;
       }
 
@@ -259,7 +259,7 @@ export const ConnectionManager = () => {
         description: "Kunde inte ansluta till TikTok",
         variant: "destructive",
       });
-      setLoading(false);
+      setConnectingProvider(null);
     }
   };
 
@@ -323,7 +323,7 @@ export const ConnectionManager = () => {
   };
 
   const reconnectTikTok = async () => {
-    setLoading(true);
+    setConnectingProvider('tiktok');
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -332,7 +332,7 @@ export const ConnectionManager = () => {
           description: "Du måste vara inloggad för att ansluta konton",
           variant: "destructive",
         });
-        setLoading(false);
+        setConnectingProvider(null);
         return;
       }
 
@@ -374,7 +374,7 @@ export const ConnectionManager = () => {
         description: "Kunde inte starta TikTok reconnect",
         variant: "destructive",
       });
-      setLoading(false);
+      setConnectingProvider(null);
     }
   };
 
@@ -435,10 +435,10 @@ export const ConnectionManager = () => {
               variant="gradient"
               size="sm"
               onClick={connectFacebook}
-              disabled={loading}
+              disabled={connectingProvider !== null}
               aria-label="Connect Facebook account"
             >
-              {loading ? "Connecting..." : "Connect account"}
+              {connectingProvider === 'meta_fb' ? "Kopplar..." : "Anslut konto"}
             </Button>
           )}
         </div>
@@ -457,9 +457,14 @@ export const ConnectionManager = () => {
                   Connected as {getConnection('meta_ig')?.username || 'Okänd'}
                 </p>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Connect to unlock personalized insights
-                </p>
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Kräver Instagram Business/Creator-konto
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Måste vara kopplat till en Facebook-sida
+                  </p>
+                </>
               )}
             </div>
           </div>
@@ -480,10 +485,10 @@ export const ConnectionManager = () => {
               variant="gradient"
               size="sm"
               onClick={connectInstagram}
-              disabled={loading}
+              disabled={connectingProvider !== null}
               aria-label="Connect Instagram account"
             >
-              {loading ? "Connecting..." : "Connect account"}
+              {connectingProvider === 'meta_ig' ? "Kopplar..." : "Anslut konto"}
             </Button>
           )}
         </div>
@@ -516,16 +521,16 @@ export const ConnectionManager = () => {
                 variant="outline"
                 size="sm"
                 onClick={reconnectTikTok}
-                disabled={loading}
+                disabled={connectingProvider !== null}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Reconnect
+                {connectingProvider === 'tiktok' ? 'Kopplar...' : 'Återanslut'}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => disconnectProvider('tiktok')}
-                disabled={loading}
+                disabled={connectingProvider !== null}
               >
                 Koppla från
               </Button>
@@ -535,10 +540,10 @@ export const ConnectionManager = () => {
               variant="gradient"
               size="sm"
               onClick={connectTikTok}
-              disabled={loading}
+              disabled={connectingProvider !== null}
               aria-label="Connect TikTok account"
             >
-              {loading ? "Connecting..." : "Connect account"}
+              {connectingProvider === 'tiktok' ? "Kopplar..." : "Anslut konto"}
             </Button>
           )}
         </div>

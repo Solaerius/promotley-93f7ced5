@@ -128,7 +128,21 @@ Deno.serve(async (req) => {
 
     // Decrypt refresh token
     const encryptionKey = await getEncryptionKey();
-    const refreshToken = await decryptToken(tokenData.refresh_token_enc, encryptionKey);
+    let refreshToken: string;
+    
+    try {
+      refreshToken = await decryptToken(tokenData.refresh_token_enc, encryptionKey);
+    } catch (decryptError) {
+      console.error('❌ Token decryption failed:', decryptError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Token har blivit ogiltig. Vänligen koppla från TikTok i Inställningar och anslut igen.',
+          need_reconnect: true
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const tiktokClientKey = Deno.env.get('TIKTOK_CLIENT_KEY');
     const tiktokClientSecret = Deno.env.get('TIKTOK_CLIENT_SECRET');

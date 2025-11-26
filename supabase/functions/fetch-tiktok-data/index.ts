@@ -137,12 +137,25 @@ Deno.serve(async (req) => {
     
     try {
       accessToken = await refreshTokenIfNeeded(supabase, user.id, tokenData, encryptionKey);
-    } catch (refreshError) {
-      console.error('❌ Token refresh failed:', refreshError);
+    } catch (decryptError) {
+      console.error('❌ Token decryption/refresh failed:', decryptError);
+      
+      // Check if it's a decryption error specifically
+      if (decryptError instanceof Error && decryptError.message.includes('Decryption failed')) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'Token har blivit ogiltig. Vänligen koppla från TikTok i Inställningar och anslut igen.',
+            need_reconnect: true
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: refreshError instanceof Error ? refreshError.message : 'Token refresh failed' 
+          error: decryptError instanceof Error ? decryptError.message : 'Token refresh failed' 
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
