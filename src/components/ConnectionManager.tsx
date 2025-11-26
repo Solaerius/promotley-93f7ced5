@@ -73,61 +73,31 @@ export const ConnectionManager = () => {
           description: "Du måste vara inloggad för att ansluta konton",
           variant: "destructive",
         });
+        setConnectingProvider(null);
         return;
       }
 
-      // Generate cryptographically secure state token
-      const stateToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+      // Call edge function to initiate OAuth
+      const { data, error } = await supabase.functions.invoke('init-meta-oauth', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: { provider: 'meta_fb' },
+      });
 
-      // Store state token in database
-      const { error: stateError } = await supabase
-        .from('oauth_states')
-        .insert({
-          state_token: stateToken,
-          user_id: session.user.id,
-          provider: 'meta_fb'
-        });
-
-      if (stateError) {
-        console.error('Failed to create OAuth state:', stateError);
+      if (error || !data?.url) {
+        console.error('Error initiating Facebook OAuth:', error);
         toast({
           title: "Säkerhetsfel",
           description: "Kunde inte initiera säker anslutning.",
           variant: "destructive",
         });
+        setConnectingProvider(null);
         return;
       }
 
-      // Get Meta App ID from backend
-      const { data: appIdData, error: appIdError } = await supabase.functions.invoke('get-meta-app-id');
-      
-      if (appIdError || !appIdData?.app_id) {
-        throw new Error('Could not get Meta App ID');
-      }
-
-      const metaAppId = appIdData.app_id;
-      const redirectUri = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/oauth-callback?provider=meta_fb`;
-      
-      // Permissions we need from Facebook
-      const permissions = [
-        'pages_show_list',
-        'pages_read_engagement',
-        'pages_manage_posts',
-        'read_insights'
-      ].join(',');
-
-      // Build OAuth URL with secure state token
-      const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
-        `client_id=${metaAppId}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=${encodeURIComponent(permissions)}&` +
-        `state=${stateToken}&` +
-        `response_type=code`;
-
-      // Redirect to Facebook OAuth
-      window.location.href = authUrl;
+      // Redirect to OAuth URL
+      window.location.href = data.url;
     } catch (error) {
       console.error('Error connecting Facebook:', error);
       toast({
@@ -149,61 +119,31 @@ export const ConnectionManager = () => {
           description: "Du måste vara inloggad för att ansluta konton",
           variant: "destructive",
         });
+        setConnectingProvider(null);
         return;
       }
 
-      // Generate cryptographically secure state token
-      const stateToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+      // Call edge function to initiate OAuth
+      const { data, error } = await supabase.functions.invoke('init-meta-oauth', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: { provider: 'meta_ig' },
+      });
 
-      // Store state token in database
-      const { error: stateError } = await supabase
-        .from('oauth_states')
-        .insert({
-          state_token: stateToken,
-          user_id: session.user.id,
-          provider: 'meta_ig'
-        });
-
-      if (stateError) {
-        console.error('Failed to create OAuth state:', stateError);
+      if (error || !data?.url) {
+        console.error('Error initiating Instagram OAuth:', error);
         toast({
           title: "Säkerhetsfel",
           description: "Kunde inte initiera säker anslutning.",
           variant: "destructive",
         });
+        setConnectingProvider(null);
         return;
       }
 
-      // Get Meta App ID from backend
-      const { data: appIdData, error: appIdError } = await supabase.functions.invoke('get-meta-app-id');
-      
-      if (appIdError || !appIdData?.app_id) {
-        throw new Error('Could not get Meta App ID');
-      }
-
-      const metaAppId = appIdData.app_id;
-      const redirectUri = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/oauth-callback?provider=meta_ig`;
-      
-      // Permissions we need for Instagram Business
-      const permissions = [
-        'instagram_basic',
-        'instagram_manage_insights',
-        'pages_show_list',
-        'pages_read_engagement'
-      ].join(',');
-
-      // Build OAuth URL with secure state token
-      const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
-        `client_id=${metaAppId}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=${encodeURIComponent(permissions)}&` +
-        `state=${stateToken}&` +
-        `response_type=code`;
-
-      // Redirect to Facebook OAuth (Instagram uses Facebook OAuth)
-      window.location.href = authUrl;
+      // Redirect to OAuth URL
+      window.location.href = data.url;
     } catch (error) {
       console.error('Error connecting Instagram:', error);
       toast({
