@@ -10,12 +10,21 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
+      // Vänta tills auth är klar
+      if (loading) {
+        console.log('AdminRoute: Auth loading, waiting...');
+        return;
+      }
+      
       if (!user) {
+        console.log('AdminRoute: No user found');
         setIsAdmin(false);
         setChecking(false);
         return;
       }
 
+      console.log('AdminRoute: Checking admin status for user:', user.id, user.email);
+      
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -23,12 +32,14 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
         .eq("role", "admin")
         .maybeSingle();
 
+      console.log('AdminRoute: Query result:', { data, error });
+      
       setIsAdmin(!!data && !error);
       setChecking(false);
     };
 
     checkAdminStatus();
-  }, [user]);
+  }, [user, loading]);
 
   if (loading || checking) {
     return (
