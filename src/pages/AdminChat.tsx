@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ChatMessage {
   id: string;
@@ -22,6 +23,7 @@ interface ChatSession {
   last_message: string;
   last_message_time: string;
   unread_count: number;
+  status: string;
 }
 
 const AdminChat = () => {
@@ -30,8 +32,10 @@ const AdminChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showClosed, setShowClosed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Load all chat sessions
   useEffect(() => {
@@ -56,7 +60,7 @@ const AdminChat = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [showClosed]);
 
   // Load messages for selected session
   useEffect(() => {
@@ -110,6 +114,16 @@ const AdminChat = () => {
       return;
     }
 
+    // Get session statuses
+    const { data: sessionsData } = await supabase
+      .from("live_chat_sessions")
+      .select("session_id, status");
+
+    const sessionStatusMap = new Map<string, string>();
+    sessionsData?.forEach((s) => {
+      sessionStatusMap.set(s.session_id, s.status);
+    });
+
     // Group by session_id
     const sessionMap = new Map<string, ChatSession>();
     
@@ -120,6 +134,7 @@ const AdminChat = () => {
           last_message: msg.message,
           last_message_time: msg.created_at,
           unread_count: 0,
+          status: sessionStatusMap.get(msg.session_id) || "active",
         });
       }
       
@@ -130,7 +145,12 @@ const AdminChat = () => {
       }
     });
 
-    setSessions(Array.from(sessionMap.values()));
+    const allSessions = Array.from(sessionMap.values());
+    const filteredSessions = showClosed 
+      ? allSessions 
+      : allSessions.filter(s => s.status === "active");
+    
+    setSessions(filteredSessions);
   };
 
   const loadMessages = async (sessionId: string) => {
@@ -191,16 +211,96 @@ const AdminChat = () => {
     setIsLoading(false);
   };
 
+  const handleCloseChat = async () => {
+    if (!selectedSession || !user) return;
+
+    setIsLoading(true);
+
+    // Check if session exists
+    const { data: existingSession } = await supabase
+      .from("live_chat_sessions")
+      .select("id")
+      .eq("session_id", selectedSession)
+      .maybeSingle();
+
+    if (existingSession) {
+      // Update existing session
+      const { error } = await supabase
+        .from("live_chat_sessions")
+        .update({
+          status: "closed",
+          closed_at: new Date().toISOString(),
+          closed_by: user.id,
+        })
+        .eq("session_id", selectedSession);
+
+      if (error) {
+        console.error("Error closing chat:", error);
+        toast({
+          title: "Fel",
+          description: "Kunde inte avsluta chatten",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Chatt avslutad",
+          description: "Chatten har markerats som avslutad",
+        });
+        setSelectedSession(null);
+        loadSessions();
+      }
+    } else {
+      // Create new session record and close it
+      const { error } = await supabase
+        .from("live_chat_sessions")
+        .insert({
+          session_id: selectedSession,
+          status: "closed",
+          closed_at: new Date().toISOString(),
+          closed_by: user.id,
+        });
+
+      if (error) {
+        console.error("Error creating closed session:", error);
+        toast({
+          title: "Fel",
+          description: "Kunde inte avsluta chatten",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Chatt avslutad",
+          description: "Chatten har markerats som avslutad",
+        });
+        setSelectedSession(null);
+        loadSessions();
+      }
+    }
+
+    setIsLoading(false);
+  };
+
   return (
     <DashboardLayout>
       <div className="h-[calc(100vh-4rem)] flex gap-4 p-6">
         {/* Sessions List */}
         <Card className="w-80 flex flex-col">
-          <div className="p-4 border-b">
+          <div className="p-4 border-b space-y-3">
             <h2 className="text-xl font-bold">Live Chattar</h2>
             <p className="text-sm text-muted-foreground">
-              {sessions.length} aktiva sessioner
+              {sessions.length} {showClosed ? "sessioner" : "aktiva sessioner"}
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowClosed(!showClosed);
+                loadSessions();
+              }}
+              className="w-full"
+            >
+              {showClosed ? "Visa endast aktiva" : "Visa alla chattar"}
+            </Button>
           </div>
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-2">
@@ -219,7 +319,12 @@ const AdminChat = () => {
                     <span className="font-semibold text-sm">
                       Session {session.session_id.slice(0, 8)}
                     </span>
-                    {session.unread_count > 0 && (
+                    {session.status === "closed" && (
+                      <span className="ml-auto bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs">
+                        Avslutad
+                      </span>
+                    )}
+                    {session.unread_count > 0 && session.status === "active" && (
                       <span className="ml-auto bg-accent text-accent-foreground rounded-full px-2 py-0.5 text-xs font-bold">
                         {session.unread_count}
                       </span>
@@ -247,12 +352,26 @@ const AdminChat = () => {
           {selectedSession ? (
             <>
               <div className="p-4 border-b bg-gradient-to-r from-primary to-secondary text-primary-foreground">
-                <h3 className="font-semibold">
-                  Session {selectedSession.slice(0, 8)}
-                </h3>
-                <p className="text-xs opacity-80">
-                  {messages.length} meddelanden
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold">
+                      Session {selectedSession.slice(0, 8)}
+                    </h3>
+                    <p className="text-xs opacity-80">
+                      {messages.length} meddelanden
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCloseChat}
+                    disabled={isLoading || sessions.find(s => s.session_id === selectedSession)?.status === "closed"}
+                    className="text-primary-foreground hover:bg-primary-foreground/20"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Avsluta chatt
+                  </Button>
+                </div>
               </div>
 
               <ScrollArea className="flex-1 p-4" ref={scrollRef}>

@@ -269,6 +269,33 @@ export type Database = {
         }
         Relationships: []
       }
+      live_chat_sessions: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string | null
+          id: string
+          session_id: string
+          status: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string | null
+          id?: string
+          session_id: string
+          status?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string | null
+          id?: string
+          session_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       metrics: {
         Row: {
           captured_at: string
