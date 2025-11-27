@@ -15,6 +15,7 @@ import Calendar from "./pages/Calendar";
 import AIChat from "./pages/AIChat";
 import Settings from "./pages/Settings";
 import AdminChat from "./pages/AdminChat";
+import AdminDashboard from "./pages/AdminDashboard";
 import AdminNotificationSettings from "./pages/AdminNotificationSettings";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -78,6 +79,14 @@ const App = () => (
                 <ProtectedRoute>
                   <Settings />
                 </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
               } 
             />
             <Route 
