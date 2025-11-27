@@ -44,13 +44,13 @@ serve(async (req) => {
     if (settings.discord_webhook_url) {
       try {
         const adminUrl = `${Deno.env.get("CUSTOM_DOMAIN")}/admin/chat`;
-        
+
         const embedPayload = {
           username: "Promotely Chat Bot",
           embeds: [
             {
               title: "🔔 Ny chatt på Promotely!",
-              description: `[👉 Öppna Admin-Chatt](${adminUrl})`,
+              description: `[👉 Öppna Admin-Chatt](https://promotley.se/admin/chat)`,
               color: 0xee593d, // Promotely färg (orange)
               fields: [
                 {
@@ -83,7 +83,7 @@ serve(async (req) => {
         });
 
         results.discord = discordResponse.ok;
-        
+
         if (!discordResponse.ok) {
           const errorText = await discordResponse.text();
           console.error("Discord error response:", errorText);
