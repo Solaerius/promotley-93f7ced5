@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Sparkles, TrendingUp, Calendar, Target, Lightbulb, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { formatText } from '@/lib/textFormatting';
 
 const AIDashboard = () => {
   const { latestAnalysis, loading, generating, generateAnalysis } = useAIAnalysis();
@@ -124,7 +125,7 @@ const AIDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-lg">{latestAnalysis.ai_output.sammanfattning}</p>
+                <p className="text-lg whitespace-pre-line">{formatText(latestAnalysis.ai_output.sammanfattning, 'analysis')}</p>
               </CardContent>
             </Card>
 
@@ -137,7 +138,7 @@ const AIDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-line">{latestAnalysis.ai_output.social_medier_analys}</p>
+                <p className="whitespace-pre-line">{formatText(latestAnalysis.ai_output.social_medier_analys, 'analysis')}</p>
               </CardContent>
             </Card>
 
@@ -160,8 +161,8 @@ const AIDashboard = () => {
                           {item.plattform}
                         </Badge>
                       </div>
-                      <p className="font-medium mb-1">{item.aktivitet}</p>
-                      <p className="text-sm text-muted-foreground">{item.beskrivning}</p>
+                      <p className="font-medium mb-1">{formatText(item.aktivitet, 'analysis')}</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">{formatText(item.beskrivning, 'analysis')}</p>
                     </div>
                   ))}
                 </div>
@@ -182,7 +183,7 @@ const AIDashboard = () => {
                   {latestAnalysis.ai_output.content_forslag.map((item, index) => (
                     <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-semibold">{item.titel}</h4>
+                        <h4 className="font-semibold">{formatText(item.titel, 'analysis')}</h4>
                         <div className="flex gap-2">
                           <Badge variant="outline">{item.format}</Badge>
                           <Badge className={getPlatformColor(item.plattform)}>
@@ -190,7 +191,7 @@ const AIDashboard = () => {
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">{item.beskrivning}</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">{formatText(item.beskrivning, 'analysis')}</p>
                     </div>
                   ))}
                 </div>
@@ -207,7 +208,7 @@ const AIDashboard = () => {
                 <CardDescription>Vägen till framgång i UF-tävlingarna</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-line">{latestAnalysis.ai_output.uf_tavlingsstrategi}</p>
+                <p className="whitespace-pre-line">{formatText(latestAnalysis.ai_output.uf_tavlingsstrategi, 'analysis')}</p>
               </CardContent>
             </Card>
 
@@ -232,10 +233,10 @@ const AIDashboard = () => {
                             </Badge>
                             <Badge variant="outline">{item.kategori}</Badge>
                           </div>
-                          <h4 className="font-semibold text-lg">{item.titel}</h4>
+                          <h4 className="font-semibold text-lg">{formatText(item.titel, 'analysis')}</h4>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{item.beskrivning}</p>
+                      <p className="text-sm text-muted-foreground mb-2 whitespace-pre-line">{formatText(item.beskrivning, 'analysis')}</p>
                       <p className="text-xs text-muted-foreground">
                         <strong>Deadline:</strong> {item.deadline}
                       </p>
