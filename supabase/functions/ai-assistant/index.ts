@@ -197,26 +197,28 @@ serve(async (req) => {
       // Check if user is asking about their social media stats
       const statsKeywords = ['följare', 'followers', 'views', 'likes', 'engagement', 'statistik', 'tiktok', 'instagram', 'facebook'];
       const isStatsQuery = statsKeywords.some(keyword => message.toLowerCase().includes(keyword));
-      
       let tools: any[] = [];
       if (isStatsQuery) {
         tools = [
           {
             type: 'function',
-            name: 'get_social_stats',
-            description: 'Hämtar användarens sociala medier-statistik från kopplade konton (TikTok, Instagram, Facebook)',
-            parameters: {
-              type: 'object',
-              properties: {
-                platform: {
-                  type: 'string',
-                  enum: ['tiktok', 'meta_ig', 'meta_fb', 'all'],
-                  description: 'Vilken plattform att hämta statistik för'
-                }
+            function: {
+              name: 'get_social_stats',
+              description:
+                'Hämtar användarens sociala medier-statistik från kopplade konton (TikTok, Instagram, Facebook)',
+              parameters: {
+                type: 'object',
+                properties: {
+                  platform: {
+                    type: 'string',
+                    enum: ['tiktok', 'meta_ig', 'meta_fb', 'all'],
+                    description: 'Vilken plattform att hämta statistik för',
+                  },
+                },
+                required: [],
               },
-              required: []
-            }
-          }
+            },
+          },
         ];
       }
 
