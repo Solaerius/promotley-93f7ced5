@@ -26,6 +26,7 @@ interface TikTokData {
   stats: TikTokStats | null;
   videos: any[];
   limited_access?: boolean;
+  scope_message?: string;
 }
 
 export const useTikTokData = () => {
@@ -91,7 +92,17 @@ export const useTikTokData = () => {
         stats: tiktokData.stats,
         videos: tiktokData.videos || [],
         limited_access: tiktokData.limited_access || false,
+        scope_message: tiktokData.scope_message,
       });
+      
+      // Show info toast if limited access
+      if (tiktokData.limited_access && tiktokData.scope_message) {
+        toast({
+          title: 'Begränsad åtkomst',
+          description: tiktokData.scope_message,
+          variant: 'default',
+        });
+      }
 
     } catch (err) {
       const error = err as Error;

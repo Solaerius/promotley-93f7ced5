@@ -268,6 +268,9 @@ Deno.serve(async (req) => {
     console.log('📹 Video list response status:', videoListResponse.status);
 
     let videos: any[] = [];
+    let limitedAccess = false;
+    let scopeErrorMessage = '';
+    
     if (videoListResponse.ok) {
       try {
         const videoListData = JSON.parse(videoListText);
@@ -290,7 +293,19 @@ Deno.serve(async (req) => {
         console.warn('⚠️ Could not parse video list:', e);
       }
     } else {
-      console.warn('⚠️ Could not fetch videos:', videoListText);
+      // Try to parse error response
+      try {
+        const errorData = JSON.parse(videoListText);
+        console.warn('⚠️ Could not fetch videos:', errorData);
+        
+        if (errorData.error?.code === 'scope_not_authorized') {
+          limitedAccess = true;
+          scopeErrorMessage = 'Video-statistik kräver Content Posting API behörigheter (video.list, video.query). Grundläggande kontostatistik visas fortfarande.';
+          console.warn('ℹ️ Limited access: Missing video.list/video.query scopes');
+        }
+      } catch {
+        console.warn('⚠️ Could not fetch videos (raw):', videoListText);
+      }
     }
 
     // Calculate aggregate stats from videos
@@ -333,12 +348,18 @@ Deno.serve(async (req) => {
         videoCount: videos.length,
       },
       videos: videos,
+      limited_access: limitedAccess,
+      scope_message: scopeErrorMessage || undefined,
     };
 
     console.log('✅ Successfully fetched TikTok data:', {
       user: response.user.display_name,
+      follower_count: response.user.follower_count,
+      likes_count: response.user.likes_count,
+      video_count: response.user.video_count,
       videoCount: videos.length,
       totalViews,
+      limitedAccess,
     });
 
     return new Response(
