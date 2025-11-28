@@ -266,15 +266,24 @@ ${ufKnowledge}
 VIKTIGA INSTRUKTIONER:
 1. När användaren frågar om sina sociala medier-statistik (följare, views, likes, etc), använd get_social_stats-funktionen för att hämta faktisk data från deras kopplade konton. Svara alltid med konkreta siffror när data finns tillgänglig.
 
-2. Om användaren frågar om ett konto som inte är kopplat, ge konkret vägledning: "Jag kan inte hämta din [plattform]-data just nu. Koppla [plattform] i Inställningar → Integrationer så visar jag siffran direkt."
+2. Tolka get_social_stats-svaret så här:
+   - Om success=true och connected=true: Visa konkreta siffror med tidsstämpel (t.ex. "Du har 12 457 följare på TikTok (uppdaterad nyss)")
+   - Om success=false och connected=false (errorCode=NOT_CONNECTED): Säg "Ditt [plattform]-konto är inte kopplat än. Gå till Inställningar → Integrationer och koppla [plattform] så hämtar jag dina siffror direkt."
+   - Om success=false och connected=true med errorCode=SCOPE_MISSING: Säg "Jag kan inte läsa alla dina [plattform]-siffror eftersom behörigheter saknas. Gå till Inställningar → Integrationer, koppla från [plattform] och anslut igen med fullständiga behörigheter."
+   - Om success=false och connected=true med errorCode=TOKEN_INVALID: Säg "Din [plattform]-anslutning har gått ut. Gå till Inställningar → Integrationer, koppla från och återanslut [plattform]."
+   - Om success=false och errorCode=API_ERROR: Säg "Jag kunde inte nå [plattform] just nu. Försök igen om en stund."
+   
+3. Visa ALDRIG generiska "jag vet inte"-svar. Ge alltid konkret orsak och nästa steg baserat på errorCode från get_social_stats.
 
-3. Använd användarens företagsprofil och branschinformation för att ge personliga råd och rekommendationer.
+4. Om flera konton är kopplade för samma plattform, nämn vilket konto siffrorna gäller (t.ex. "konto: @username").
 
-4. Om användaren inte har fyllt i sin företagsprofil men frågar om strategier eller innehåll, föreslå att de först fyller i sin profil under Inställningar för bättre personliga rekommendationer.
+5. Använd användarens företagsprofil och branschinformation för att ge personliga råd och rekommendationer.
 
-5. Följ alltid UF-reglerna och riktlinjerna när du ger råd om marknadsföring och företagande.
+6. Om användaren inte har fyllt i sin företagsprofil men frågar om strategier eller innehåll, föreslå att de först fyller i sin profil under Inställningar för bättre personliga rekommendationer.
 
-Svara alltid på svenska och var hjälpsam och engagerande. Inkludera alltid när datan senast uppdaterades när du presenterar statistik.`
+7. Följ alltid UF-reglerna och riktlinjerna när du ger råd om marknadsföring och företagande.
+
+Svara alltid på svenska och var hjälpsam och engagerande. När du presenterar statistik, inkludera alltid tidsstämpeln från get_social_stats-svaret.`
         },
         ...(history || []).map((msg: any) => ({
           role: msg.role,
@@ -332,12 +341,155 @@ Svara alltid på svenska och var hjälpsam och engagerande. Inkludera alltid nä
           
           console.log('🔧 Tool call: get_social_stats for platform:', platform || 'all');
           
-          // Log telemetry
           const startTime = Date.now();
-          const stats = await getUserStats(user.id, platform);
+          let statsResult: any = {
+            success: false,
+            error: 'Okänt fel',
+            platform: platform || 'all'
+          };
+
+          try {
+            // Check if user has the requested platform connected
+            const { data: connection } = await supabaseClient
+              .from('connections')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('provider', platform || 'tiktok')
+              .maybeSingle();
+
+            if (!connection) {
+              console.log('⚠️ No connection found for platform:', platform);
+              const platformName = platform === 'tiktok' ? 'TikTok' : 
+                                   platform === 'meta_ig' ? 'Instagram' : 
+                                   platform === 'meta_fb' ? 'Facebook' : 'denna plattform';
+              
+              statsResult = {
+                success: false,
+                connected: false,
+                platform: platform || 'tiktok',
+                error: `${platformName}-kontot är inte kopplat`,
+                action: `Koppla ${platformName} i Inställningar → Integrationer för att se statistik`,
+                errorCode: 'NOT_CONNECTED'
+              };
+            } else {
+              console.log('✅ Connection found:', connection.provider, connection.username);
+              
+              // For TikTok, fetch live data
+              if (platform === 'tiktok' || !platform) {
+                console.log('📱 Fetching live TikTok data...');
+                
+                const { data: tiktokData, error: tiktokError } = await supabaseClient.functions.invoke(
+                  'fetch-tiktok-data',
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+
+                if (tiktokError) {
+                  console.error('❌ TikTok fetch error:', tiktokError);
+                  statsResult = {
+                    success: false,
+                    connected: true,
+                    platform: 'tiktok',
+                    error: 'Kunde inte hämta TikTok-data just nu',
+                    action: 'Försök igen om en stund',
+                    errorCode: 'API_ERROR',
+                    details: tiktokError.message
+                  };
+                } else if (!tiktokData?.success) {
+                  console.error('❌ TikTok API returned error:', tiktokData?.error);
+                  
+                  let action = 'Försök igen om en stund';
+                  let errorCode = 'API_ERROR';
+                  
+                  if (tiktokData?.error?.includes('kopplat') || tiktokData?.error?.includes('inte anslut')) {
+                    action = 'Koppla TikTok i Inställningar → Integrationer';
+                    errorCode = 'NOT_CONNECTED';
+                  } else if (tiktokData?.error?.includes('behörighet') || tiktokData?.error?.includes('scope')) {
+                    action = 'Återkoppla TikTok i Inställningar → Integrationer med fullständiga behörigheter';
+                    errorCode = 'SCOPE_MISSING';
+                  } else if (tiktokData?.error?.includes('ogiltig') || tiktokData?.error?.includes('invalid')) {
+                    action = 'Koppla från och återanslut TikTok i Inställningar';
+                    errorCode = 'TOKEN_INVALID';
+                  }
+                  
+                  statsResult = {
+                    success: false,
+                    connected: true,
+                    platform: 'tiktok',
+                    error: tiktokData?.error || 'Kunde inte hämta TikTok-data',
+                    action,
+                    errorCode,
+                    limited_access: tiktokData?.limited_access || false
+                  };
+                } else {
+                  console.log('✅ TikTok data fetched successfully');
+                  
+                  const user_data = tiktokData.user || {};
+                  const stats = tiktokData.stats || {};
+                  
+                  statsResult = {
+                    success: true,
+                    connected: true,
+                    platform: 'tiktok',
+                    account: connection.username || user_data.display_name,
+                    data: {
+                      followers: user_data.follower_count || 0,
+                      following: user_data.following_count || 0,
+                      likes: user_data.likes_count || 0,
+                      videos: user_data.video_count || 0,
+                      totalViews: stats.totalViews || 0,
+                      totalLikes: stats.totalLikes || 0,
+                      totalShares: stats.totalShares || 0,
+                      totalComments: stats.totalComments || 0,
+                      avgEngagementRate: stats.avgEngagementRate || '0%'
+                    },
+                    timestamp: new Date().toISOString(),
+                    updated: 'nyss'
+                  };
+                  
+                  // Cache the result for 60 seconds
+                  statsCache.set(`tiktok-${user.id}`, { 
+                    data: statsResult, 
+                    timestamp: Date.now() 
+                  });
+                }
+              } else {
+                // For other platforms, use cached data from social_stats table
+                const stats = await getUserStats(user.id, platform);
+                statsResult = {
+                  success: true,
+                  connected: true,
+                  platform,
+                  data: stats,
+                  timestamp: new Date().toISOString()
+                };
+              }
+            }
+          } catch (error) {
+            console.error('❌ Error in get_social_stats:', error);
+            statsResult = {
+              success: false,
+              platform: platform || 'tiktok',
+              error: error instanceof Error ? error.message : 'Okänt fel uppstod',
+              errorCode: 'UNKNOWN_ERROR'
+            };
+          }
+
           const responseTime = Date.now() - startTime;
           
-          console.log('📊 Stats fetched in', responseTime, 'ms');
+          // Log telemetry
+          console.log('📈 Telemetry:', {
+            intent: 'social_stats_query',
+            platform: platform || 'all',
+            responseTime,
+            success: statsResult.success,
+            connected: statsResult.connected,
+            errorCode: statsResult.errorCode,
+            cacheHit: false
+          });
           
           // Call AI again with the stats data
           const followUpMessages = [
@@ -346,7 +498,7 @@ Svara alltid på svenska och var hjälpsam och engagerande. Inkludera alltid nä
             {
               role: 'tool',
               tool_call_id: toolCall.id,
-              content: JSON.stringify(stats)
+              content: JSON.stringify(statsResult)
             }
           ];
 
@@ -366,15 +518,6 @@ Svara alltid på svenska och var hjälpsam och engagerande. Inkludera alltid nä
 
           const followUpData = await followUpResponse.json();
           assistantMessage = followUpData.choices[0].message.content;
-          
-          // Log telemetry for successful stats query
-          console.log('📈 Telemetry:', {
-            intent: 'social_stats_query',
-            platform: platform || 'all',
-            responseTime,
-            cacheHit: !!statsCache.get(`${user.id}-${platform || 'all'}`),
-            hasData: !!stats?.stats?.length
-          });
         }
       }
 
