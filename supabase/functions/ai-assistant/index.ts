@@ -268,7 +268,7 @@ VIKTIGA INSTRUKTIONER:
 
 2. Tolka get_social_stats-svaret så här:
    - Om success=true och connected=true: Visa konkreta siffror med tidsstämpel (t.ex. "Du har 12 457 följare på TikTok (uppdaterad nyss)")
-   - Om limited_access=true: Visa de siffror som finns (followers, likes, video_count) men förklara att video-visningar inte är tillgängliga utan Content Posting API behörigheter. Exempel: "Du har X följare, Y likes och Z videor (uppdaterad nyss). Video-visningsstatistik kräver Content Posting API behörigheter."
+   - Om limited_access=true: Visa de siffror som finns (followers, likes, video_count) men förklara att video-visningar inte är tillgängliga utan video.list behörighet och att användaren måste återkoppla sitt konto. Exempel: "Du har X följare, Y likes och Z videor (uppdaterad nyss). För att se video-visningar, gå till Inställningar → Integrationer, koppla bort och återkoppla TikTok."
    - Om success=false och connected=false (errorCode=NOT_CONNECTED): Säg "Ditt [plattform]-konto är inte kopplat än. Gå till Inställningar → Integrationer och koppla [plattform] så hämtar jag dina siffror direkt."
    - Om success=false och connected=true med errorCode=SCOPE_MISSING: Säg "Jag kan inte läsa alla dina [plattform]-siffror eftersom behörigheter saknas. Gå till Inställningar → Integrationer, koppla från [plattform] och anslut igen med fullständiga behörigheter."
    - Om success=false och connected=true med errorCode=TOKEN_INVALID: Säg "Din [plattform]-anslutning har gått ut. Gå till Inställningar → Integrationer, koppla från och återanslut [plattform]."

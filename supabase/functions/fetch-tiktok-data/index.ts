@@ -300,8 +300,8 @@ Deno.serve(async (req) => {
         
         if (errorData.error?.code === 'scope_not_authorized') {
           limitedAccess = true;
-          scopeErrorMessage = 'Video-statistik kräver Content Posting API behörigheter (video.list, video.query). Grundläggande kontostatistik visas fortfarande.';
-          console.warn('ℹ️ Limited access: Missing video.list/video.query scopes');
+          scopeErrorMessage = 'Video-statistik kräver video.list behörighet. Koppla bort och återkoppla TikTok i Inställningar → Integrationer.';
+          console.warn('ℹ️ Limited access: Missing video.list scope');
         }
       } catch {
         console.warn('⚠️ Could not fetch videos (raw):', videoListText);
