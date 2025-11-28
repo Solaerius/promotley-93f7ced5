@@ -414,12 +414,6 @@ Deno.serve(async (req) => {
 
     const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
 
-    // Store granted scopes with token for future reference
-    const scopesMetadata = provider === 'tiktok' ? {
-      granted_scopes: grantedScopesString,
-      has_full_access: !missingOptionalScopes || missingOptionalScopes.length === 0
-    } : null;
-
     const { error: tokenError } = await supabase.from("tokens").upsert(
       {
         user_id: userId,
@@ -427,6 +421,7 @@ Deno.serve(async (req) => {
         access_token_enc: encryptedAccessToken,
         refresh_token_enc: encryptedRefreshToken,
         expires_at: expiresAt,
+        scopes: grantedScopesString || null,
       },
       {
         onConflict: "user_id,provider",

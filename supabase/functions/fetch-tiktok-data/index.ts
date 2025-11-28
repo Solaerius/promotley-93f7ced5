@@ -131,6 +131,28 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Verify scopes before proceeding
+    const grantedScopes = (tokenData.scopes || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+    const hasUserInfoStats = grantedScopes.includes('user.info.stats');
+    const hasVideoList = grantedScopes.includes('video.list');
+    
+    console.log('🔍 Granted scopes from token:', grantedScopes.join(', '));
+    console.log('🔍 Has user.info.stats:', hasUserInfoStats);
+    console.log('🔍 Has video.list:', hasVideoList);
+
+    if (!hasUserInfoStats) {
+      console.error('❌ Missing required scope: user.info.stats');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Behörigheten user.info.stats saknas. Koppla bort och återkoppla TikTok i Inställningar → Integrationer.',
+          errorCode: 'SCOPE_MISSING',
+          missing_scope: 'user.info.stats'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Decrypt and refresh token if needed
     const encryptionKey = await getEncryptionKey();
     let accessToken: string;
@@ -267,7 +289,13 @@ Deno.serve(async (req) => {
     let scopeErrorMessage = '';
     let videoErrorCode = null;
     
-    if (videoListResponse.ok) {
+    // Check if video.list scope is granted before attempting API call
+    if (!hasVideoList) {
+      limitedAccess = true;
+      videoErrorCode = 'SCOPE_MISSING';
+      scopeErrorMessage = 'Video-statistik kräver video.list behörighet. Koppla bort och återkoppla TikTok i Inställningar → Integrationer för att aktivera scopet.';
+      console.warn('ℹ️ Missing scope: video.list (skipping video fetch)');
+    } else if (videoListResponse.ok) {
       try {
         const videoListData = JSON.parse(videoListText);
         if (videoListData.data && videoListData.data.videos) {
@@ -294,17 +322,12 @@ Deno.serve(async (req) => {
         const errorData = JSON.parse(videoListText);
         console.warn('⚠️ Video list API error:', errorData.error);
         
-        if (errorData.error?.code === 'scope_not_authorized') {
-          limitedAccess = true;
-          videoErrorCode = 'SCOPE_MISSING';
-          scopeErrorMessage = 'Video-statistik kräver video.list behörighet. Koppla bort och återkoppla TikTok i Inställningar → Integrationer för att aktivera scopet.';
-          console.warn('ℹ️ Missing scope: video.list (required for video statistics)');
-        } else if (errorData.error?.code === 'access_token_invalid') {
+        if (errorData.error?.code === 'access_token_invalid') {
           videoErrorCode = 'TOKEN_INVALID';
           scopeErrorMessage = 'Token har gått ut under video-hämtning. Koppla bort och återkoppla TikTok.';
         } else {
           videoErrorCode = 'API_ERROR';
-          scopeErrorMessage = `Video-data kunde inte hämtas: ${errorData.error?.message || 'okänt fel'}`;
+          scopeErrorMessage = `TikTok API-fel (${errorData.error?.code || 'okänt'}): ${errorData.error?.message || 'kunde inte hämta video-data'}`;
         }
       } catch {
         console.warn('⚠️ Could not parse video error (raw):', videoListText);

@@ -690,6 +690,7 @@ export type Database = {
           id: string
           provider: Database["public"]["Enums"]["social_provider"]
           refresh_token_enc: string | null
+          scopes: string | null
           updated_at: string
           user_id: string
         }
@@ -700,6 +701,7 @@ export type Database = {
           id?: string
           provider: Database["public"]["Enums"]["social_provider"]
           refresh_token_enc?: string | null
+          scopes?: string | null
           updated_at?: string
           user_id: string
         }
@@ -710,6 +712,7 @@ export type Database = {
           id?: string
           provider?: Database["public"]["Enums"]["social_provider"]
           refresh_token_enc?: string | null
+          scopes?: string | null
           updated_at?: string
           user_id?: string
         }
