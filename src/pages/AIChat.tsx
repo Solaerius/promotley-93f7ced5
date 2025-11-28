@@ -16,6 +16,8 @@ import {
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
+import { stripEmojis } from "@/lib/textFormatting";
+import MarkdownIt from "markdown-it";
 
 interface Message {
   id: string;
@@ -31,6 +33,14 @@ const AIChat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
+
+  // Configure markdown-it with safe rendering (HTML disabled)
+  const md = new MarkdownIt({
+    html: false,        // Disable HTML tags
+    breaks: true,       // Convert \n to <br>
+    linkify: true,      // Auto-convert URLs to links
+    typographer: false  // Disable smart quotes
+  });
 
   const quickCommands = [
     { icon: BarChart3, text: "Analysera min statistik", color: "from-blue-500 to-cyan-500" },
@@ -104,6 +114,13 @@ const AIChat = () => {
     return date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Render message with safe Markdown (strips emojis first)
+  const renderMessage = (text: string) => {
+    const cleanText = stripEmojis(text);
+    const html = md.render(cleanText);
+    return <div dangerouslySetInnerHTML={{ __html: html }} className="prose prose-sm dark:prose-invert max-w-none" />;
+  };
+
   return (
     <DashboardLayout>
       <div className="h-[calc(100vh-12rem)] flex flex-col animate-fade-in">
@@ -171,7 +188,9 @@ const AIChat = () => {
                             : "bg-muted text-foreground"
                         }`}
                       >
-                        <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                        <div className="break-words">
+                          {msg.role === "assistant" ? renderMessage(msg.message) : <p className="whitespace-pre-wrap">{stripEmojis(msg.message)}</p>}
+                        </div>
                         <p className={`text-xs mt-2 ${msg.role === "user" ? "text-white/70" : "text-muted-foreground"}`}>
                           {formatTime(new Date(msg.timestamp))}
                         </p>
