@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
     } else {
       videoFetchAttempted = true;
       console.log('🎥 Fetching TikTok video list with video.list scope...');
-      // Fetch video list (last 20 videos) using video.list scope
+      // Fetch video list (last 50 videos) using video.list scope
       const videoListResponse = await fetch(
         'https://open.tiktokapis.com/v2/video/list/?fields=id,create_time,cover_image_url,share_url,video_description,duration,title,like_count,comment_count,share_count,view_count',
         {
@@ -289,7 +289,7 @@ Deno.serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            max_count: 20,
+            max_count: 50,
           }),
         }
       );
@@ -317,6 +317,59 @@ Deno.serve(async (req) => {
               duration: video.duration,
             }));
             console.log(`✅ Successfully fetched ${videos.length} videos using video.list scope`);
+            
+            // Check if any videos are missing view_count and need fallback
+            const videosMissingViews = videos.filter(v => !v.views && v.id);
+            if (videosMissingViews.length > 0) {
+              console.log(`⚠️ ${videosMissingViews.length} videos missing view_count, attempting fallback via video.query`);
+              
+              // Batch video IDs (max 20 per request)
+              const batchSize = 20;
+              for (let i = 0; i < videosMissingViews.length; i += batchSize) {
+                const batch = videosMissingViews.slice(i, i + batchSize);
+                const videoIds = batch.map(v => v.id);
+                
+                try {
+                  const queryResponse = await fetch(
+                    'https://open.tiktokapis.com/v2/video/query/?fields=id,view_count,like_count,comment_count,share_count,cover_image_url',
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        filters: {
+                          video_ids: videoIds,
+                        },
+                      }),
+                    }
+                  );
+                  
+                  if (queryResponse.ok) {
+                    const queryData = await queryResponse.json();
+                    if (queryData.data && queryData.data.videos) {
+                      // Merge fallback data into main videos array
+                      queryData.data.videos.forEach((queryVideo: any) => {
+                        const videoIndex = videos.findIndex(v => v.id === queryVideo.id);
+                        if (videoIndex !== -1) {
+                          videos[videoIndex].views = queryVideo.view_count || videos[videoIndex].views;
+                          videos[videoIndex].likes = queryVideo.like_count || videos[videoIndex].likes;
+                          videos[videoIndex].comments = queryVideo.comment_count || videos[videoIndex].comments;
+                          videos[videoIndex].shares = queryVideo.share_count || videos[videoIndex].shares;
+                          videos[videoIndex].cover_image_url = queryVideo.cover_image_url || videos[videoIndex].cover_image_url;
+                        }
+                      });
+                      console.log(`✅ Fallback: fetched ${queryData.data.videos.length} videos via video.query`);
+                    }
+                  } else {
+                    console.warn(`⚠️ Fallback video.query failed for batch ${i / batchSize + 1}:`, queryResponse.status);
+                  }
+                } catch (queryError) {
+                  console.warn(`⚠️ Fallback video.query error for batch ${i / batchSize + 1}:`, queryError);
+                }
+              }
+            }
             
             // If we got 0 videos with valid scope, it means user has no public videos (not a scope error)
             if (videos.length === 0) {
