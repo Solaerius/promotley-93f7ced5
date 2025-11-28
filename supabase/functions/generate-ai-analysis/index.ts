@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 
-const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -85,24 +85,24 @@ serve(async (req) => {
     }
 
     // Hämta plan config för att få rätt AI-modell
-    let aiModel = 'google/gemini-2.5-flash-lite'; // Default
+    let aiModel = 'gpt-4o-mini'; // Default
     let maxCredits = 50;
     
     switch (userData.plan) {
       case 'free_trial':
-        aiModel = 'google/gemini-2.5-flash-lite';
+        aiModel = 'gpt-4o-mini';
         maxCredits = 50;
         break;
       case 'pro':
-        aiModel = 'google/gemini-2.5-flash';
+        aiModel = 'gpt-4.1-mini';
         maxCredits = 100;
         break;
       case 'pro_xl':
-        aiModel = 'google/gemini-2.5-pro';
+        aiModel = 'gpt-5.1';
         maxCredits = 300;
         break;
       case 'pro_unlimited':
-        aiModel = 'google/gemini-2.5-pro';
+        aiModel = 'gpt-5.1';
         maxCredits = 1000;
         break;
     }
@@ -250,13 +250,13 @@ Ge konkreta, actionable råd som företaget kan börja implementera IDAG.
 Fokusera på snabba vinster och långsiktig tillväxt.
 Håll dig alltid till UF-reglerna och deadlines.`;
 
-    console.log('Calling Lovable AI Gateway...');
+    console.log('Calling OpenAI API...');
 
-    // Anropa Lovable AI Gateway
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Anropa OpenAI API
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -272,7 +272,7 @@ Håll dig alltid till UF-reglerna och deadlines.`;
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('Lovable AI API error:', aiResponse.status, errorText);
+      console.error('OpenAI API error:', aiResponse.status, errorText);
       throw new Error(`AI API error: ${aiResponse.status}`);
     }
 
