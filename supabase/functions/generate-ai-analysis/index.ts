@@ -67,6 +67,48 @@ serve(async (req) => {
 
     console.log('Generating AI analysis for user:', user.id);
 
+    // Hämta användarens plan och krediter
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('plan, credits_used, max_credits, renewal_date')
+      .eq('id', user.id)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      throw new Error('Could not fetch user plan');
+    }
+
+    // Kolla om användaren har krediter kvar
+    if (userData.credits_used >= userData.max_credits) {
+      throw new Error('No credits remaining. Please upgrade your plan.');
+    }
+
+    // Hämta plan config för att få rätt AI-modell
+    let aiModel = 'gpt-4o-mini'; // Default
+    let maxCredits = 50;
+    
+    switch (userData.plan) {
+      case 'free_trial':
+        aiModel = 'gpt-4o-mini';
+        maxCredits = 50;
+        break;
+      case 'pro':
+        aiModel = 'gpt-4.1-mini';
+        maxCredits = 100;
+        break;
+      case 'pro_xl':
+        aiModel = 'gpt-5.1';
+        maxCredits = 300;
+        break;
+      case 'pro_unlimited':
+        aiModel = 'gpt-5.1';
+        maxCredits = 1000;
+        break;
+    }
+
+    console.log(`Using AI model: ${aiModel} for plan: ${userData.plan}`);
+
     // Hämta AI-profil
     const { data: aiProfile, error: profileError } = await supabase
       .from('ai_profiles')
@@ -97,6 +139,20 @@ serve(async (req) => {
     if (analyticsError) {
       console.error('Error fetching analytics:', analyticsError);
     }
+
+    // Hämta UF-kunskapsregler från databasen
+    const { data: ufKnowledge, error: knowledgeError } = await supabase
+      .from('ai_knowledge')
+      .select('content')
+      .in('category', ['uf_rules', 'competition_criteria', 'annual_report']);
+
+    if (knowledgeError) {
+      console.error('Error fetching UF knowledge:', knowledgeError);
+    }
+
+    const dynamicUfRules = ufKnowledge && ufKnowledge.length > 0
+      ? ufKnowledge.map(k => k.content).join('\n\n')
+      : UF_RULES;
 
     // Bygg system prompt
     const systemPrompt = `Du är Promotely UF:s AI-expert och marknadsföringsrådgivare.
@@ -152,7 +208,7 @@ ${analytics.map(a => `
 ` : ''}
 
 ## UF-REGLER DU MÅSTE FÖLJA
-${UF_RULES}
+${dynamicUfRules}
 
 ---
 
@@ -204,7 +260,7 @@ Håll dig alltid till UF-reglerna och deadlines.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: aiModel,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -225,6 +281,16 @@ Håll dig alltid till UF-reglerna och deadlines.`;
 
     console.log('AI analysis generated successfully');
 
+    // Uppdatera krediter
+    const { error: creditError } = await supabase
+      .from('users')
+      .update({ credits_used: userData.credits_used + 1 })
+      .eq('id', user.id);
+
+    if (creditError) {
+      console.error('Error updating credits:', creditError);
+    }
+
     // Spara analysen i historik
     const { error: saveError } = await supabase
       .from('ai_analysis_history')
@@ -233,7 +299,9 @@ Håll dig alltid till UF-reglerna och deadlines.`;
         input_data: {
           aiProfile,
           socialStats,
-          analytics
+          analytics,
+          plan: userData.plan,
+          model_used: aiModel
         },
         ai_output: aiOutput
       });

@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_knowledge: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          id: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string | null
+          id?: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          id?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ai_profiles: {
         Row: {
           branch: string | null
@@ -722,13 +749,16 @@ export type Database = {
           company_name: string | null
           created_at: string
           credits_left: number
+          credits_used: number | null
           deleted_at: string | null
           deletion_scheduled_at: string | null
           email: string
           id: string
           industry: string | null
           keywords: string[] | null
+          max_credits: number | null
           plan: Database["public"]["Enums"]["user_plan"]
+          renewal_date: string | null
           trial_used: boolean
           updated_at: string
         }
@@ -736,13 +766,16 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           credits_left?: number
+          credits_used?: number | null
           deleted_at?: string | null
           deletion_scheduled_at?: string | null
           email: string
           id: string
           industry?: string | null
           keywords?: string[] | null
+          max_credits?: number | null
           plan?: Database["public"]["Enums"]["user_plan"]
+          renewal_date?: string | null
           trial_used?: boolean
           updated_at?: string
         }
@@ -750,13 +783,16 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           credits_left?: number
+          credits_used?: number | null
           deleted_at?: string | null
           deletion_scheduled_at?: string | null
           email?: string
           id?: string
           industry?: string | null
           keywords?: string[] | null
+          max_credits?: number | null
           plan?: Database["public"]["Enums"]["user_plan"]
+          renewal_date?: string | null
           trial_used?: boolean
           updated_at?: string
         }

@@ -366,7 +366,7 @@ const Dashboard = () => {
             <p className="text-muted-foreground mb-6">
               Obegränsade AI-förslag, exporterbara innehållskalendrar och prioriterad support
             </p>
-            <Button variant="gradient" size="lg" onClick={() => window.open('/auth', '_self')}>
+            <Button variant="gradient" size="lg" onClick={() => window.location.href = '/#pricing'}>
               Se prisplaner
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
