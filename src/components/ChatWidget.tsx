@@ -90,7 +90,11 @@ const ChatWidget = () => {
 
     // Subscribe to realtime updates
     const channel = supabase
-      .channel(`live_chat:${sessionId}`)
+      .channel(`live_chat_${sessionId}`, {
+        config: {
+          broadcast: { self: true },
+        },
+      })
       .on(
         "postgres_changes",
         {
@@ -100,7 +104,13 @@ const ChatWidget = () => {
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          console.log("New message received:", payload);
+          const newMessage = payload.new as Message;
+          setMessages((prev) => {
+            // Avoid duplicates
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
         }
       )
       .on(
@@ -112,14 +122,18 @@ const ChatWidget = () => {
           filter: `session_id=eq.${sessionId}`,
         },
         (payload: any) => {
+          console.log("Session update received:", payload);
           if (payload.new?.status === "closed") {
             setIsChatClosed(true);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Realtime subscription status:", status);
+      });
 
     return () => {
+      console.log("Unsubscribing from channel");
       supabase.removeChannel(channel);
     };
   }, [sessionId]);
@@ -246,8 +260,7 @@ const ChatWidget = () => {
       console.error("Error sending message:", error);
       setSendError("Kunde inte skicka meddelande");
     } else {
-      // Add message to state immediately for instant UI feedback
-      setMessages((prev) => [...prev, data]);
+      // Don't add to state here - let realtime handle it to avoid duplicates
       
       // Clear input after successful send
       setInputValue("");
