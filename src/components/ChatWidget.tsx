@@ -21,6 +21,7 @@ const ChatWidget = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [autoReplyHasBeenSent, setAutoReplyHasBeenSent] = useState(false);
+  const [isChatClosed, setIsChatClosed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Draggable and resizable state - smaller initial size
@@ -45,6 +46,7 @@ const ChatWidget = () => {
     if (savedSessionId) {
       setSessionId(savedSessionId);
       setAutoReplyHasBeenSent(autoReplySent === "true");
+      checkSessionStatus(savedSessionId);
     } else {
       // Create new session
       const newSessionId = crypto.randomUUID();
@@ -52,6 +54,19 @@ const ChatWidget = () => {
       setSessionId(newSessionId);
     }
   }, []);
+
+  // Check if session is closed
+  const checkSessionStatus = async (sessId: string) => {
+    const { data } = await supabase
+      .from("live_chat_sessions")
+      .select("status")
+      .eq("session_id", sessId)
+      .maybeSingle();
+    
+    if (data?.status === "closed") {
+      setIsChatClosed(true);
+    }
+  };
 
   // Load messages when session is ready
   useEffect(() => {
@@ -88,6 +103,20 @@ const ChatWidget = () => {
           setMessages((prev) => [...prev, payload.new as Message]);
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "live_chat_sessions",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload: any) => {
+          if (payload.new?.status === "closed") {
+            setIsChatClosed(true);
+          }
+        }
+      )
       .subscribe();
 
     return () => {
@@ -113,6 +142,23 @@ const ChatWidget = () => {
       setAutoReplyHasBeenSent(true);
       localStorage.setItem("live_chat_auto_reply_sent", "true");
     }, 2000);
+  };
+
+  const handleStartNewChat = () => {
+    // Clear old session data
+    localStorage.removeItem("live_chat_session_id");
+    localStorage.removeItem("live_chat_auto_reply_sent");
+    
+    // Create new session
+    const newSessionId = crypto.randomUUID();
+    localStorage.setItem("live_chat_session_id", newSessionId);
+    
+    // Reset state
+    setSessionId(newSessionId);
+    setMessages([]);
+    setAutoReplyHasBeenSent(false);
+    setIsChatClosed(false);
+    setInputValue("");
   };
 
   // Drag handlers
@@ -308,7 +354,23 @@ const ChatWidget = () => {
 
           {/* Messages Area */}
           <ScrollArea className="flex-1 p-4">
-            {messages.length === 0 ? (
+            {isChatClosed ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="mb-4 p-4 rounded-full bg-muted/50">
+                  <X className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Chatten avslutades av support</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Du kan starta en ny chatt om du har fler frågor
+                </p>
+                <Button
+                  onClick={handleStartNewChat}
+                  className="bg-gradient-primary hover:shadow-glow"
+                >
+                  Starta ny chatt
+                </Button>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="mb-4 p-4 rounded-full bg-muted/50">
                   <MessageCircle className="w-8 h-8 text-muted-foreground" />
@@ -356,10 +418,10 @@ const ChatWidget = () => {
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
+                  onKeyPress={(e) => e.key === "Enter" && !isLoading && !isChatClosed && handleSend()}
                   placeholder="Skriv ditt meddelande..."
                   className="flex-1 bg-background"
-                  disabled={isLoading}
+                  disabled={isLoading || isChatClosed}
                   aria-label="Skicka fråga"
                   aria-live="polite"
                   aria-describedby={sendError ? "send-error" : undefined}
@@ -367,7 +429,7 @@ const ChatWidget = () => {
                 <Button
                   onClick={handleSend}
                   size="icon"
-                  disabled={isLoading || !inputValue.trim()}
+                  disabled={isLoading || !inputValue.trim() || isChatClosed}
                   className="bg-gradient-primary hover:shadow-glow"
                   aria-label="Skicka meddelande"
                 >
