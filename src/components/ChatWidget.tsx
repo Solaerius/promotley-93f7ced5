@@ -2,15 +2,26 @@ import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
+
+interface Message {
+  id: string;
+  message: string;
+  sender_type: string;
+  created_at: string;
+}
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [autoReplyHasBeenSent, setAutoReplyHasBeenSent] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Draggable and resizable state - smaller initial size
   const [position, setPosition] = useState({ x: 24, y: window.innerHeight - 474 }); // bottom-6 right-6
@@ -29,9 +40,11 @@ const ChatWidget = () => {
   // Load or create session on mount
   useEffect(() => {
     const savedSessionId = localStorage.getItem("live_chat_session_id");
+    const autoReplySent = localStorage.getItem("live_chat_auto_reply_sent");
     
     if (savedSessionId) {
       setSessionId(savedSessionId);
+      setAutoReplyHasBeenSent(autoReplySent === "true");
     } else {
       // Create new session
       const newSessionId = crypto.randomUUID();
@@ -39,6 +52,68 @@ const ChatWidget = () => {
       setSessionId(newSessionId);
     }
   }, []);
+
+  // Load messages when session is ready
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadMessages = async () => {
+      const { data, error } = await supabase
+        .from("live_chat_messages")
+        .select("*")
+        .eq("session_id", sessionId)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error loading messages:", error);
+      } else {
+        setMessages(data || []);
+      }
+    };
+
+    loadMessages();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel(`live_chat:${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "live_chat_messages",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new as Message]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const sendAutoReply = async () => {
+    if (!sessionId || autoReplyHasBeenSent) return;
+
+    setTimeout(async () => {
+      await supabase.from("live_chat_messages").insert({
+        session_id: sessionId,
+        sender_type: "admin",
+        message: "Tack för ditt meddelande! Vi kan vara upptagna just nu, så svarstiden kan variera beroende på hur många som chattar. Vi återkommer så snart vi kan!",
+      });
+
+      setAutoReplyHasBeenSent(true);
+      localStorage.setItem("live_chat_auto_reply_sent", "true");
+    }, 2000);
+  };
 
   // Drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -127,6 +202,11 @@ const ChatWidget = () => {
     } else {
       // Clear input after successful send
       setInputValue("");
+      
+      // Send auto-reply if this is the first message
+      if (messages.length === 0) {
+        sendAutoReply();
+      }
       
       // Send notification to admin (silent)
       try {
@@ -226,16 +306,48 @@ const ChatWidget = () => {
             </button>
           </div>
 
-          {/* Content Area - Empty for users, just shows header */}
-          <div className="flex-1 p-6 flex flex-col items-center justify-center text-center">
-            <div className="mb-4 p-4 rounded-full bg-muted/50">
-              <MessageCircle className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Skicka din fråga</h3>
-            <p className="text-sm text-muted-foreground">
-              Vi svarar så snart vi kan
-            </p>
-          </div>
+          {/* Messages Area */}
+          <ScrollArea className="flex-1 p-4">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="mb-4 p-4 rounded-full bg-muted/50">
+                  <MessageCircle className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Skicka din fråga</h3>
+                <p className="text-sm text-muted-foreground">
+                  Vi svarar så snart vi kan
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${
+                      msg.sender_type === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                        msg.sender_type === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-foreground"
+                      }`}
+                    >
+                      <p className="text-sm">{msg.message}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {new Date(msg.created_at).toLocaleTimeString("sv-SE", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </ScrollArea>
 
           {/* Input */}
           <div className="p-4 border-t border-border/50">
