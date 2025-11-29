@@ -2,31 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import TypingIndicator from "./TypingIndicator";
-
-interface Message {
-  id: string;
-  message: string;
-  sender_type: "user" | "admin";
-  created_at: string;
-}
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [autoReplyHasBeenSent, setAutoReplyHasBeenSent] = useState(false);
-  const [isChatClosed, setIsChatClosed] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
+  const [sendError, setSendError] = useState<string | null>(null);
 
   // Draggable and resizable state - smaller initial size
   const [position, setPosition] = useState({ x: 24, y: window.innerHeight - 474 }); // bottom-6 right-6
@@ -45,94 +29,16 @@ const ChatWidget = () => {
   // Load or create session on mount
   useEffect(() => {
     const savedSessionId = localStorage.getItem("live_chat_session_id");
-    const autoReplySent = localStorage.getItem("live_chat_auto_reply_sent");
     
     if (savedSessionId) {
       setSessionId(savedSessionId);
-      loadMessages(savedSessionId);
-      setAutoReplyHasBeenSent(autoReplySent === "true");
     } else {
       // Create new session
       const newSessionId = crypto.randomUUID();
       localStorage.setItem("live_chat_session_id", newSessionId);
       setSessionId(newSessionId);
-      setAutoReplyHasBeenSent(false);
     }
   }, []);
-
-  // Subscribe to new messages and session status changes
-  useEffect(() => {
-    if (!sessionId) return;
-
-    const channel = supabase
-      .channel(`live_chat:${sessionId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "live_chat_messages",
-          filter: `session_id=eq.${sessionId}`,
-        },
-        (payload) => {
-          const newMessage = payload.new as Message;
-          setMessages((prev) => [...prev, newMessage]);
-          
-          // Increment unread count for admin messages when chat is closed
-          if (newMessage.sender_type === "admin" && !isOpen) {
-            setUnreadCount((prev) => prev + 1);
-          }
-          
-          setIsTyping(false);
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "live_chat_sessions",
-          filter: `session_id=eq.${sessionId}`,
-        },
-        (payload) => {
-          // Check if chat was closed
-          if (payload.new && (payload.new as any).status === "closed") {
-            handleChatClosedByAdmin();
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [sessionId, isOpen]);
-
-  // Check session status on mount
-  useEffect(() => {
-    if (!sessionId) return;
-
-    const checkSessionStatus = async () => {
-      const { data } = await supabase
-        .from("live_chat_sessions")
-        .select("status")
-        .eq("session_id", sessionId)
-        .maybeSingle();
-
-      if (data?.status === "closed") {
-        setIsChatClosed(true);
-      }
-    };
-
-    checkSessionStatus();
-  }, [sessionId]);
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   // Drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -203,45 +109,11 @@ const ChatWidget = () => {
     setResizeDirection(direction);
   };
 
-  const loadMessages = async (sessId: string) => {
-    const { data, error } = await supabase
-      .from("live_chat_messages")
-      .select("*")
-      .eq("session_id", sessId)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("Error loading messages:", error);
-    } else if (data) {
-      setMessages(data as Message[]);
-    }
-  };
-
-  const sendAutoReply = async () => {
-    if (!sessionId || autoReplyHasBeenSent) return;
-
-    // Wait 2 seconds before sending auto-reply
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const autoReplyMessage = "Tack för ditt meddelande! Vi har fått din förfrågan och återkommer så snart vi kan. Notera att det kan ta lite tid beroende på hur många förfrågningar vi har just nu. Vi uppskattar ditt tålamod! 🙏";
-
-    const { error } = await supabase.from("live_chat_messages").insert({
-      session_id: sessionId,
-      sender_type: "admin",
-      message: autoReplyMessage,
-    });
-
-    if (!error) {
-      localStorage.setItem("live_chat_auto_reply_sent", "true");
-      setAutoReplyHasBeenSent(true);
-    }
-  };
-
   const handleSend = async () => {
     if (!inputValue.trim() || !sessionId) return;
 
     setIsLoading(true);
-    const isFirstMessage = messages.length === 0 && !autoReplyHasBeenSent;
+    setSendError(null);
 
     const { data, error } = await supabase.from("live_chat_messages").insert({
       session_id: sessionId,
@@ -251,16 +123,12 @@ const ChatWidget = () => {
 
     if (error) {
       console.error("Error sending message:", error);
-      toast({
-        title: "Fel",
-        description: "Kunde inte skicka meddelande",
-        variant: "destructive",
-      });
+      setSendError("Kunde inte skicka meddelande");
     } else {
+      // Clear input after successful send
       setInputValue("");
-      setIsTyping(true);
       
-      // Send notification to admin
+      // Send notification to admin (silent)
       try {
         await supabase.functions.invoke("send-chat-notification", {
           body: {
@@ -271,12 +139,6 @@ const ChatWidget = () => {
         });
       } catch (notifError) {
         console.error("Error sending notification:", notifError);
-        // Don't show error to user, just log it
-      }
-
-      // Send auto-reply if this is the first message
-      if (isFirstMessage) {
-        sendAutoReply();
       }
     }
 
@@ -286,52 +148,14 @@ const ChatWidget = () => {
   const handleOpen = () => {
     setIsOpen(true);
     setIsClosing(false);
-    setUnreadCount(0);
   };
 
   const handleClose = () => {
     setIsClosing(true);
-    // Wait for animation to complete before actually closing
     setTimeout(() => {
       setIsOpen(false);
       setIsClosing(false);
     }, 250);
-  };
-
-  const handleChatClosedByAdmin = () => {
-    // Clear all messages and state
-    setMessages([]);
-    setIsChatClosed(true);
-    setInputValue("");
-    setIsTyping(false);
-    
-    toast({
-      title: "Chatten avslutades",
-      description: "Support har avslutat chatten",
-    });
-  };
-
-  const handleStartNewChat = () => {
-    // Clear localStorage
-    localStorage.removeItem("live_chat_session_id");
-    localStorage.removeItem("live_chat_auto_reply_sent");
-    
-    // Create new session
-    const newSessionId = crypto.randomUUID();
-    localStorage.setItem("live_chat_session_id", newSessionId);
-    
-    // Reset all state
-    setSessionId(newSessionId);
-    setMessages([]);
-    setIsChatClosed(false);
-    setAutoReplyHasBeenSent(false);
-    setInputValue("");
-    setUnreadCount(0);
-    
-    toast({
-      title: "Ny chatt skapad",
-      description: "Du kan nu börja en ny konversation",
-    });
   };
 
   return (
@@ -344,13 +168,7 @@ const ChatWidget = () => {
           aria-label="Öppna chat"
         >
           <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-          {unreadCount > 0 ? (
-            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-accent text-accent-foreground rounded-full animate-pulse flex items-center justify-center text-xs font-bold px-1">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          ) : (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-pulse" />
-          )}
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-pulse" />
         </button>
       )}
 
@@ -408,64 +226,20 @@ const ChatWidget = () => {
             </button>
           </div>
 
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-            {isChatClosed ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6">
-                <div className="mb-4 p-4 rounded-full bg-muted">
-                  <X className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Chatten är avslutad</h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Chatten avslutades av support.
-                </p>
-                <Button
-                  onClick={handleStartNewChat}
-                  className="bg-gradient-primary hover:shadow-glow"
-                >
-                  Starta ny chatt
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.sender_type === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                        message.sender_type === "user"
-                          ? "bg-gradient-primary text-primary-foreground rounded-br-sm"
-                          : "bg-muted text-foreground rounded-bl-sm"
-                      }`}
-                    >
-                      <p className="text-sm">{message.message}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          message.sender_type === "user"
-                            ? "text-hero-foreground/70"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {new Date(message.created_at).toLocaleTimeString("sv-SE", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {isTyping && <TypingIndicator />}
-              </div>
-            )}
-          </ScrollArea>
+          {/* Content Area - Empty for users, just shows header */}
+          <div className="flex-1 p-6 flex flex-col items-center justify-center text-center">
+            <div className="mb-4 p-4 rounded-full bg-muted/50">
+              <MessageCircle className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Skicka din fråga</h3>
+            <p className="text-sm text-muted-foreground">
+              Vi svarar så snart vi kan
+            </p>
+          </div>
 
           {/* Input */}
-          {!isChatClosed && (
-            <div className="p-4 border-t border-border/50">
+          <div className="p-4 border-t border-border/50">
+            <div className="flex flex-col gap-2">
               <div className="flex gap-2">
                 <Input
                   value={inputValue}
@@ -474,18 +248,27 @@ const ChatWidget = () => {
                   placeholder="Skriv ditt meddelande..."
                   className="flex-1 bg-background"
                   disabled={isLoading}
+                  aria-label="Skicka fråga"
+                  aria-live="polite"
+                  aria-describedby={sendError ? "send-error" : undefined}
                 />
                 <Button
                   onClick={handleSend}
                   size="icon"
                   disabled={isLoading || !inputValue.trim()}
                   className="bg-gradient-primary hover:shadow-glow"
+                  aria-label="Skicka meddelande"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
+              {sendError && (
+                <p id="send-error" className="text-xs text-destructive" role="alert">
+                  {sendError}
+                </p>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
     </>
