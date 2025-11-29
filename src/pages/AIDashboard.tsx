@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Sparkles, TrendingUp, Calendar, Target, Lightbulb, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 const AIDashboard = () => {
   const { latestAnalysis, loading, generating, generateAnalysis } = useAIAnalysis();
@@ -124,7 +125,7 @@ const AIDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-lg">{latestAnalysis.ai_output.sammanfattning}</p>
+                <MarkdownRenderer content={latestAnalysis.ai_output.sammanfattning} />
               </CardContent>
             </Card>
 
@@ -137,7 +138,7 @@ const AIDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-line">{latestAnalysis.ai_output.social_medier_analys}</p>
+                <MarkdownRenderer content={latestAnalysis.ai_output.social_medier_analys} />
               </CardContent>
             </Card>
 
@@ -207,7 +208,7 @@ const AIDashboard = () => {
                 <CardDescription>Vägen till framgång i UF-tävlingarna</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-line">{latestAnalysis.ai_output.uf_tavlingsstrategi}</p>
+                <MarkdownRenderer content={latestAnalysis.ai_output.uf_tavlingsstrategi} />
               </CardContent>
             </Card>
 

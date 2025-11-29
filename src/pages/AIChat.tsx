@@ -16,6 +16,7 @@ import {
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 
 interface Message {
   id: string;
@@ -171,7 +172,11 @@ const AIChat = () => {
                             : "bg-muted text-foreground"
                         }`}
                       >
-                        <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                        {msg.role === "user" ? (
+                          <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                        ) : (
+                          <MarkdownRenderer content={msg.message} />
+                        )}
                         <p className={`text-xs mt-2 ${msg.role === "user" ? "text-white/70" : "text-muted-foreground"}`}>
                           {formatTime(new Date(msg.timestamp))}
                         </p>
