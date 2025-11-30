@@ -19,10 +19,13 @@ export const AISuggestions = () => {
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [copied, setCopied] = useState(false);
+  const [hasAccess, setHasAccess] = useState(true);
+  const [accessError, setAccessError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const generateSuggestion = async () => {
     setLoading(true);
+    setAccessError(null);
     try {
       // Validate platform selection
       const validation = suggestionSchema.safeParse({
@@ -53,12 +56,33 @@ export const AISuggestions = () => {
         return;
       }
 
+      const requestId = crypto.randomUUID();
       const response = await supabase.functions.invoke("generate-suggestion", {
-        body: { platform },
+        body: { platform, requestId },
       });
 
       if (response.error) {
-        if (response.error.message?.includes("PAYWALL")) {
+        const errorData = response.data as any;
+        
+        if (errorData?.error === 'NO_ACTIVE_PLAN') {
+          setHasAccess(false);
+          setAccessError('no_plan');
+          toast({
+            title: "Uppgradera för AI-förslag",
+            description: "Du behöver ett aktivt paket för att använda AI-funktioner",
+            variant: "destructive",
+          });
+        } else if (errorData?.error === 'INSUFFICIENT_CREDITS') {
+          setHasAccess(false);
+          setAccessError('no_credits');
+          toast({
+            title: "Inga krediter kvar",
+            description: `Du behöver ${errorData.credits_needed} krediter. Fyll på ditt konto eller uppgradera.`,
+            variant: "destructive",
+          });
+        } else if (response.error.message?.includes("PAYWALL")) {
+          setHasAccess(false);
+          setAccessError('paywall');
           toast({
             title: "Uppgradera till Pro",
             description: "Du har använt ditt gratis förslag. Uppgradera för obegränsade AI-förslag!",
@@ -116,8 +140,22 @@ export const AISuggestions = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {!hasAccess && accessError && (
+            <div className="p-4 border border-primary/20 rounded-lg bg-primary/5">
+              <h4 className="font-semibold mb-2">AI-förslag låsta</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                {accessError === 'no_plan' && 'Du behöver ett aktivt paket för att använda AI-funktioner'}
+                {accessError === 'no_credits' && 'Dina krediter är slut. Fyll på för att fortsätta'}
+                {accessError === 'paywall' && 'Uppgradera ditt paket för fler AI-förslag'}
+              </p>
+              <Button variant="gradient" size="sm" onClick={() => window.location.href = '/pricing'}>
+                Visa paket
+              </Button>
+            </div>
+          )}
+          
           <div className="flex gap-4">
-            <Select value={platform} onValueChange={setPlatform}>
+            <Select value={platform} onValueChange={setPlatform} disabled={!hasAccess}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Välj plattform" />
               </SelectTrigger>
@@ -130,7 +168,7 @@ export const AISuggestions = () => {
 
             <Button
               onClick={generateSuggestion}
-              disabled={loading}
+              disabled={loading || !hasAccess}
               className="gap-2"
               variant="gradient"
               aria-label="Generate AI content suggestions"
