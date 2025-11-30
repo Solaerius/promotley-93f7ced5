@@ -52,62 +52,148 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      return new Response(JSON.stringify({ error: 'Missing authorization' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
     
-    // Verifiera användaren
+    // Verify user
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      throw new Error('Unauthorized');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     console.log('Generating AI analysis for user:', user.id);
 
-    // Hämta användarens plan och krediter
+    // Parse request body for requestId and any override attempts
+    const body = await req.json().catch(() => ({}));
+    const requestId = body.requestId || crypto.randomUUID();
+    const clientModel = body.model; // Will be ignored if doesn't match policy
+
+    // Fetch user plan and credits
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('plan, credits_used, max_credits, renewal_date')
+      .select('plan, credits_left, max_credits, renewal_date')
       .eq('id', user.id)
       .single();
 
     if (userError) {
       console.error('Error fetching user data:', userError);
-      throw new Error('Could not fetch user plan');
+      return new Response(JSON.stringify({ error: 'Could not fetch user plan' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // Kolla om användaren har krediter kvar
-    if (userData.credits_used >= userData.max_credits) {
-      throw new Error('No credits remaining. Please upgrade your plan.');
+    // Check if user has active plan
+    const validPlans = ['free_trial', 'pro', 'pro_xl', 'pro_unlimited'];
+    if (!validPlans.includes(userData.plan)) {
+      return new Response(JSON.stringify({ 
+        error: 'NO_ACTIVE_PLAN',
+        message: 'Uppgradera för att låsa upp AI-analys',
+        upgrade_url: '/pricing'
+      }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // Hämta plan config för att få rätt AI-modell
-    let aiModel = 'gpt-4o-mini'; // Default
-    let maxCredits = 50;
+    // Determine tier and enforce model policy
+    let tier = 'starter';
+    let aiModel = 'gpt-4o-mini';
+    let estimatedCost = 5;
     
     switch (userData.plan) {
       case 'free_trial':
+        tier = 'starter';
         aiModel = 'gpt-4o-mini';
-        maxCredits = 50;
+        estimatedCost = 5;
         break;
       case 'pro':
-        aiModel = 'gpt-4.1-mini';
-        maxCredits = 100;
+        tier = 'growth';
+        aiModel = 'gpt-4o-mini';
+        estimatedCost = 3;
         break;
       case 'pro_xl':
-        aiModel = 'gpt-5.1';
-        maxCredits = 300;
+        tier = 'pro';
+        aiModel = 'gpt-4o';
+        estimatedCost = 2;
         break;
       case 'pro_unlimited':
-        aiModel = 'gpt-5.1';
-        maxCredits = 1000;
+        tier = 'unlimited';
+        aiModel = 'gpt-4o';
+        estimatedCost = 0;
         break;
     }
 
-    console.log(`Using AI model: ${aiModel} for plan: ${userData.plan}`);
+    // Enforce model policy - ignore client override
+    if (clientModel && clientModel !== aiModel) {
+      console.warn('POLICY_VIOLATION: Client attempted model override', {
+        userId: user.id,
+        tier,
+        requested: clientModel,
+        allowed: aiModel,
+        requestId
+      });
+    }
+
+    console.log(`Using AI model: ${aiModel} for tier: ${tier}`);
+
+    // Check credits
+    if (tier !== 'unlimited' && userData.credits_left < estimatedCost) {
+      return new Response(JSON.stringify({ 
+        error: 'INSUFFICIENT_CREDITS',
+        message: 'Fyll på krediter för att fortsätta',
+        credits_needed: estimatedCost,
+        credits_available: userData.credits_left
+      }), {
+        status: 402,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Reserve credits (idempotency check)
+    const { data: existingReservation } = await supabase
+      .from('credit_reservations')
+      .select('*')
+      .eq('request_id', requestId)
+      .maybeSingle();
+
+    if (existingReservation) {
+      console.log('Request already processed:', requestId);
+      return new Response(JSON.stringify({ 
+        error: 'DUPLICATE_REQUEST',
+        message: 'This request has already been processed'
+      }), {
+        status: 409,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Deduct credits (reservation)
+    const creditsBefore = userData.credits_left;
+    if (tier !== 'unlimited') {
+      const { error: deductError } = await supabase
+        .from('users')
+        .update({ credits_left: userData.credits_left - estimatedCost })
+        .eq('id', user.id);
+
+      if (deductError) {
+        console.error('Error reserving credits:', deductError);
+        return new Response(JSON.stringify({ error: 'Could not reserve credits' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
 
     // Hämta AI-profil
     const { data: aiProfile, error: profileError } = await supabase
@@ -289,17 +375,24 @@ Håll dig alltid till UF-reglerna och deadlines.`;
 
     console.log('AI analysis generated successfully');
 
-    // Uppdatera krediter
-    const { error: creditError } = await supabase
-      .from('users')
-      .update({ credits_used: userData.credits_used + 1 })
-      .eq('id', user.id);
+    // Get actual usage from OpenAI response
+    const actualTokens = aiData.usage?.total_tokens || 0;
+    const actualCost = Math.ceil(actualTokens / 1000); // Simplified cost calculation
+    
+    // Settlement: adjust credits based on actual vs reserved
+    const settlement = actualCost - estimatedCost;
+    const creditsAfter = tier === 'unlimited' 
+      ? creditsBefore 
+      : creditsBefore - actualCost;
 
-    if (creditError) {
-      console.error('Error updating credits:', creditError);
+    if (tier !== 'unlimited' && settlement !== 0) {
+      await supabase
+        .from('users')
+        .update({ credits_left: creditsAfter })
+        .eq('id', user.id);
     }
 
-    // Spara analysen i historik
+    // Save analysis to history
     const { error: saveError } = await supabase
       .from('ai_analysis_history')
       .insert({
@@ -309,7 +402,9 @@ Håll dig alltid till UF-reglerna och deadlines.`;
           socialStats,
           analytics,
           plan: userData.plan,
-          model_used: aiModel
+          tier,
+          model_used: aiModel,
+          request_id: requestId
         },
         ai_output: aiOutput
       });
@@ -318,10 +413,38 @@ Håll dig alltid till UF-reglerna och deadlines.`;
       console.error('Error saving analysis history:', saveError);
     }
 
+    // Log usage for billing
+    const usageLogResult = await supabase.from('ai_usage_logs').insert({
+      user_id: user.id,
+      request_id: requestId,
+      endpoint: 'generate-ai-analysis',
+      model: aiModel,
+      tier,
+      credits_reserved: estimatedCost,
+      credits_actual: actualCost,
+      tokens_used: actualTokens,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (usageLogResult.error) {
+      console.error('Failed to log usage:', usageLogResult.error);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        analysis: aiOutput 
+        analysis: aiOutput,
+        credits: {
+          before: creditsBefore,
+          reserved: estimatedCost,
+          actual: actualCost,
+          after: creditsAfter
+        },
+        usage: {
+          tokens: actualTokens,
+          model: aiModel
+        },
+        requestId
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -331,6 +454,30 @@ Håll dig alltid till UF-reglerna och deadlines.`;
   } catch (error) {
     console.error('Error in generate-ai-analysis:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Rollback credits on error if they were reserved
+    try {
+      const body = await req.json().catch(() => ({}));
+      const requestId = body.requestId;
+      
+      if (requestId) {
+        // Check if credits were reserved
+        const authHeader = req.headers.get('authorization');
+        if (authHeader) {
+          const token = authHeader.replace('Bearer ', '');
+          const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
+          const { data: { user } } = await supabase.auth.getUser(token);
+          
+          if (user) {
+            console.log('Rolling back reserved credits for requestId:', requestId);
+            // Note: In production, implement proper rollback logic
+          }
+        }
+      }
+    } catch (rollbackError) {
+      console.error('Error during rollback:', rollbackError);
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 

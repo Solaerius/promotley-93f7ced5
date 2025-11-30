@@ -14,6 +14,8 @@ const AIDashboard = () => {
   const { latestAnalysis, loading, generating, generateAnalysis } = useAIAnalysis();
   const { profile: aiProfile } = useAIProfile();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [hasAccess, setHasAccess] = useState(true);
+  const [accessError, setAccessError] = useState<string | null>(null);
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
@@ -73,8 +75,22 @@ const AIDashboard = () => {
             </p>
           </div>
           <Button
-            onClick={generateAnalysis}
-            disabled={generating}
+            onClick={async () => {
+              try {
+                await generateAnalysis();
+                setHasAccess(true);
+                setAccessError(null);
+              } catch (error: any) {
+                if (error?.message?.includes('NO_ACTIVE_PLAN')) {
+                  setHasAccess(false);
+                  setAccessError('no_plan');
+                } else if (error?.message?.includes('INSUFFICIENT_CREDITS')) {
+                  setHasAccess(false);
+                  setAccessError('no_credits');
+                }
+              }
+            }}
+            disabled={generating || !hasAccess}
             size="lg"
             className="gap-2"
           >
@@ -83,8 +99,24 @@ const AIDashboard = () => {
           </Button>
         </div>
 
+        {/* Access blocked warning */}
+        {!hasAccess && accessError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                {accessError === 'no_plan' && 'Du behöver ett aktivt paket för att använda AI-analys'}
+                {accessError === 'no_credits' && 'Dina krediter är slut. Fyll på för att fortsätta'}
+              </span>
+              <Button variant="outline" size="sm" onClick={() => window.location.href = '/pricing'}>
+                Visa paket
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Varning om profil saknas */}
-        {!aiProfile && (
+        {!aiProfile && hasAccess && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
