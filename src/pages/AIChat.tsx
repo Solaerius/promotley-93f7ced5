@@ -17,12 +17,14 @@ import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import MarketingPlanCard from "@/components/MarketingPlanCard";
 
 interface Message {
   id: string;
   sender: "user" | "ai";
   message: string;
   timestamp: Date;
+  plan?: any; // Marketing plan data if message contains a plan
 }
 
 const AIChat = () => {
@@ -32,6 +34,7 @@ const AIChat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [activePlan, setActivePlan] = useState<any>(null);
 
   const quickCommands = [
     { icon: BarChart3, text: "Analysera min statistik", color: "from-blue-500 to-cyan-500" },
@@ -94,10 +97,26 @@ const AIChat = () => {
         await analyzeStats();
         break;
       case "Skapa marknadsföringsplan":
-        await createMarketingPlan();
+        try {
+          const result = await createMarketingPlan();
+          if (result?.plan) {
+            setActivePlan(result.plan);
+          }
+        } catch (error) {
+          console.error('Error creating plan:', error);
+        }
         break;
       default:
         setInputMessage(command);
+    }
+  };
+
+  const handleImplementPlan = async (plan: any, requestId: string) => {
+    try {
+      await implementPlan(plan, requestId);
+      setActivePlan(null);
+    } catch (error) {
+      console.error('Error implementing plan:', error);
     }
   };
 
@@ -184,6 +203,18 @@ const AIChat = () => {
                     </div>
                   </div>
                 ))}
+
+                {/* Marketing Plan Card */}
+                {activePlan && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[80%] lg:max-w-[70%]">
+                      <MarketingPlanCard 
+                        plan={activePlan} 
+                        onImplement={handleImplementPlan}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Typing indicator */}
                 {loading && (

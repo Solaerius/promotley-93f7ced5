@@ -614,6 +614,120 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
       );
     }
 
+    // POST /ai-assistant/create-marketing-plan - Create marketing plan
+    if (action === 'create-marketing-plan' && req.method === 'POST') {
+      console.log('📅 Creating marketing plan...');
+      
+      const body = await req.json();
+      const { targets = ['reach', 'engagement'], timeframe = 'month', calendarContextDigest = [] } = body;
+
+      const userContext = await getUserContext(user.id);
+
+      const now = new Date();
+      const endDate = new Date(now);
+      endDate.setMonth(endDate.getMonth() + (timeframe === 'week' ? 0 : 1));
+      endDate.setDate(endDate.getDate() + (timeframe === 'week' ? 7 : 0));
+
+      let calendarContext = '';
+      if (calendarContextDigest.length > 0) {
+        calendarContext = `\n\nExisterande kalender:\n${calendarContextDigest.map((p: any) => 
+          `- ${p.date}: ${p.title} (${p.channel})`
+        ).join('\n')}`;
+      }
+
+      const systemPrompt = `Du är en marknadsföringsexpert för UF-företag. Skapa en detaljerad marknadsföringsplan i JSON-format.
+
+Mål: ${targets.join(', ')}
+Tidsram: ${timeframe}
+Start: ${now.toISOString().split('T')[0]}
+Slut: ${endDate.toISOString().split('T')[0]}
+
+${userContext.profile ? `
+Företagsprofil:
+- Bransch: ${userContext.profile.branch || 'Ej angiven'}
+- Målgrupp: ${userContext.profile.malgrupp || 'Ej angiven'}
+- Produkt: ${userContext.profile.produkt_beskrivning || 'Ej angiven'}
+` : ''}
+
+${calendarContext}
+
+Returnera ENDAST ett JSON-objekt (ingen annan text före eller efter) med följande exakta struktur:
+{
+  "timeframe": {"start": "${now.toISOString().split('T')[0]}", "end": "${endDate.toISOString().split('T')[0]}"},
+  "goals": ["konkret mål 1", "konkret mål 2", "konkret mål 3"],
+  "budgetHints": ["budgettips 1", "budgettips 2"],
+  "posts": [
+    {
+      "date": "YYYY-MM-DD",
+      "channel": "instagram",
+      "title": "Catchy inläggstitel",
+      "content": "Detaljerad innehållsbeskrivning för inlägget",
+      "tags": ["tag1", "tag2", "tag3"],
+      "assets": [],
+      "status": "scheduled"
+    }
+  ]
+}
+
+Skapa minst 10-15 inlägg spridda jämnt över tidsperioden. Variera kanaler (instagram, tiktok, facebook). Alla datum måste vara mellan ${now.toISOString().split('T')[0]} och ${endDate.toISOString().split('T')[0]}. Gör innehållet relevant för UF-företag.`;
+
+      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: 'Skapa marknadsföringsplanen nu i JSON-format.' }
+          ],
+          temperature: 0.8,
+        }),
+      });
+
+      if (!aiResponse.ok) {
+        throw new Error('Failed to generate plan');
+      }
+
+      const aiData = await aiResponse.json();
+      let planText = aiData.choices[0].message.content.trim();
+      
+      // Remove markdown code blocks if present
+      planText = planText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+      try {
+        const plan = JSON.parse(planText);
+        
+        const explanation = `Jag har skapat en marknadsföringsplan för ${timeframe === 'week' ? 'denna vecka' : 'denna månad'} med ${plan.posts?.length || 0} inlägg fördelade över Instagram, TikTok och Facebook.
+
+Planen fokuserar på ${targets.join(' och ')} och innehåller konkreta inlägg med datumplanering.
+
+Vill du implementera denna plan i din kalender? Klicka på "Implementera planen"-knappen nedan så läggs alla inlägg automatiskt in.`;
+
+        // Save plan suggestion (optional logging)
+        await supabaseClient
+          .from('chat_history')
+          .insert({
+            user_id: user.id,
+            role: 'assistant',
+            message: explanation,
+          });
+
+        return new Response(
+          JSON.stringify({ plan, explanation }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (parseError) {
+        console.error('Failed to parse plan JSON:', parseError, 'Raw text:', planText);
+        return new Response(
+          JSON.stringify({ error: 'Kunde inte generera giltig plan. Försök igen.' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     // POST /ai-assistant/analyze - Analyze statistics
     if (action === 'analyze' && req.method === 'POST') {
       return new Response(
