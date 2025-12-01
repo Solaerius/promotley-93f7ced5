@@ -29,17 +29,22 @@ async function invokeCalendar(payload: MethodAction): Promise<any> {
     const token = await getFreshToken();
     if (!token) throw Object.assign(new Error('not_authenticated'), { status: 401 });
 
+    // Ensure payload always has action
+    const body = payload && payload.action ? payload : { action: 'list' };
+    
+    console.debug('[calendar] invoking with payload:', body);
+
     const { data, error } = await supabase.functions.invoke('calendar', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json', 
         'Authorization': `Bearer ${token}` 
       },
-      body: payload
+      body: JSON.stringify(body)
     });
 
     if (error) {
-      // Check if it's a 401 error
+      console.error('[calendar] invoke error:', error);
       if (error.message?.includes('Unauthorized') || error.message?.includes('JW') || error.message?.includes('invalid_jwt')) {
         throw Object.assign(error, { status: 401 });
       }
@@ -52,7 +57,8 @@ async function invokeCalendar(payload: MethodAction): Promise<any> {
     return await attempt();
   } catch (err: any) {
     if (err?.status === 401 || String(err?.message).toLowerCase().includes('unauthorized') || err.message === 'not_authenticated') {
-      await supabase.auth.getSession(); // silent refresh
+      console.debug('[calendar] 401 detected, refreshing session and retrying');
+      await supabase.auth.getSession();
       return await attempt();
     }
     throw err;
@@ -68,6 +74,8 @@ export const useCalendar = () => {
   const fetchPosts = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.debug('[calendar] fetching posts with action: list');
       const result = await invokeCalendar({ action: 'list' });
       setPosts(Array.isArray(result) ? result : []);
     } catch (err: any) {
@@ -102,6 +110,8 @@ export const useCalendar = () => {
         throw new Error('Ogiltigt datum');
       }
       const isoDate = date.toISOString().slice(0, 10);
+
+      console.debug('[calendar] creating post:', { title: postData.title, platform, date: isoDate });
 
       const result = await invokeCalendar({ 
         action: 'create', 
@@ -147,6 +157,8 @@ export const useCalendar = () => {
         date: isNaN(d.valueOf()) ? '' : d.toISOString().slice(0, 10)
       };
     });
+
+    console.debug('[calendar] bulk creating posts:', normalizedPosts.length);
 
     const result = await invokeCalendar({ 
       action: 'bulk_create', 
