@@ -10,6 +10,8 @@ import { Calendar as CalendarIcon, Plus, Sparkles, Instagram, Music2, Facebook, 
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useCalendar } from "@/hooks/useCalendar";
+import CalendarSkeleton from "@/components/CalendarSkeleton";
+import CalendarErrorState from "@/components/CalendarErrorState";
 
 interface CalendarPost {
   id: string;
@@ -21,10 +23,11 @@ interface CalendarPost {
 
 const Calendar = () => {
   const { toast } = useToast();
-  const { posts, loading, hasPosts, createPost, updatePost, deletePost } = useCalendar();
+  const { posts, loading, error, hasPosts, createPost, updatePost, deletePost, fetchPosts } = useCalendar();
   const [view, setView] = useState<"month" | "week">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingPost, setEditingPost] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     date: "",
@@ -76,6 +79,7 @@ const Calendar = () => {
       return;
     }
 
+    setIsSaving(true);
     try {
       if (editingPost) {
         await updatePost(editingPost.id, formData);
@@ -85,16 +89,19 @@ const Calendar = () => {
       setIsDialogOpen(false);
       setEditingPost(null);
       setFormData({ date: "", platform: "", title: "", description: "" });
-    } catch (error) {
-      console.error('Error saving post:', error);
+    } catch (err: any) {
+      console.error('Error saving post:', err);
+      // Toast already shown by hook
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDeletePost = async (id: string) => {
     try {
       await deletePost(id);
-    } catch (error) {
-      console.error('Error deleting post:', error);
+    } catch (err) {
+      console.error('Error deleting post:', err);
     }
   };
 
@@ -126,8 +133,22 @@ const Calendar = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <CalendarSkeleton />
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8 animate-fade-in">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Innehållskalender</h1>
+            <p className="text-muted-foreground">
+              Planera dina inlägg och håll koll på din content-strategi
+            </p>
+          </div>
+          <CalendarErrorState error={error} onRetry={fetchPosts} />
         </div>
       </DashboardLayout>
     );
@@ -201,8 +222,15 @@ const Calendar = () => {
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                   </div>
-                  <Button onClick={handleSavePost} className="w-full">
-                    {editingPost ? "Uppdatera" : "Skapa"}
+                  <Button onClick={handleSavePost} className="w-full" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {editingPost ? "Uppdaterar..." : "Skapar..."}
+                      </>
+                    ) : (
+                      editingPost ? "Uppdatera" : "Skapa"
+                    )}
                   </Button>
                 </div>
               </DialogContent>

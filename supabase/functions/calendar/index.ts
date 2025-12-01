@@ -189,9 +189,19 @@ serve(async (req) => {
       );
     }
 
-    // POST /calendar - Create new post
-    if (req.method === 'POST' && pathParts.length === 1) {
-      const body = await req.json();
+    // POST /calendar - Create new post (not bulk_create or update)
+    if (req.method === 'POST' && !pathParts.includes('bulk_create')) {
+      let body;
+      try {
+        body = await req.json();
+      } catch (parseError) {
+        console.error('Failed to parse request body:', parseError);
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON body' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       const { title, description, platform, date } = body;
 
       if (!title || !platform || !date) {
