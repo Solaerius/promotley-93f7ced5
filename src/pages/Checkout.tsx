@@ -47,15 +47,16 @@ const Checkout = () => {
           return;
         }
 
+        const accessToken = session.access_token;
         setUserId(session.user.id);
 
-        // Fetch Stripe publishable key from server
-        const { data: configData, error: configError } = await supabase.functions.invoke('billing/config', {
-          method: 'GET'
+        // Fetch Stripe publishable key from server (public endpoint)
+        const { data: configData, error: configError } = await supabase.functions.invoke('billing', {
+          body: { route: 'config' }
         });
 
         if (configError || !configData?.publishableKey) {
-          console.error('Config error:', configError);
+          console.error('Config error:', configError, configData);
           setError("Stripe är inte konfigurerat. Kontakta administratören.");
           setLoading(false);
           return;
@@ -65,17 +66,14 @@ const Checkout = () => {
         const stripeP = loadStripe(configData.publishableKey);
         setStripePromise(stripeP);
 
-        // Create checkout session
+        // Create checkout session with JWT auth
         const successUrl = `${window.location.origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
         const cancelUrl = `${window.location.origin}/pricing?cancelled=true`;
 
-        // Get fresh access token for auth header
-        const { data: sessionData } = await supabase.auth.getSession();
-        const accessToken = sessionData?.session?.access_token;
-
-        const { data, error: invokeError } = await supabase.functions.invoke('billing/create-checkout-session', {
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        const { data, error: invokeError } = await supabase.functions.invoke('billing', {
+          headers: { Authorization: `Bearer ${accessToken}` },
           body: {
+            route: 'create-checkout-session',
             plan,
             planLookupKey: selectedPlan.lookupKey,
             userId: session.user.id,
