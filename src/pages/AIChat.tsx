@@ -5,6 +5,14 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Send,
   Sparkles,
   BarChart3,
@@ -29,19 +37,21 @@ interface Message {
   sender: "user" | "ai";
   message: string;
   timestamp: Date;
-  plan?: any; // Marketing plan data if message contains a plan
+  plan?: any;
 }
 
 const AIChat = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { messages, loading, sendMessage, generatePlan, analyzeStats, createMarketingPlan, implementPlan } = useAIAssistant();
+  const { messages, loading, sendMessage, analyzeStats, implementPlan } = useAIAssistant();
   const { credits } = useUserCredits();
   const [inputMessage, setInputMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [activePlan, setActivePlan] = useState<any>(null);
+  const [pendingPlan, setPendingPlan] = useState<any>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [longLoadingBanner, setLongLoadingBanner] = useState(false);
   
   const hasInsufficientCredits = credits && credits.credits_left <= 0 && credits.plan !== 'pro_unlimited';
 
@@ -52,12 +62,23 @@ const AIChat = () => {
     { icon: TrendingUp, text: "Skapa 30-dagars strategi", color: "from-green-500 to-emerald-500" },
   ];
 
+  // Show long loading banner after 2 seconds
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (loading) {
+      timer = setTimeout(() => setLongLoadingBanner(true), 2000);
+    } else {
+      setLongLoadingBanner(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   // Check if user is near bottom of scroll area
   const checkIfNearBottom = () => {
     const element = scrollRef.current;
     if (!element) return false;
     
-    const threshold = 80; // pixels from bottom
+    const threshold = 80;
     const scrollBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
     return scrollBottom < threshold;
   };
@@ -86,7 +107,19 @@ const AIChat = () => {
     }
   }, [messages, loading, isNearBottom]);
 
-  const handleSendMessage = async (text?: string) => {
+  // Extract plan from messages (look for plan data in metadata)
+  const getLatestPlan = () => {
+    // Find the most recent message with a plan
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i] as any;
+      if (msg.plan) {
+        return { plan: msg.plan, requestId: msg.requestId || `plan-${msg.id}` };
+      }
+    }
+    return null;
+  };
+
+  const handleSendMessage = async (text?: string, meta?: any) => {
     const messageText = text || inputMessage.trim();
     if (!messageText || loading) return;
     
@@ -100,7 +133,7 @@ const AIChat = () => {
     }
 
     try {
-      await sendMessage(messageText);
+      await sendMessage(messageText, meta);
       setInputMessage("");
     } catch (error: any) {
       console.error('Error sending message:', error);
@@ -128,24 +161,24 @@ const AIChat = () => {
     
     switch (command) {
       case "Analysera min statistik":
-        await analyzeStats();
+        // Send as visible message
+        await handleSendMessage("Analysera min statistik och ge mig insikter om mina sociala medier-konton.");
         break;
       case "Skapa marknadsföringsplan":
-        try {
-          const result = await createMarketingPlan();
-          if (result?.plan) {
-            setActivePlan(result.plan);
-          }
-        } catch (error: any) {
-          console.error('Error creating plan:', error);
-          if (error?.message?.includes('INSUFFICIENT_CREDITS')) {
-            toast({
-              title: "Otillräckliga krediter",
-              description: "Marknadsföringsplaner kräver fler krediter än du har kvar.",
-              variant: "destructive",
-            });
-          }
-        }
+        // Send as visible message with metadata for the AI to understand the intent
+        const planMessage = "Skapa en marknadsföringsplan för kommande 4 veckor som maximerar räckvidd och engagemang. Utgå från min kalender och företagsprofil.";
+        await handleSendMessage(planMessage, {
+          action: 'create_marketing_plan',
+          timeframe: { preset: 'next_4_weeks' },
+          targets: ['reach', 'engagement'],
+          requestId: crypto.randomUUID()
+        });
+        break;
+      case "Skriv caption":
+        setInputMessage("Skriv en engagerande caption för mitt nästa inlägg om ");
+        break;
+      case "Skapa 30-dagars strategi":
+        await handleSendMessage("Skapa en 30-dagars strategi för att öka min synlighet på sociala medier. Inkludera konkreta aktiviteter och mål.");
         break;
       default:
         setInputMessage(command);
@@ -153,17 +186,38 @@ const AIChat = () => {
   };
 
   const handleImplementPlan = async (plan: any, requestId: string) => {
+    // Show confirmation dialog
+    setPendingPlan({ plan, requestId });
+    setShowConfirmDialog(true);
+  };
+
+  const confirmImplementPlan = async () => {
+    if (!pendingPlan) return;
+    
+    setShowConfirmDialog(false);
     try {
-      await implementPlan(plan, requestId);
-      setActivePlan(null);
+      await implementPlan(pendingPlan.plan, pendingPlan.requestId);
+      toast({
+        title: "Plan implementerad",
+        description: `${pendingPlan.plan.posts?.length || 0} inlägg har lagts till i din kalender.`,
+      });
     } catch (error) {
       console.error('Error implementing plan:', error);
+      toast({
+        title: "Fel",
+        description: "Kunde inte implementera planen. Försök igen.",
+        variant: "destructive",
+      });
+    } finally {
+      setPendingPlan(null);
     }
   };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
   };
+
+  const latestPlanData = getLatestPlan();
 
   return (
     <DashboardLayout>
@@ -189,6 +243,8 @@ const AIChat = () => {
                 variant="outline"
                 className="h-auto p-4 justify-start hover:shadow-soft transition-all duration-300 group"
                 onClick={() => handleQuickCommand(cmd.text)}
+                disabled={loading}
+                aria-label={cmd.text}
               >
                 <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cmd.color} flex items-center justify-center mr-3 group-hover:scale-110 transition-transform`}>
                   <Icon className="w-5 h-5 text-white" />
@@ -202,6 +258,13 @@ const AIChat = () => {
         {/* Chat Container */}
         <Card className="flex-1 flex flex-col overflow-hidden relative rounded-2xl shadow-elegant">
           <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+            {/* Long loading banner */}
+            {longLoadingBanner && loading && (
+              <div className="absolute top-0 left-0 right-0 z-10 bg-primary/10 border-b border-primary/20 px-4 py-2 text-center">
+                <p className="text-sm text-primary">Skapar plan... detta kan ta några sekunder</p>
+              </div>
+            )}
+
             {/* Messages with proper scroll handling */}
             <div 
               className="flex-1 overflow-y-auto p-4 md:p-6"
@@ -214,7 +277,7 @@ const AIChat = () => {
               }}
             >
               <div className="space-y-6">
-                {messages.map((msg) => (
+                {messages.map((msg: any) => (
                   <div
                     key={msg.id}
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
@@ -244,21 +307,19 @@ const AIChat = () => {
                           {formatTime(new Date(msg.timestamp))}
                         </p>
                       </div>
+                      
+                      {/* Render MarketingPlanCard if message contains a plan */}
+                      {msg.plan && (
+                        <div className="mt-4">
+                          <MarketingPlanCard 
+                            plan={msg.plan} 
+                            onImplement={handleImplementPlan}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
-
-                {/* Marketing Plan Card */}
-                {activePlan && (
-                  <div className="flex justify-start">
-                    <div className="max-w-[80%] lg:max-w-[70%]">
-                      <MarketingPlanCard 
-                        plan={activePlan} 
-                        onImplement={handleImplementPlan}
-                      />
-                    </div>
-                  </div>
-                )}
 
                 {/* Typing indicator */}
                 {loading && (
@@ -334,6 +395,7 @@ const AIChat = () => {
                   size="icon"
                   onClick={() => toast({ title: "Filuppladdning", description: "Kommer snart!" })}
                   disabled={hasInsufficientCredits}
+                  aria-label="Bifoga fil"
                 >
                   <Paperclip className="w-4 h-4" />
                 </Button>
@@ -341,15 +403,22 @@ const AIChat = () => {
                   placeholder={hasInsufficientCredits ? "Inga krediter kvar..." : "Skriv ditt meddelande..."}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && !hasInsufficientCredits && handleSendMessage()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && !hasInsufficientCredits) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
                   className="flex-1"
-                  disabled={hasInsufficientCredits}
+                  disabled={hasInsufficientCredits || loading}
+                  aria-label="Meddelande"
                 />
                 <Button
                   variant="gradient"
                   size="icon"
                   onClick={() => handleSendMessage()}
                   disabled={!inputMessage.trim() || loading || hasInsufficientCredits}
+                  aria-label="Skicka meddelande"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
@@ -363,6 +432,31 @@ const AIChat = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Confirmation Dialog for Plan Implementation */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Implementera marknadsföringsplan?</DialogTitle>
+            <DialogDescription>
+              {pendingPlan && (
+                <>
+                  Vill du lägga in {pendingPlan.plan.posts?.length || 0} inlägg i din kalender mellan{' '}
+                  {pendingPlan.plan.timeframe?.start} och {pendingPlan.plan.timeframe?.end}?
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Avbryt
+            </Button>
+            <Button variant="gradient" onClick={confirmImplementPlan}>
+              Implementera
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

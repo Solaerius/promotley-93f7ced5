@@ -204,10 +204,10 @@ serve(async (req) => {
       return result;
     };
 
-    // POST /ai-assistant/chat - Chat with AI
+    // POST /ai-assistant/chat - Chat with AI (handles both regular chat and marketing plan creation)
     if (action === 'chat' && req.method === 'POST') {
       const body = await req.json();
-      const { message, history } = body;
+      const { message, history, calendarContextDigest = [], meta } = body;
 
       if (!message) {
         return new Response(
@@ -217,10 +217,16 @@ serve(async (req) => {
       }
 
       console.log('Processing chat message:', message);
-      
+      console.log('Meta:', meta);
+
+      // Check if this is a marketing plan request (via meta action)
+      const isMarketingPlanRequest = meta?.action === 'create_marketing_plan' || 
+        message.toLowerCase().includes('marknadsföringsplan') && 
+        (message.toLowerCase().includes('skapa') || message.toLowerCase().includes('generera'));
+
       // Estimate credit cost for this request
-      const estimatedCost = estimateCreditCost('chat', message);
-      console.log('💰 Estimated credit cost:', estimatedCost);
+      const estimatedCost = isMarketingPlanRequest ? 5 : estimateCreditCost('chat', message);
+      console.log('💰 Estimated credit cost:', estimatedCost, isMarketingPlanRequest ? '(marketing plan)' : '');
       
       // Check user credits
       const { data: userData, error: userError } = await supabaseClient
@@ -236,15 +242,180 @@ serve(async (req) => {
       // Check if user has enough credits (skip for unlimited plan)
       if (userData?.plan !== 'pro_unlimited' && (userData?.credits_left || 0) < estimatedCost) {
         console.log('❌ Insufficient credits:', userData?.credits_left, 'needed:', estimatedCost);
+        
+        // Return a friendly message instead of error for insufficient credits
+        const creditMessage = isMarketingPlanRequest 
+          ? `Du har inte tillräckligt med krediter för en marknadsföringsplan. En plan kostar ${estimatedCost} krediter och du har ${userData?.credits_left || 0} kvar. Uppgradera din plan för att fortsätta.`
+          : `Du har inte tillräckligt med krediter för denna förfrågan. Du har ${userData?.credits_left || 0} krediter kvar.`;
+        
         return new Response(
           JSON.stringify({ 
             error: 'INSUFFICIENT_CREDITS',
-            message: 'Du har inte tillräckligt med krediter för denna förfrågan.',
+            message: creditMessage,
+            response: creditMessage,
             credits_left: userData?.credits_left || 0,
             cost: estimatedCost
           }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
+
+      // If this is a marketing plan request, handle it specially
+      if (isMarketingPlanRequest) {
+        console.log('📅 Creating marketing plan via chat...');
+        
+        const targets = meta?.targets || ['reach', 'engagement'];
+        const timeframe = meta?.timeframe?.preset === 'next_4_weeks' ? 'month' : 'month';
+        const requestId = meta?.requestId;
+
+        const userContext = await getUserContext(user.id);
+
+        const now = new Date();
+        const endDate = new Date(now);
+        endDate.setMonth(endDate.getMonth() + 1);
+
+        let calendarContext = '';
+        if (calendarContextDigest.length > 0) {
+          calendarContext = `\n\nExisterande kalender:\n${calendarContextDigest.map((p: any) => 
+            `- ${p.date}: ${p.title} (${p.channel})`
+          ).join('\n')}`;
+        }
+
+        const systemPrompt = `Du är en marknadsföringsexpert för UF-företag. Skapa en detaljerad marknadsföringsplan i JSON-format.
+
+Mål: ${targets.join(', ')}
+Tidsram: kommande 4 veckor
+Start: ${now.toISOString().split('T')[0]}
+Slut: ${endDate.toISOString().split('T')[0]}
+
+${userContext.profile ? `
+Företagsprofil:
+- Bransch: ${userContext.profile.branch || 'Ej angiven'}
+- Målgrupp: ${userContext.profile.malgrupp || 'Ej angiven'}
+- Produkt: ${userContext.profile.produkt_beskrivning || 'Ej angiven'}
+` : ''}
+
+${calendarContext}
+
+Returnera ENDAST ett JSON-objekt (ingen annan text före eller efter) med följande exakta struktur:
+{
+  "timeframe": {"start": "${now.toISOString().split('T')[0]}", "end": "${endDate.toISOString().split('T')[0]}"},
+  "goals": ["konkret mål 1", "konkret mål 2", "konkret mål 3"],
+  "budgetHints": ["budgettips 1", "budgettips 2"],
+  "posts": [
+    {
+      "date": "YYYY-MM-DD",
+      "channel": "instagram",
+      "title": "Catchy inläggstitel",
+      "content": "Detaljerad innehållsbeskrivning för inlägget",
+      "tags": ["tag1", "tag2", "tag3"],
+      "assets": [],
+      "status": "scheduled"
+    }
+  ]
+}
+
+Skapa minst 10-15 inlägg spridda jämnt över tidsperioden. Variera kanaler (instagram, tiktok, facebook). Alla datum måste vara mellan ${now.toISOString().split('T')[0]} och ${endDate.toISOString().split('T')[0]}. Gör innehållet relevant för UF-företag.`;
+
+        const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openaiApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: message }
+            ],
+            temperature: 0.8,
+          }),
+        });
+
+        if (!aiResponse.ok) {
+          throw new Error('Failed to generate plan');
+        }
+
+        const aiData = await aiResponse.json();
+        let planText = aiData.choices[0].message.content.trim();
+        
+        // Remove markdown code blocks if present
+        planText = planText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+        try {
+          const plan = JSON.parse(planText);
+          
+          const explanation = `Jag har skapat en marknadsföringsplan baserat på din förfrågan!
+
+Planen innehåller ${plan.posts?.length || 0} inlägg fördelade över Instagram, TikTok och Facebook under de kommande 4 veckorna.
+
+Mål för perioden:
+${plan.goals?.map((g: string, i: number) => `${i + 1}) ${g}`).join('\n') || 'Öka räckvidd och engagemang'}
+
+Klicka på "Implementera planen" nedan för att lägga till alla inlägg i din kalender.`;
+
+          // Save user message to chat history
+          await supabaseClient
+            .from('chat_history')
+            .insert({
+              user_id: user.id,
+              role: 'user',
+              message,
+            });
+
+          // Save plan to analysis history for later reuse
+          await supabaseClient
+            .from('ai_analysis_history')
+            .insert({
+              user_id: user.id,
+              input_data: {
+                type: 'marketing_plan',
+                targets,
+                timeframe,
+                requestId,
+              },
+              ai_output: plan,
+            });
+
+          // Save explanation message to chat history
+          await supabaseClient
+            .from('chat_history')
+            .insert({
+              user_id: user.id,
+              role: 'assistant',
+              message: explanation,
+            });
+          
+          // Deduct credits after successful plan creation (skip for unlimited plan)
+          if (userData?.plan !== 'pro_unlimited') {
+            const newCredits = Math.max(0, (userData?.credits_left || 0) - estimatedCost);
+            await supabaseClient
+              .from('users')
+              .update({ credits_left: newCredits })
+              .eq('id', user.id);
+            console.log('💸 Plan credits deducted:', estimatedCost, 'remaining:', newCredits);
+          }
+
+          return new Response(
+            JSON.stringify({ 
+              response: explanation, 
+              plan, 
+              credits_used: estimatedCost,
+              requestId 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (parseError) {
+          console.error('Failed to parse plan JSON:', parseError, 'Raw text:', planText);
+          return new Response(
+            JSON.stringify({ 
+              response: 'Jag kunde inte generera en giltig plan just nu. Försök igen om en stund.',
+              error: 'Kunde inte generera giltig plan. Försök igen.' 
+            }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
       }
 
       // Get user context (connections, profile, knowledge base)

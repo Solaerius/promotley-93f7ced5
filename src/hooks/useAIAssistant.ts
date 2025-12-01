@@ -10,6 +10,15 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   message: string;
   timestamp: string;
+  plan?: any; // Marketing plan if present
+  requestId?: string;
+}
+
+interface MessageMeta {
+  action?: string;
+  timeframe?: any;
+  targets?: string[];
+  requestId?: string;
 }
 
 export const useAIAssistant = () => {
@@ -41,7 +50,7 @@ export const useAIAssistant = () => {
     }
   };
 
-  const sendMessage = async (message: string) => {
+  const sendMessage = async (message: string, meta?: MessageMeta) => {
     try {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -50,9 +59,9 @@ export const useAIAssistant = () => {
       // Fetch calendar context
       const { data: contextData } = await supabase.functions.invoke('calendar/context');
 
-      // Add user message to UI immediately
+      // Add user message to UI immediately (optimistic)
       const userMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: `temp-${Date.now()}`,
         role: 'user',
         message,
         timestamp: new Date().toISOString(),
@@ -65,19 +74,27 @@ export const useAIAssistant = () => {
           message, 
           history: messages,
           calendarContextDigest: contextData?.digest || [],
-          lastUpdatedAt: contextData?.lastUpdatedAt
+          lastUpdatedAt: contextData?.lastUpdatedAt,
+          meta // Include metadata for special actions like marketing plan
         }
       });
 
       if (error) throw error;
 
-      // Add AI response to UI
+      // Build AI response message
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         message: result.response,
         timestamp: new Date().toISOString(),
       };
+
+      // If a marketing plan was generated, attach it to the message
+      if (result.plan) {
+        aiMessage.plan = result.plan;
+        aiMessage.requestId = meta?.requestId || `plan-${Date.now()}`;
+      }
+
       setMessages(prev => [...prev, aiMessage]);
 
       // Trigger credit update
