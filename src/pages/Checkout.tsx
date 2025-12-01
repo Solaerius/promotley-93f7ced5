@@ -1,87 +1,160 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, ArrowLeft, AlertCircle, CreditCard, Shield, Lock } from "lucide-react";
+import { loadStripe, Stripe } from "@stripe/stripe-js";
+import {
+  EmbeddedCheckoutProvider,
+  EmbeddedCheckout,
+} from "@stripe/react-stripe-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 
-const planDetails: Record<string, { name: string; price: string; credits: string }> = {
-  starter: { name: "UF Starter", price: "29", credits: "50" },
-  growth: { name: "UF Growth", price: "49", credits: "100" },
-  pro: { name: "UF Pro", price: "99", credits: "300" },
+const planDetails: Record<string, { name: string; price: string; credits: string; lookupKey: string }> = {
+  starter: { name: "UF Starter", price: "29", credits: "50", lookupKey: "starter_monthly_sek" },
+  growth: { name: "UF Growth", price: "49", credits: "100", lookupKey: "growth_monthly_sek" },
+  pro: { name: "UF Pro", price: "99", credits: "300", lookupKey: "pro_monthly_sek" },
 };
 
 const Checkout = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  
   const plan = searchParams.get("plan") || "starter";
   const selectedPlan = planDetails[plan] || planDetails.starter;
 
   useEffect(() => {
-    // Check if user is logged in
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+    const initCheckout = async () => {
+      try {
+        // Check if user is logged in
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast({
+            title: "Logga in först",
+            description: "Du måste vara inloggad för att köpa ett paket.",
+            variant: "destructive",
+          });
+          navigate("/auth?redirect=/checkout?plan=" + plan);
+          return;
+        }
+
+        setUserId(session.user.id);
+
+        // Fetch Stripe publishable key from server
+        const { data: configData, error: configError } = await supabase.functions.invoke('billing/config', {
+          method: 'GET'
+        });
+
+        if (configError || !configData?.publishableKey) {
+          console.error('Config error:', configError);
+          setError("Stripe är inte konfigurerat. Kontakta administratören.");
+          setLoading(false);
+          return;
+        }
+
+        // Initialize Stripe with the key from server
+        const stripeP = loadStripe(configData.publishableKey);
+        setStripePromise(stripeP);
+
+        // Create checkout session
+        const successUrl = `${window.location.origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
+        const cancelUrl = `${window.location.origin}/pricing?cancelled=true`;
+
+        const { data, error: invokeError } = await supabase.functions.invoke('billing/create-checkout-session', {
+          body: {
+            plan,
+            planLookupKey: selectedPlan.lookupKey,
+            userId: session.user.id,
+            successUrl,
+            cancelUrl,
+          }
+        });
+
+        if (invokeError) {
+          console.error('Checkout error:', invokeError);
+          throw new Error(invokeError.message || 'Kunde inte starta betalning');
+        }
+
+        if (data?.clientSecret) {
+          setClientSecret(data.clientSecret);
+        } else if (data?.checkoutUrl) {
+          // Fallback to hosted checkout if embedded not available
+          window.location.href = data.checkoutUrl;
+          return;
+        } else {
+          throw new Error('Ingen checkout-session skapad');
+        }
+
+      } catch (err: any) {
+        console.error('Checkout init error:', err);
+        setError(err.message || 'Ett fel uppstod vid betalning');
         toast({
-          title: "Logga in först",
-          description: "Du måste vara inloggad för att köpa ett paket.",
+          title: "Fel",
+          description: err.message || "Kunde inte starta betalning. Försök igen.",
           variant: "destructive",
         });
-        navigate("/auth");
+      } finally {
+        setLoading(false);
       }
     };
-    checkAuth();
-  }, [navigate, toast]);
 
-  const handleCreateCheckout = async () => {
-    try {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
+    initCheckout();
+  }, [plan, navigate, toast, selectedPlan.lookupKey]);
 
-      const successUrl = `${window.location.origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`;
-      const cancelUrl = `${window.location.origin}/pricing`;
+  // Handle checkout completion
+  const onComplete = useCallback(() => {
+    // EmbeddedCheckout handles redirect via return_url
+  }, []);
 
-      const { data, error } = await supabase.functions.invoke('billing/checkout', {
-        method: 'POST',
-        body: {
-          plan,
-          userId: session.user.id,
-          successUrl,
-          cancelUrl,
-        }
-      });
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[400px]">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Förbereder betalning...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-      if (error) throw error;
-
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      }
-    } catch (err) {
-      console.error('Error creating checkout:', err);
-      toast({
-        title: "Fel",
-        description: "Kunde inte starta betalning. Försök igen.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-2xl mx-auto">
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+            <Button variant="outline" onClick={() => navigate("/pricing")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Tillbaka till priser
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-2xl mx-auto">
+      <div className="container mx-auto px-4 py-8 md:py-16">
+        <div className="max-w-4xl mx-auto">
           <Button
             variant="ghost"
             onClick={() => navigate("/pricing")}
@@ -91,78 +164,93 @@ const Checkout = () => {
             Tillbaka till priser
           </Button>
 
-          <Card className="p-8">
-            <h1 className="text-3xl font-bold mb-2">Bekräfta ditt val</h1>
-            <p className="text-muted-foreground mb-8">
-              Du är på väg att aktivera {selectedPlan.name}
-            </p>
+          <div className="grid md:grid-cols-5 gap-6 md:gap-8">
+            {/* Order Summary */}
+            <div className="md:col-span-2">
+              <Card className="p-6 sticky top-24">
+                <h2 className="text-xl font-bold mb-4">Din beställning</h2>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold">{selectedPlan.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedPlan.credits} AI-krediter/månad
+                      </p>
+                    </div>
+                    <p className="font-bold">{selectedPlan.price} kr</p>
+                  </div>
 
-            <div className="space-y-4 mb-8">
-              <div className="flex justify-between items-center pb-4 border-b">
-                <div>
-                  <h3 className="font-semibold text-lg">{selectedPlan.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedPlan.credits} AI-krediter per månad
-                  </p>
+                  <div className="border-t pt-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Pris per månad</span>
+                      <span>{selectedPlan.price} kr</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Moms (25%)</span>
+                      <span>{(parseFloat(selectedPlan.price) * 0.25).toFixed(0)} kr</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-base pt-2 border-t">
+                      <span>Totalt</span>
+                      <span>{(parseFloat(selectedPlan.price) * 1.25).toFixed(0)} kr/mån</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold">{selectedPlan.price} kr</p>
-                  <p className="text-sm text-muted-foreground">per månad</p>
-                </div>
-              </div>
 
-              <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
-                <p className="flex justify-between">
-                  <span>Pris per månad:</span>
-                  <span className="font-medium">{selectedPlan.price} kr</span>
-                </p>
-                <p className="flex justify-between">
-                  <span>Moms (25%):</span>
-                  <span className="font-medium">{(parseFloat(selectedPlan.price) * 0.25).toFixed(0)} kr</span>
-                </p>
-                <div className="border-t border-border pt-2 mt-2">
-                  <p className="flex justify-between text-base font-bold">
-                    <span>Totalt:</span>
-                    <span>{(parseFloat(selectedPlan.price) * 1.25).toFixed(0)} kr/mån</span>
-                  </p>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <span>Säker betalning via Stripe</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-primary" />
+                    <span>Avsluta när du vill</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-primary" />
+                    <span>Dina uppgifter är krypterade</span>
+                  </div>
                 </div>
-              </div>
-
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>✓ Avsluta när du vill</p>
-                <p>✓ Säker betalning via Stripe</p>
-                <p>✓ Faktura skickas via e-post</p>
-              </div>
+              </Card>
             </div>
 
-            <Button
-              variant="gradient"
-              size="lg"
-              className="w-full"
-              onClick={handleCreateCheckout}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Förbereder betalning...
-                </>
-              ) : (
-                "Fortsätt till betalning"
-              )}
-            </Button>
+            {/* Payment Form */}
+            <div className="md:col-span-3">
+              <Card className="p-6">
+                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Betalning
+                </h2>
 
-            <p className="text-xs text-center text-muted-foreground mt-4">
-              Genom att fortsätta godkänner du våra{" "}
-              <a href="/terms-of-service" className="underline">
-                användarvillkor
-              </a>{" "}
-              och{" "}
-              <a href="/privacy-policy" className="underline">
-                integritetspolicy
-              </a>
-            </p>
-          </Card>
+                {clientSecret && stripePromise ? (
+                  <div className="stripe-checkout-container">
+                    <EmbeddedCheckoutProvider
+                      stripe={stripePromise}
+                      options={{ clientSecret, onComplete }}
+                    >
+                      <EmbeddedCheckout />
+                    </EmbeddedCheckoutProvider>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                    <p className="text-muted-foreground">Laddar betalningsformulär...</p>
+                  </div>
+                )}
+              </Card>
+
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                Genom att fortsätta godkänner du våra{" "}
+                <a href="/terms-of-service" className="underline hover:text-primary">
+                  användarvillkor
+                </a>{" "}
+                och{" "}
+                <a href="/privacy-policy" className="underline hover:text-primary">
+                  integritetspolicy
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
