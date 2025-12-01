@@ -158,15 +158,36 @@ export const useAIAssistant = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const { data: result, error } = await supabase.functions.invoke('calendar/bulk_create', {
-        method: 'POST',
+      // Normalize posts for bulk_create
+      const normalizedPosts = (plan.posts || []).map((p: any) => {
+        const channel = (p.channel || p.platform || '').toLowerCase();
+        const d = new Date(p.date);
+        return {
+          title: p.title,
+          content: p.content || p.description || '',
+          channel: channel as 'instagram' | 'tiktok' | 'facebook',
+          date: isNaN(d.valueOf()) ? '' : d.toISOString().slice(0, 10)
+        };
+      });
+
+      console.debug('[implementPlan] Sending posts:', normalizedPosts);
+
+      const { data: result, error } = await supabase.functions.invoke('calendar', {
+        headers: { 
+          'Authorization': `Bearer ${session.access_token}` 
+        },
         body: {
-          posts: plan.posts,
-          requestId
+          action: 'bulk_create',
+          data: { posts: normalizedPosts, requestId }
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[implementPlan] Error:', error);
+        throw error;
+      }
+
+      console.debug('[implementPlan] Result:', result);
 
       toast({
         title: "Plan implementerad!",
