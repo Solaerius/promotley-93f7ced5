@@ -6,12 +6,20 @@ import { Check, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 
+const PLAN_LABELS: Record<string, string> = {
+  pro: "UF Starter",
+  pro_xl: "UF Growth", 
+  pro_unlimited: "UF Pro",
+  free_trial: "Gratis",
+};
+
 const BillingSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session_id");
   const [isActivating, setIsActivating] = useState(true);
   const [isActive, setIsActive] = useState(false);
+  const [activatedPlan, setActivatedPlan] = useState<string>("pro");
   const [pollCount, setPollCount] = useState(0);
   const MAX_POLLS = 10;
 
@@ -36,6 +44,9 @@ const BillingSuccess = () => {
         if (data?.status === 'active') {
           setIsActive(true);
           setIsActivating(false);
+          if (data?.plan) {
+            setActivatedPlan(data.plan);
+          }
           return true;
         }
 
@@ -115,7 +126,7 @@ const BillingSuccess = () => {
                 </div>
 
                 <h1 className="text-3xl md:text-4xl font-bold mb-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                  Välkommen till Promotely Pro! 🎉
+                  Välkommen till {PLAN_LABELS[activatedPlan] || "Promotely Pro"}! 🎉
                 </h1>
                 
                 <p className="text-lg text-muted-foreground mb-8 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 delay-100">
