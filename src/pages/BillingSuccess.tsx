@@ -29,19 +29,36 @@ const BillingSuccess = () => {
       return;
     }
 
-    // Poll for subscription activation
-    const pollSubscription = async () => {
+    // Verify and activate the subscription
+    const verifyAndActivate = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('billing/subscription-status', {
-          method: 'GET'
-        });
-
-        if (error) {
-          console.error('Error checking subscription:', error);
+        // Get auth token
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          console.error('No auth session');
+          navigate("/auth?redirect=/billing/success?session_id=" + sessionId);
           return false;
         }
 
-        if (data?.status === 'active') {
+        // Call verify-session to activate the subscription
+        const { data, error } = await supabase.functions.invoke('billing', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: {
+            route: 'verify-session',
+            sessionId: sessionId,
+          },
+        });
+
+        console.log('[BillingSuccess] verify-session response:', data, error);
+
+        if (error) {
+          console.error('Error verifying session:', error);
+          return false;
+        }
+
+        if (data?.activated && data?.status === 'active') {
           setIsActive(true);
           setIsActivating(false);
           if (data?.plan) {
@@ -50,16 +67,21 @@ const BillingSuccess = () => {
           return true;
         }
 
+        // If not activated yet, check subscription status
+        if (data?.status === 'pending') {
+          return false;
+        }
+
         return false;
       } catch (err) {
-        console.error('Poll error:', err);
+        console.error('Verify error:', err);
         return false;
       }
     };
 
     const startPolling = async () => {
-      // Initial check
-      const activated = await pollSubscription();
+      // Initial verification attempt
+      const activated = await verifyAndActivate();
       if (activated) return;
 
       // Poll every second for up to MAX_POLLS seconds
@@ -75,11 +97,11 @@ const BillingSuccess = () => {
           return prev + 1;
         });
 
-        const success = await pollSubscription();
+        const success = await verifyAndActivate();
         if (success) {
           clearInterval(interval);
         }
-      }, 1000);
+      }, 1500);
 
       return () => clearInterval(interval);
     };

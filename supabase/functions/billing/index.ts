@@ -217,13 +217,86 @@ serve(async (req) => {
       });
     }
 
+    // Route: verify-session (aktivera prenumeration efter betalning)
+    if (route === 'verify-session') {
+      const { sessionId } = body;
+      
+      if (!sessionId) {
+        return jsonResponse({ error: 'missing_session_id' }, 400);
+      }
+
+      if (!STRIPE_SECRET_KEY) {
+        return jsonResponse({ error: 'stripe_misconfigured' }, 500);
+      }
+
+      const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
+
+      try {
+        // Hämta checkout session från Stripe
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        
+        console.log('[billing] Verifying session:', sessionId, 'status:', session.status, 'payment_status:', session.payment_status);
+
+        // Verifiera att sessionen tillhör denna användare
+        if (session.metadata?.userId && session.metadata.userId !== user.id) {
+          console.error('[billing] Session userId mismatch:', session.metadata.userId, '!=', user.id);
+          return jsonResponse({ error: 'forbidden' }, 403);
+        }
+
+        // Om betalningen är slutförd, aktivera paketet
+        if (session.status === 'complete' && session.payment_status === 'paid') {
+          const plan = session.metadata?.plan || 'starter';
+          const credits = parseInt(session.metadata?.credits || '50');
+          const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.starter;
+          
+          const renewalDate = new Date();
+          renewalDate.setMonth(renewalDate.getMonth() + 1);
+
+          console.log('[billing] Activating plan for user:', user.id, 'plan:', planConfig.dbPlan, 'credits:', credits);
+
+          const { error: updateError } = await supabaseAdmin
+            .from('users')
+            .update({
+              plan: planConfig.dbPlan,
+              max_credits: credits,
+              credits_left: credits,
+              credits_used: 0,
+              renewal_date: renewalDate.toISOString().split('T')[0],
+            })
+            .eq('id', user.id);
+
+          if (updateError) {
+            console.error('[billing] Failed to update user:', updateError);
+            return jsonResponse({ error: 'db_error', detail: updateError.message }, 500);
+          }
+
+          console.log('[billing] Plan activated successfully for user:', user.id);
+
+          return jsonResponse({
+            status: 'active',
+            plan: planConfig.dbPlan,
+            credits: credits,
+            activated: true,
+          });
+        }
+
+        // Betalningen är inte slutförd ännu
+        return jsonResponse({
+          status: 'pending',
+          sessionStatus: session.status,
+          paymentStatus: session.payment_status,
+          activated: false,
+        });
+
+      } catch (stripeError) {
+        console.error('[billing] Stripe error:', stripeError);
+        return jsonResponse({ error: 'stripe_error', detail: stripeError instanceof Error ? stripeError.message : 'Unknown' }, 500);
+      }
+    }
+
     // Route: subscription-status
     if (route === 'subscription-status') {
-      const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        global: { headers: { Authorization: authHeader } },
-      });
-
-      const { data: userData, error: dbError } = await supabaseClient
+      const { data: userData, error: dbError } = await supabaseAdmin
         .from('users')
         .select('plan, credits_left, max_credits, renewal_date')
         .eq('id', user.id)
