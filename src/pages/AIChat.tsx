@@ -27,7 +27,7 @@ interface Message {
 
 const AIChat = () => {
   const { toast } = useToast();
-  const { messages, loading, sendMessage, generatePlan, analyzeStats } = useAIAssistant();
+  const { messages, loading, sendMessage, generatePlan, analyzeStats, createMarketingPlan, implementPlan } = useAIAssistant();
   const [inputMessage, setInputMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -94,7 +94,7 @@ const AIChat = () => {
         await analyzeStats();
         break;
       case "Skapa marknadsföringsplan":
-        await generatePlan();
+        await createMarketingPlan();
         break;
       default:
         setInputMessage(command);
@@ -107,7 +107,7 @@ const AIChat = () => {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-12rem)] flex flex-col animate-fade-in">
+      <div className="h-[calc(100vh-8rem)] min-h-[680px] md:min-h-[780px] flex flex-col animate-fade-in max-w-screen-xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-4xl font-bold text-foreground mb-2">AI-Assistent</h1>
@@ -137,11 +137,11 @@ const AIChat = () => {
         </div>
 
         {/* Chat Container */}
-        <Card className="flex-1 flex flex-col overflow-hidden relative">
+        <Card className="flex-1 flex flex-col overflow-hidden relative rounded-2xl shadow-elegant">
           <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
             {/* Messages with proper scroll handling */}
             <div 
-              className="flex-1 overflow-y-auto p-6"
+              className="flex-1 overflow-y-auto p-4 md:p-6"
               ref={scrollRef}
               onScroll={handleScroll}
               style={{ 
@@ -232,7 +232,7 @@ const AIChat = () => {
             )}
 
             {/* Input Area */}
-            <div className="border-t border-border p-4">
+            <div className="border-t border-border p-3 md:p-4 rounded-b-2xl">
               <div className="flex gap-2">
                 <Button
                   variant="outline"

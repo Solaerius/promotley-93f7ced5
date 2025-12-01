@@ -34,6 +34,48 @@ serve(async (req) => {
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/').filter(Boolean);
 
+    // GET /calendar/context - Get calendar digest for AI
+    if (req.method === 'GET' && pathParts.includes('context')) {
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sixtyDaysForward = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+
+      const { data, error } = await supabaseClient
+        .from('calendar_posts')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
+        .lte('date', sixtyDaysForward.toISOString().split('T')[0])
+        .order('date', { ascending: true })
+        .limit(100);
+
+      if (error) {
+        console.error('Error fetching calendar context:', error);
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Create digest
+      const digest = (data || []).map(post => ({
+        id: post.id,
+        date: post.date,
+        channel: post.platform,
+        title: post.title,
+        tags: post.description?.substring(0, 50) || ''
+      }));
+
+      return new Response(
+        JSON.stringify({ 
+          digest, 
+          lastUpdatedAt: new Date().toISOString(),
+          count: digest.length 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // GET /calendar - Get all posts sorted by date
     if (req.method === 'GET') {
       const { data, error } = await supabaseClient
@@ -56,6 +98,73 @@ serve(async (req) => {
       );
     }
 
+    // POST /calendar/bulk_create - Create multiple posts
+    if (req.method === 'POST' && pathParts.includes('bulk_create')) {
+      const body = await req.json();
+      const { posts, requestId } = body;
+
+      if (!posts || !Array.isArray(posts)) {
+        return new Response(
+          JSON.stringify({ error: 'Posts array required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const created = [];
+      const skipped = [];
+
+      for (const post of posts) {
+        if (!post.title || !post.channel || !post.date) {
+          skipped.push({ reason: 'Missing required fields', post });
+          continue;
+        }
+
+        // Check for duplicates
+        const { data: existing } = await supabaseClient
+          .from('calendar_posts')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('platform', post.channel)
+          .eq('date', post.date)
+          .eq('title', post.title)
+          .maybeSingle();
+
+        if (existing) {
+          skipped.push({ reason: 'duplicate', id: existing.id, post });
+          continue;
+        }
+
+        // Validate future date
+        if (new Date(post.date) < new Date()) {
+          skipped.push({ reason: 'Date must be in the future', post });
+          continue;
+        }
+
+        const { data: created_post, error } = await supabaseClient
+          .from('calendar_posts')
+          .insert({
+            user_id: user.id,
+            title: post.title,
+            description: post.content || '',
+            platform: post.channel,
+            date: post.date,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          skipped.push({ reason: error.message, post });
+        } else {
+          created.push(created_post);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ created, skipped }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // POST /calendar - Create new post
     if (req.method === 'POST' && pathParts.length === 1) {
       const body = await req.json();
@@ -63,14 +172,22 @@ serve(async (req) => {
 
       if (!title || !platform || !date) {
         return new Response(
-          JSON.stringify({ error: 'Missing required fields' }),
+          JSON.stringify({ error: 'Missing required fields: title, platform, date' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
       if (!['instagram', 'tiktok', 'facebook'].includes(platform)) {
         return new Response(
-          JSON.stringify({ error: 'Invalid platform' }),
+          JSON.stringify({ error: 'Invalid platform. Must be: instagram, tiktok, or facebook' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Validate future date
+      if (new Date(date) < new Date()) {
+        return new Response(
+          JSON.stringify({ error: 'Date must be in the future' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -84,7 +201,8 @@ serve(async (req) => {
           platform,
           date,
         })
-        .select();
+        .select()
+        .single();
 
       if (error) {
         console.error('Error creating calendar post:', error);
@@ -95,8 +213,8 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify(data[0]),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify(data),
+        { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -111,7 +229,8 @@ serve(async (req) => {
         .update({ title, description, platform, date })
         .eq('id', postId)
         .eq('user_id', user.id)
-        .select();
+        .select()
+        .single();
 
       if (error) {
         console.error('Error updating calendar post:', error);
@@ -121,7 +240,7 @@ serve(async (req) => {
         );
       }
 
-      if (!data || data.length === 0) {
+      if (!data) {
         return new Response(
           JSON.stringify({ error: 'Post not found' }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -129,7 +248,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify(data[0]),
+        JSON.stringify(data),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

@@ -44,6 +44,9 @@ export const useAIAssistant = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
+      // Fetch calendar context
+      const { data: contextData } = await supabase.functions.invoke('calendar/context');
+
       // Add user message to UI immediately
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -55,7 +58,12 @@ export const useAIAssistant = () => {
 
       const { data: result, error } = await supabase.functions.invoke('ai-assistant/chat', {
         method: 'POST',
-        body: { message, history: messages }
+        body: { 
+          message, 
+          history: messages,
+          calendarContextDigest: contextData?.digest || [],
+          lastUpdatedAt: contextData?.lastUpdatedAt
+        }
       });
 
       if (error) throw error;
@@ -75,6 +83,102 @@ export const useAIAssistant = () => {
       toast({
         title: "Fel",
         description: "Kunde inte skicka meddelande.",
+        variant: "destructive",
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createMarketingPlan = async () => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      // Fetch calendar context
+      const { data: contextData } = await supabase.functions.invoke('calendar/context');
+
+      // Add system message
+      const systemMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        message: 'Jag skapar en marknadsföringsplan baserat på dina mål och kalender...',
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, systemMessage]);
+
+      const { data: result, error } = await supabase.functions.invoke('ai-assistant/create-marketing-plan', {
+        method: 'POST',
+        body: {
+          targets: ['reach', 'engagement'],
+          timeframe: 'month',
+          calendarContextDigest: contextData?.digest || []
+        }
+      });
+
+      if (error) throw error;
+
+      // Add plan to chat
+      const planMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        message: result.explanation || 'Plan skapad!',
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, planMessage]);
+
+      return result;
+    } catch (err) {
+      console.error('Error creating marketing plan:', err);
+      toast({
+        title: "Fel",
+        description: "Kunde inte skapa marknadsföringsplan.",
+        variant: "destructive",
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const implementPlan = async (plan: any, requestId: string) => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const { data: result, error } = await supabase.functions.invoke('calendar/bulk_create', {
+        method: 'POST',
+        body: {
+          posts: plan.posts,
+          requestId
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Plan implementerad!",
+        description: `${result.created?.length || 0} inlägg skapade.`,
+      });
+
+      // Add confirmation message
+      const confirmMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        message: `Plan implementerad! ${result.created?.length || 0} inlägg har lagts till i kalendern.`,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, confirmMessage]);
+
+      return result;
+    } catch (err) {
+      console.error('Error implementing plan:', err);
+      toast({
+        title: "Fel",
+        description: "Kunde inte implementera plan.",
         variant: "destructive",
       });
       throw err;
@@ -164,5 +268,7 @@ export const useAIAssistant = () => {
     generatePlan,
     analyzeStats,
     fetchHistory,
+    createMarketingPlan,
+    implementPlan,
   };
 };

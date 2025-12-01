@@ -15,6 +15,9 @@ import Calendar from "./pages/Calendar";
 import AIChat from "./pages/AIChat";
 import AIDashboard from "./pages/AIDashboard";
 import Settings from "./pages/Settings";
+import Pricing from "./pages/Pricing";
+import Checkout from "./pages/Checkout";
+import BillingSuccess from "./pages/BillingSuccess";
 import AdminChat from "./pages/AdminChat";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminNotificationSettings from "./pages/AdminNotificationSettings";
@@ -121,6 +124,23 @@ const App = () => (
                 <AdminRoute>
                   <AdminUserManagement />
                 </AdminRoute>
+              } 
+            />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route 
+              path="/checkout" 
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/billing/success" 
+              element={
+                <ProtectedRoute>
+                  <BillingSuccess />
+                </ProtectedRoute>
               } 
             />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
