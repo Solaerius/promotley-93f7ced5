@@ -8,7 +8,7 @@ const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
 };
 
 serve(async (req) => {
@@ -18,14 +18,6 @@ serve(async (req) => {
   }
 
   try {
-    // Only allow POST
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Only POST supported' }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Extract and validate JWT
     const authHeader = req.headers.get('Authorization') ?? '';
     const jwt = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -55,19 +47,6 @@ serve(async (req) => {
       auth: { persistSession: false }
     });
 
-    // 3) Parse body
-    let body: any = null;
-    try {
-      body = await req.json();
-    } catch {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON body' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const action = body?.action;
-
     // Helper functions
     const ok = (data: any, status = 200) => new Response(
       JSON.stringify(data),
@@ -76,21 +55,44 @@ serve(async (req) => {
     
     const bad = (msg: string, status = 400) => ok({ error: msg }, status);
 
-    console.log(`Calendar action: ${action}, user: ${user.id}`);
+    // Helper: fetch list of posts
+    const fetchList = async () => {
+      const { data, error } = await db
+        .from('calendar_posts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: true });
+      if (error) {
+        console.error('Error fetching calendar posts:', error);
+        return bad(error.message, 500);
+      }
+      return ok(data ?? []);
+    };
+
+    // 3) GET → backward compat, return list
+    if (req.method === 'GET') {
+      console.log('[calendar] GET request (backward compat), user:', user.id);
+      return fetchList();
+    }
+
+    // 4) POST - parse body robustly (no 400 on parse failure)
+    let body: any = null;
+    try {
+      body = await req.json();
+    } catch {
+      // Body parsing failed - that's OK, we'll default to 'list'
+      body = null;
+    }
+
+    // Default to 'list' if body is missing or has no action
+    const action = (body && body.action) ? body.action : 'list';
+    const dataIn = (body && body.data) ? body.data : null;
+
+    console.log('[calendar] action:', action, 'hasBody:', !!body, 'user:', user.id);
 
     switch (action) {
       case 'list': {
-        const { data, error } = await db
-          .from('calendar_posts')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: true });
-
-        if (error) {
-          console.error('Error fetching calendar posts:', error);
-          return bad(error.message, 500);
-        }
-        return ok(data ?? []);
+        return fetchList();
       }
 
       case 'context': {
@@ -129,7 +131,7 @@ serve(async (req) => {
       }
 
       case 'create': {
-        const { title, description, platform, date } = body?.data ?? {};
+        const { title, description, platform, date } = dataIn ?? {};
 
         if (!title || !platform || !date) {
           return bad('Missing required fields: title, platform, date');
@@ -160,8 +162,8 @@ serve(async (req) => {
       }
 
       case 'bulk_create': {
-        const posts = body?.data?.posts;
-        const requestId = body?.data?.requestId ?? null;
+        const posts = dataIn?.posts;
+        const requestId = dataIn?.requestId ?? null;
 
         if (!Array.isArray(posts)) {
           return bad('Posts array required');
@@ -224,8 +226,8 @@ serve(async (req) => {
       }
 
       case 'update': {
-        const id = body?.data?.id;
-        const patch = body?.data?.patch ?? {};
+        const id = dataIn?.id;
+        const patch = dataIn?.patch ?? {};
 
         if (!id) {
           return bad('Missing id');
@@ -260,7 +262,7 @@ serve(async (req) => {
       }
 
       case 'delete': {
-        const id = body?.data?.id;
+        const id = dataIn?.id;
 
         if (!id) {
           return bad('Missing id');
@@ -281,7 +283,9 @@ serve(async (req) => {
       }
 
       default:
-        return bad('Unknown action');
+        // Fallback to list for unknown actions
+        console.log('[calendar] Unknown action, falling back to list:', action);
+        return fetchList();
     }
   } catch (error) {
     console.error('Error in calendar function:', error);

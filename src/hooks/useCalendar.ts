@@ -40,11 +40,11 @@ async function invokeCalendar(payload: MethodAction): Promise<any> {
         'Content-Type': 'application/json', 
         'Authorization': `Bearer ${token}` 
       },
-      body: JSON.stringify(body)
+      body // OBS: skicka objekt, INTE JSON.stringify
     });
 
     if (error) {
-      console.error('[calendar] invoke error:', error);
+      console.error('[calendar] invoke error:', error, 'response:', data);
       if (error.message?.includes('Unauthorized') || error.message?.includes('JW') || error.message?.includes('invalid_jwt')) {
         throw Object.assign(error, { status: 401 });
       }
