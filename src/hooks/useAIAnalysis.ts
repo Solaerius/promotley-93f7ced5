@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { creditUpdateEvent } from './useAIAssistant';
 
 interface AIAnalysis {
   id: string;
@@ -95,9 +96,12 @@ export const useAIAnalysis = () => {
       }
 
       toast({
-        title: 'Analys genererad! 🎉',
+        title: 'Analys genererad!',
         description: 'Din AI-analys är nu klar.',
       });
+
+      // Trigger credit update
+      creditUpdateEvent.dispatchEvent(new Event('creditsChanged'));
 
       await fetchAnalyses();
       return data.analysis;

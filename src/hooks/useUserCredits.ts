@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { creditUpdateEvent } from './useAIAssistant';
 
 interface UserCredits {
   plan: string;
@@ -12,7 +13,7 @@ export const useUserCredits = () => {
   const [credits, setCredits] = useState<UserCredits | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchCredits = async () => {
+  const fetchCredits = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -33,11 +34,22 @@ export const useUserCredits = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCredits();
-  }, []);
+
+    // Listen for credit update events
+    const handleCreditUpdate = () => {
+      fetchCredits();
+    };
+
+    creditUpdateEvent.addEventListener('creditsChanged', handleCreditUpdate);
+
+    return () => {
+      creditUpdateEvent.removeEventListener('creditsChanged', handleCreditUpdate);
+    };
+  }, [fetchCredits]);
 
   const getPlanLabel = (plan: string) => {
     switch (plan) {

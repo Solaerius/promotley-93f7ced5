@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// Global event for credit updates
+export const creditUpdateEvent = new EventTarget();
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -77,6 +80,9 @@ export const useAIAssistant = () => {
       };
       setMessages(prev => [...prev, aiMessage]);
 
+      // Trigger credit update
+      creditUpdateEvent.dispatchEvent(new Event('creditsChanged'));
+
       return result;
     } catch (err) {
       console.error('Error sending message:', err);
@@ -128,6 +134,9 @@ export const useAIAssistant = () => {
         timestamp: new Date().toISOString(),
       };
       setMessages(prev => [...prev, planMessage]);
+
+      // Trigger credit update
+      creditUpdateEvent.dispatchEvent(new Event('creditsChanged'));
 
       return result;
     } catch (err) {
