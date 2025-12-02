@@ -8,22 +8,34 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const { user } = useAuth();
-  const [isBubble, setIsBubble] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <nav 
       id="site-header"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-[750ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ${
-        isBubble 
-          ? 'mt-2 mx-4 md:mx-6 lg:mx-12 rounded-[18px] md:rounded-[22px] lg:rounded-[24px] backdrop-blur-xl shadow-elegant translate-y-[6px] opacity-100' 
-          : 'mt-0 mx-0 rounded-none bg-background/80 backdrop-blur-md border-b translate-y-0'
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-[750ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] backdrop-blur-xl shadow-lg ${
+        isScrolled 
+          ? 'mt-3 mx-4 md:mx-6 lg:mx-12 rounded-[18px] md:rounded-[22px] lg:rounded-[24px] shadow-xl' 
+          : 'mt-2 mx-3 md:mx-4 lg:mx-8 rounded-[14px] md:rounded-[16px] lg:rounded-[18px]'
       }`}
       style={{
-        transitionProperty: 'margin, border-radius, background-color, backdrop-filter, box-shadow, opacity, transform',
-        ...(isBubble ? {
-          background: 'linear-gradient(135deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--secondary) / 0.15) 50%, hsl(var(--accent) / 0.2) 100%)',
-        } : {})
+        transitionProperty: 'margin, border-radius, box-shadow, transform',
+        background: 'linear-gradient(135deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--secondary) / 0.12) 50%, hsl(var(--accent) / 0.15) 100%)',
+        boxShadow: isScrolled 
+          ? '0 8px 32px -8px hsl(var(--primary) / 0.25), 0 4px 16px -4px hsl(var(--foreground) / 0.1)' 
+          : '0 4px 20px -6px hsl(var(--primary) / 0.2), 0 2px 8px -2px hsl(var(--foreground) / 0.08)',
       }}
     >
       <div className="container mx-auto px-4">
@@ -62,9 +74,7 @@ const Navbar = () => {
                 <Link to="/auth">
                   <Button 
                     variant="gradient"
-                    className={`transition-shadow duration-300 ${
-                      isBubble ? 'shadow-[0_6px_18px_rgba(238,89,61,0.35)] hover:shadow-[0_8px_24px_rgba(238,89,61,0.45)]' : ''
-                    }`}
+                    className="shadow-[0_6px_18px_rgba(238,89,61,0.35)] hover:shadow-[0_8px_24px_rgba(238,89,61,0.45)] transition-shadow duration-300"
                   >
                     Starta gratis
                   </Button>
