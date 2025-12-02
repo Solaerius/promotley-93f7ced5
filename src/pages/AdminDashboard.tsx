@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, AlertCircle, Bell, Users, CheckCircle, XCircle } from "lucide-react";
+import { MessageCircle, AlertCircle, Bell, Users, CheckCircle, XCircle, BookOpen, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -22,6 +23,11 @@ const AdminDashboard = () => {
     sms: false,
   });
   const [loading, setLoading] = useState(true);
+  const [importingDocs, setImportingDocs] = useState(false);
+  const [importResults, setImportResults] = useState<{
+    summary?: { imported: number; updated: number; errors: number; skipped: number };
+    results?: { file: string; status: string; category?: string }[];
+  } | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -89,6 +95,38 @@ const AdminDashboard = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const handleImportKnowledge = async () => {
+    setImportingDocs(true);
+    setImportResults(null);
+    
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token) {
+        toast.error("Du måste vara inloggad");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('parse-knowledge-docs', {
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`
+        }
+      });
+
+      if (error) {
+        toast.error("Import misslyckades: " + error.message);
+        return;
+      }
+
+      setImportResults(data);
+      toast.success(`Import klar! ${data.summary.imported} nya, ${data.summary.updated} uppdaterade`);
+    } catch (err) {
+      console.error("Import error:", err);
+      toast.error("Något gick fel vid import");
+    } finally {
+      setImportingDocs(false);
+    }
   };
 
   return (
@@ -204,6 +242,78 @@ const AdminDashboard = () => {
                 Hantera Notifikationer
               </Button>
             </Link>
+          </CardContent>
+        </Card>
+
+        {/* AI Knowledge Import */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              AI Kunskapsbas
+            </CardTitle>
+            <CardDescription>
+              Importera dokument från storage till AI:ns kunskapsbas
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Läser .txt, .md och .pdf filer från <code className="bg-muted px-1 rounded">promotley_knowledgebase</code> bucket och sparar innehållet i ai_knowledge tabellen.
+            </p>
+            
+            <Button 
+              onClick={handleImportKnowledge} 
+              disabled={importingDocs}
+              className="w-full"
+            >
+              {importingDocs ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importerar...
+                </>
+              ) : (
+                <>
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  Importera Dokument
+                </>
+              )}
+            </Button>
+
+            {importResults && (
+              <div className="space-y-3 mt-4">
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div className="bg-green-500/10 p-2 rounded">
+                    <div className="text-lg font-bold text-green-600">{importResults.summary?.imported}</div>
+                    <div className="text-xs text-muted-foreground">Nya</div>
+                  </div>
+                  <div className="bg-blue-500/10 p-2 rounded">
+                    <div className="text-lg font-bold text-blue-600">{importResults.summary?.updated}</div>
+                    <div className="text-xs text-muted-foreground">Uppdaterade</div>
+                  </div>
+                  <div className="bg-red-500/10 p-2 rounded">
+                    <div className="text-lg font-bold text-red-600">{importResults.summary?.errors}</div>
+                    <div className="text-xs text-muted-foreground">Fel</div>
+                  </div>
+                  <div className="bg-muted p-2 rounded">
+                    <div className="text-lg font-bold">{importResults.summary?.skipped}</div>
+                    <div className="text-xs text-muted-foreground">Hoppade</div>
+                  </div>
+                </div>
+                
+                {importResults.results && importResults.results.length > 0 && (
+                  <div className="max-h-40 overflow-y-auto text-xs space-y-1 bg-muted p-2 rounded">
+                    {importResults.results.map((r, i) => (
+                      <div key={i} className="flex justify-between">
+                        <span className="truncate flex-1">{r.file}</span>
+                        <Badge variant={r.status.includes('error') ? 'destructive' : r.status === 'skipped' ? 'secondary' : 'default'} className="ml-2 text-xs">
+                          {r.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
