@@ -43,7 +43,7 @@ export interface OrganizationInvite {
 }
 
 export const useOrganization = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrganization, setActiveOrganization] = useState<Organization | null>(null);
   const [membership, setMembership] = useState<OrganizationMember | null>(null);
@@ -54,7 +54,7 @@ export const useOrganization = () => {
 
   // Load user's organizations
   const loadOrganizations = useCallback(async () => {
-    if (!user?.id) {
+    if (!user?.id || !session) {
       setLoading(false);
       return;
     }
@@ -111,11 +111,11 @@ export const useOrganization = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, session]);
 
   // Load current membership details
   const loadMembership = useCallback(async () => {
-    if (!user?.id || !activeOrganization?.id) return;
+    if (!user?.id || !activeOrganization?.id || !session) return;
 
     try {
       const { data, error } = await supabase
@@ -130,11 +130,11 @@ export const useOrganization = () => {
     } catch (error) {
       console.error("Error loading membership:", error);
     }
-  }, [user?.id, activeOrganization?.id]);
+  }, [user?.id, activeOrganization?.id, session]);
 
   // Load all members of active organization
   const loadMembers = useCallback(async () => {
-    if (!activeOrganization?.id) return;
+    if (!activeOrganization?.id || !session) return;
 
     try {
       const { data, error } = await supabase
@@ -161,11 +161,11 @@ export const useOrganization = () => {
     } catch (error) {
       console.error("Error loading members:", error);
     }
-  }, [activeOrganization?.id]);
+  }, [activeOrganization?.id, session]);
 
   // Load invites
   const loadInvites = useCallback(async () => {
-    if (!activeOrganization?.id) return;
+    if (!activeOrganization?.id || !session) return;
 
     try {
       const { data, error } = await supabase
@@ -180,11 +180,11 @@ export const useOrganization = () => {
     } catch (error) {
       console.error("Error loading invites:", error);
     }
-  }, [activeOrganization?.id]);
+  }, [activeOrganization?.id, session]);
 
   // Switch active organization
   const switchOrganization = async (orgId: string) => {
-    if (!user?.id) return;
+    if (!user?.id || !session) return;
 
     try {
       const { error } = await supabase
@@ -205,7 +205,10 @@ export const useOrganization = () => {
 
   // Create new organization
   const createOrganization = async (name: string, logoUrl?: string): Promise<string | null> => {
-    if (!user?.id) return null;
+    if (!user?.id || !session) {
+      toast.error("Du måste vara inloggad för att skapa en organisation");
+      return null;
+    }
 
     try {
       // Create organization
@@ -252,7 +255,10 @@ export const useOrganization = () => {
 
   // Join organization by invite code
   const joinByCode = async (code: string): Promise<boolean> => {
-    if (!user?.id) return false;
+    if (!user?.id || !session) {
+      toast.error("Du måste vara inloggad för att gå med i en organisation");
+      return false;
+    }
 
     try {
       // First check organization invite code
@@ -350,7 +356,7 @@ export const useOrganization = () => {
 
   // Create email invite
   const createEmailInvite = async (email: string): Promise<boolean> => {
-    if (!activeOrganization?.id || !user?.id) return false;
+    if (!activeOrganization?.id || !user?.id || !session) return false;
 
     try {
       const { error } = await supabase
@@ -438,7 +444,7 @@ export const useOrganization = () => {
 
   // Update organization settings
   const updateOrganization = async (updates: Partial<Organization>): Promise<boolean> => {
-    if (!activeOrganization?.id) return false;
+    if (!activeOrganization?.id || !session) return false;
 
     try {
       const { error } = await supabase
