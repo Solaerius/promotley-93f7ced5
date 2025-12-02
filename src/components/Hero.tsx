@@ -44,35 +44,33 @@ const Hero = () => {
             AI som hjälper UF-företag och startups att växa snabbare på sociala medier
           </p>
 
-          {/* Email Capture */}
-          <div className="max-w-xl mx-auto pt-4 md:pt-6 animate-slide-up px-4" style={{ animationDelay: "0.2s" }}>
-            <form className="flex flex-col sm:flex-row gap-3" onSubmit={(e) => { e.preventDefault(); window.location.href = '/auth'; }}>
-              <input
-                type="email"
-                placeholder="Din e-postadress"
-                required
-                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-lg bg-card/95 backdrop-blur-sm text-card-foreground placeholder:text-muted-foreground border-2 border-transparent focus:border-primary focus:outline-none transition-all text-sm sm:text-base font-medium"
-              />
-              <Button 
-                type="submit"
-                variant="gradient" 
-                className="text-sm sm:text-base px-5 sm:px-6 py-3 sm:py-4 hover:scale-105 transition-all duration-300 shadow-glow font-semibold whitespace-nowrap h-auto sm:h-[52px]"
-              >
-                Starta gratis
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </form>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mt-3">
-              <p className="text-xs md:text-sm text-hero-muted/70 text-center">
-                Ingen kortinformation krävs.
-              </p>
-              <Link 
-                to={user ? "/join-organization" : "/auth?mode=join"} 
-                className="text-xs md:text-sm text-hero-muted/90 hover:text-hero-foreground transition-colors underline underline-offset-2"
-              >
-                Anslut till befintligt företag
+          {/* CTA Buttons */}
+          <div className="max-w-2xl mx-auto pt-4 md:pt-6 animate-slide-up px-4" style={{ animationDelay: "0.2s" }}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <Link to="/auth">
+                <Button 
+                  variant="gradient" 
+                  size="lg"
+                  className="text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 hover:scale-105 transition-all duration-300 shadow-glow font-semibold whitespace-nowrap h-auto"
+                >
+                  Starta gratis
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+              <span className="text-hero-muted/70 text-sm font-medium">eller</span>
+              <Link to={user ? "/join-organization" : "/auth?mode=join"}>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 border-2 border-muted-foreground/40 text-muted-foreground hover:bg-muted/10 backdrop-blur-sm transition-all duration-300 font-medium whitespace-nowrap h-auto"
+                >
+                  Anslut till företag
+                </Button>
               </Link>
             </div>
+            <p className="text-xs md:text-sm text-hero-muted/70 text-center mt-4">
+              Ingen kortinformation krävs.
+            </p>
           </div>
 
           {/* Secondary CTA */}

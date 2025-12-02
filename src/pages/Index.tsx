@@ -14,67 +14,37 @@ import BackToTop from "@/components/BackToTop";
 import AnimatedSection from "@/components/AnimatedSection";
 import { Link } from "react-router-dom";
 
-// Blur transition divider between sections for fluid look
-const SectionBlur = ({ className = "" }: { className?: string }) => (
-  <div 
-    className={`h-24 md:h-32 w-full pointer-events-none relative ${className}`}
-    style={{
-      background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--background) / 0.5) 50%, transparent 100%)',
-      backdropFilter: 'blur(8px)',
-      WebkitBackdropFilter: 'blur(8px)',
-      maskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
-      WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
-    }}
-  />
-);
-
 const Index = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
       <Hero />
       
-      <SectionBlur />
-      
       <AnimatedSection animation="slide-up">
         <ProblemSection />
       </AnimatedSection>
-      
-      <SectionBlur />
       
       <AnimatedSection animation="fade-in-scale" delay={100}>
         <HowItWorks />
       </AnimatedSection>
       
-      <SectionBlur />
-      
       <ResultsSection />
-      
-      <SectionBlur />
       
       <AnimatedSection animation="slide-up" delay={100}>
         <AIDemoSection />
       </AnimatedSection>
       
-      <SectionBlur />
-      
       <AnimatedSection animation="fade-in" delay={100}>
         <Pricing />
       </AnimatedSection>
-      
-      <SectionBlur />
       
       <AnimatedSection animation="slide-up">
         <Testimonials />
       </AnimatedSection>
       
-      <SectionBlur />
-      
       <AnimatedSection animation="fade-in-scale" delay={100}>
         <TrustSection />
       </AnimatedSection>
-      
-      <SectionBlur />
       
       <FinalCTA />
       
