@@ -2,8 +2,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import gamlastan from "@/assets/gamlastan.png";
+import { useAuth } from "@/hooks/useAuth";
 
 const Hero = () => {
+  const { user } = useAuth();
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden font-poppins">
       {/* Background image with blur */}
@@ -64,8 +67,8 @@ const Hero = () => {
             </p>
           </div>
 
-          {/* Secondary CTA */}
-          <div className="pt-2 md:pt-4 animate-slide-up px-4" style={{ animationDelay: "0.3s" }}>
+          {/* Secondary CTAs */}
+          <div className="pt-2 md:pt-4 animate-slide-up px-4 flex flex-col sm:flex-row gap-3 justify-center items-center" style={{ animationDelay: "0.3s" }}>
             <a href="#how-it-works">
               <Button 
                 variant="outline" 
@@ -75,6 +78,15 @@ const Hero = () => {
                 Se hur det funkar
               </Button>
             </a>
+            <Link to={user ? "/organization/join" : "/auth"}>
+              <Button 
+                variant="ghost" 
+                size="lg" 
+                className="text-sm sm:text-base px-5 sm:px-6 py-2.5 sm:py-3 text-hero-muted hover:text-hero-foreground hover:bg-card/20 backdrop-blur-sm transition-all duration-300 font-medium"
+              >
+                Anslut till befintligt företag
+              </Button>
+            </Link>
           </div>
 
           {/* Social proof badge */}

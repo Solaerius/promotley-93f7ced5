@@ -12,24 +12,16 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const sentinel = document.getElementById('header-bubble-sentinel');
-    if (!sentinel) return;
+    const handleScroll = () => {
+      // Trigger bubble mode after just 50px of scroll
+      const shouldBeBubble = window.scrollY > 50;
+      setIsBubble(shouldBeBubble);
+    };
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // Only update bubble state based on scroll position relative to sentinel
-        const sentinelTop = entry.boundingClientRect.top;
-        const isAboveSentinel = sentinelTop > 0;
-        
-        // Activate bubble when scrolled past sentinel, keep it active until scrolled back above
-        setIsBubble(!isAboveSentinel);
-      },
-      { rootMargin: '0px', threshold: 0 }
-    );
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check initial state
 
-    observer.observe(sentinel);
-
-    return () => observer.disconnect();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
