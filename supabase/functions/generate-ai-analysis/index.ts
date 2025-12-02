@@ -71,6 +71,18 @@ serve(async (req) => {
       });
     }
 
+    // Check email verification
+    if (!user.email_confirmed_at) {
+      console.error('Email not verified:', user.id);
+      return new Response(JSON.stringify({ 
+        error: 'email_not_verified',
+        message: 'Verifiera din e-post för att använda AI-analys'
+      }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     console.log('Generating AI analysis for user:', user.id);
 
     // Parse request body for requestId and any override attempts

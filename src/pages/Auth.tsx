@@ -165,8 +165,15 @@ const Auth = () => {
           variant: "destructive",
         });
       } else if (!isLogin) {
-        // Redirect to onboarding after successful signup
-        navigate("/onboarding");
+        // Send verification email and redirect to verify-email page
+        try {
+          await supabase.functions.invoke("send-verification", {
+            body: { email },
+          });
+        } catch (emailError) {
+          console.warn("Failed to send verification email:", emailError);
+        }
+        navigate("/verify-email");
       }
     } catch (error) {
       toast({

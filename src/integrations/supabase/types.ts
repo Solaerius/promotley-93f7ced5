@@ -146,6 +146,30 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_resend_logs: {
+        Row: {
+          email: string
+          id: string
+          ip: string | null
+          sent_at: string
+          user_id: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          ip?: string | null
+          sent_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          ip?: string | null
+          sent_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       calendar_posts: {
         Row: {
           created_at: string | null

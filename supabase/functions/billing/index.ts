@@ -99,6 +99,15 @@ serve(async (req) => {
 
     console.log('[billing] Authenticated user:', user.id);
 
+    // Check email verification for checkout
+    if (route === 'create-checkout-session' && !user.email_confirmed_at) {
+      console.error('[billing] Email not verified:', user.id);
+      return jsonResponse({ 
+        error: 'email_not_verified',
+        message: 'Verifiera din e-post för att kunna köpa prenumeration'
+      }, 403);
+    }
+
     // Route: create-checkout-session
     if (route === 'create-checkout-session') {
       if (!STRIPE_SECRET_KEY) {

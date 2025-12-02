@@ -5,9 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RequireVerifiedEmail } from "@/components/RequireVerifiedEmail";
 import { AdminRoute } from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import VerifyEmail from "./pages/VerifyEmail";
+import AuthCallback from "./pages/AuthCallback";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Analytics from "./pages/Analytics";
@@ -38,6 +41,15 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route 
+              path="/verify-email" 
+              element={
+                <ProtectedRoute>
+                  <VerifyEmail />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/onboarding" 
               element={
@@ -49,9 +61,9 @@ const App = () => (
             <Route 
               path="/dashboard" 
               element={
-                <ProtectedRoute>
+                <RequireVerifiedEmail>
                   <Dashboard />
-                </ProtectedRoute>
+                </RequireVerifiedEmail>
               } 
             />
             <Route 
@@ -73,17 +85,17 @@ const App = () => (
             <Route 
               path="/ai-chat" 
               element={
-                <ProtectedRoute>
+                <RequireVerifiedEmail>
                   <AIChat />
-                </ProtectedRoute>
+                </RequireVerifiedEmail>
               } 
             />
             <Route 
               path="/ai-dashboard" 
               element={
-                <ProtectedRoute>
+                <RequireVerifiedEmail>
                   <AIDashboard />
-                </ProtectedRoute>
+                </RequireVerifiedEmail>
               } 
             />
             <Route 
@@ -130,9 +142,9 @@ const App = () => (
             <Route 
               path="/checkout" 
               element={
-                <ProtectedRoute>
+                <RequireVerifiedEmail>
                   <Checkout />
-                </ProtectedRoute>
+                </RequireVerifiedEmail>
               } 
             />
             <Route 

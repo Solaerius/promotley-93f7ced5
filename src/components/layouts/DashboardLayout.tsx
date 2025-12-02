@@ -6,6 +6,7 @@ import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { useNotifications } from "@/hooks/useNotifications";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -279,6 +280,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
       {/* Main content */}
       <div className="flex-1 lg:pl-64">
+        {/* Email Verification Banner */}
+        <EmailVerificationBanner />
+
         {/* Top header */}
         <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-8 py-4">
