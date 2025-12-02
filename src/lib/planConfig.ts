@@ -3,7 +3,7 @@
  * Single source of truth for AI model mappings and credit policies
  */
 
-export type PlanType = 'free_trial' | 'pro' | 'pro_xl' | 'pro_unlimited';
+export type PlanType = 'starter' | 'growth' | 'pro';
 
 export interface PlanConfig {
   model: string;
@@ -11,7 +11,7 @@ export interface PlanConfig {
   features: string[];
   displayName: string;
   price: number;
-  tier: 'starter' | 'growth' | 'pro' | 'unlimited';
+  tier: 'starter' | 'growth' | 'pro';
   isActive: boolean;
 }
 
@@ -22,8 +22,7 @@ export interface PlanConfig {
 export const MODEL_BY_TIER = {
   starter: 'gpt-4o-mini',
   growth: 'gpt-4o-mini', 
-  pro: 'gpt-4o',
-  unlimited: 'gpt-4o'
+  pro: 'gpt-4o'
 } as const;
 
 /**
@@ -32,8 +31,7 @@ export const MODEL_BY_TIER = {
 export const CREDIT_COST_BY_TIER = {
   starter: 2,
   growth: 1,
-  pro: 1,
-  unlimited: 0
+  pro: 1
 } as const;
 
 /**
@@ -42,47 +40,36 @@ export const CREDIT_COST_BY_TIER = {
  */
 export function getPlanConfig(plan: PlanType): PlanConfig {
   switch (plan) {
-    case 'free_trial':
+    case 'starter':
       return {
         model: MODEL_BY_TIER.starter,
         credits: 50,
         features: ['basic_strategy', 'tips'],
-        displayName: 'UF Starter',
+        displayName: 'Starter',
         price: 29,
         tier: 'starter',
         isActive: true
       };
 
-    case 'pro':
+    case 'growth':
       return {
         model: MODEL_BY_TIER.growth,
         credits: 100,
         features: ['calendar', 'ideas', 'analysis'],
-        displayName: 'UF Growth',
+        displayName: 'Growth',
         price: 49,
         tier: 'growth',
         isActive: true
       };
 
-    case 'pro_xl':
+    case 'pro':
       return {
         model: MODEL_BY_TIER.pro,
         credits: 300,
         features: ['advanced', 'creative', 'competitors', 'reports'],
-        displayName: 'UF Pro',
+        displayName: 'Pro',
         price: 99,
         tier: 'pro',
-        isActive: true
-      };
-
-    case 'pro_unlimited':
-      return {
-        model: MODEL_BY_TIER.unlimited,
-        credits: 999999,
-        features: ['advanced', 'creative', 'competitors', 'reports', 'unlimited'],
-        displayName: 'UF Pro Unlimited',
-        price: 199,
-        tier: 'unlimited',
         isActive: true
       };
 
@@ -91,7 +78,7 @@ export function getPlanConfig(plan: PlanType): PlanConfig {
         model: MODEL_BY_TIER.starter,
         credits: 50,
         features: ['basic_strategy', 'tips'],
-        displayName: 'UF Starter',
+        displayName: 'Starter',
         price: 29,
         tier: 'starter',
         isActive: false
@@ -138,7 +125,7 @@ export function hasAIAccess(plan: PlanType, creditsLeft: number): {
     };
   }
   
-  if (config.tier !== 'unlimited' && creditsLeft <= 0) {
+  if (creditsLeft <= 0) {
     return {
       allowed: false,
       reason: 'insufficient_credits',

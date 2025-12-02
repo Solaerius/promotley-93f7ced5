@@ -121,21 +121,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Kolla krediter - freemium logik
-    if (userData.plan === "free_trial" && userData.trial_used) {
-      return new Response(
-        JSON.stringify({
-          error: "PAYWALL",
-          message: "Du har använt ditt gratis AI-förslag. Uppgradera till Pro för fler!",
-        }),
-        {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    if (userData.plan !== "pro_unlimited" && userData.credits_left <= 0) {
+    // Kolla krediter - alla planer har nu krediter
+    if (userData.credits_left <= 0) {
       return new Response(
         JSON.stringify({
           error: "PAYWALL",
@@ -285,16 +272,10 @@ VIKTIGT: Caption ska vara professionell men ungdomlig text, perfekt för UF-för
     }
 
     // Uppdatera krediter
-    if (userData.plan === "free_trial") {
-      // Markera trial som använd
-      await supabase.from("users").update({ trial_used: true }).eq("id", user.id);
-    } else if (userData.plan !== "pro_unlimited") {
-      // Dra en kredit
-      await supabase
-        .from("users")
-        .update({ credits_left: userData.credits_left - 1 })
-        .eq("id", user.id);
-    }
+    await supabase
+      .from("users")
+      .update({ credits_left: userData.credits_left - 1 })
+      .eq("id", user.id);
 
     console.log("Förslag genererat och sparat:", suggestion);
 

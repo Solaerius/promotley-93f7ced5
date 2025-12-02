@@ -7,10 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 
 const PLAN_LABELS: Record<string, string> = {
-  pro: "UF Starter",
-  pro_xl: "UF Growth", 
-  pro_unlimited: "UF Pro",
-  free_trial: "Gratis",
+  starter: "Starter",
+  growth: "Growth", 
+  pro: "Pro",
 };
 
 const BillingSuccess = () => {

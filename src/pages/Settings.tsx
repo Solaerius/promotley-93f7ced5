@@ -51,7 +51,7 @@ const Settings = () => {
   });
   const [isSavingAIProfile, setIsSavingAIProfile] = useState(false);
 
-  const hasPaidPlan = credits?.plan && credits.plan !== 'free_trial';
+  const hasPaidPlan = credits?.plan && credits.plan !== 'starter';
 
   // Fetch user's company name
   useEffect(() => {

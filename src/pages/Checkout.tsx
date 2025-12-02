@@ -14,18 +14,17 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 
 const planDetails: Record<string, { name: string; price: string; credits: string; lookupKey: string; dbPlan: string; tierLevel: number }> = {
-  starter: { name: "UF Starter", price: "29", credits: "50", lookupKey: "starter_monthly_sek", dbPlan: "pro", tierLevel: 1 },
-  growth: { name: "UF Growth", price: "49", credits: "100", lookupKey: "growth_monthly_sek", dbPlan: "pro_xl", tierLevel: 2 },
-  pro: { name: "UF Pro", price: "99", credits: "300", lookupKey: "pro_monthly_sek", dbPlan: "pro_unlimited", tierLevel: 3 },
+  starter: { name: "Starter", price: "29", credits: "50", lookupKey: "starter_monthly_sek", dbPlan: "starter", tierLevel: 1 },
+  growth: { name: "Growth", price: "49", credits: "100", lookupKey: "growth_monthly_sek", dbPlan: "growth", tierLevel: 2 },
+  pro: { name: "Pro", price: "99", credits: "300", lookupKey: "pro_monthly_sek", dbPlan: "pro", tierLevel: 3 },
 };
 
 // Get tier level from db plan
 const getTierLevelFromDbPlan = (dbPlan: string): number => {
   switch (dbPlan) {
-    case 'free_trial': return 0;
-    case 'pro': return 1;
-    case 'pro_xl': return 2;
-    case 'pro_unlimited': return 3;
+    case 'starter': return 1;
+    case 'growth': return 2;
+    case 'pro': return 3;
     default: return 0;
   }
 };
@@ -77,10 +76,9 @@ const Checkout = () => {
           // Block if user already has same or higher tier
           if (currentTierLevel >= selectedTierLevel) {
             const planLabels: Record<string, string> = {
-              'free_trial': 'Gratis',
-              'pro': 'Starter',
-              'pro_xl': 'Growth',
-              'pro_unlimited': 'Pro'
+              'starter': 'Starter',
+              'growth': 'Growth',
+              'pro': 'Pro'
             };
             setCurrentPlanName(planLabels[userData.plan] || userData.plan);
             setAlreadyHasPlan(true);

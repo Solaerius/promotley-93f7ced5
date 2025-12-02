@@ -106,7 +106,7 @@ serve(async (req) => {
     }
 
     // Check if user has active plan
-    const validPlans = ['free_trial', 'pro', 'pro_xl', 'pro_unlimited'];
+    const validPlans = ['starter', 'growth', 'pro'];
     if (!validPlans.includes(userData.plan)) {
       return new Response(JSON.stringify({ 
         error: 'NO_ACTIVE_PLAN',
@@ -121,28 +121,23 @@ serve(async (req) => {
     // Determine tier and enforce model policy
     let tier = 'starter';
     let aiModel = 'gpt-4o-mini';
-    let estimatedCost = 5;
+    let estimatedCost = 2;
     
     switch (userData.plan) {
-      case 'free_trial':
+      case 'starter':
         tier = 'starter';
         aiModel = 'gpt-4o-mini';
-        estimatedCost = 5;
-        break;
-      case 'pro':
-        tier = 'growth';
-        aiModel = 'gpt-4o-mini';
-        estimatedCost = 3;
-        break;
-      case 'pro_xl':
-        tier = 'pro';
-        aiModel = 'gpt-4o';
         estimatedCost = 2;
         break;
-      case 'pro_unlimited':
-        tier = 'unlimited';
+      case 'growth':
+        tier = 'growth';
+        aiModel = 'gpt-4o-mini';
+        estimatedCost = 1;
+        break;
+      case 'pro':
+        tier = 'pro';
         aiModel = 'gpt-4o';
-        estimatedCost = 0;
+        estimatedCost = 1;
         break;
     }
 
@@ -160,7 +155,7 @@ serve(async (req) => {
     console.log(`Using AI model: ${aiModel} for tier: ${tier}`);
 
     // Check credits
-    if (tier !== 'unlimited' && userData.credits_left < estimatedCost) {
+    if (userData.credits_left < estimatedCost) {
       return new Response(JSON.stringify({ 
         error: 'INSUFFICIENT_CREDITS',
         message: 'Fyll på krediter för att fortsätta',
@@ -174,19 +169,17 @@ serve(async (req) => {
 
     // Deduct credits (reservation)
     const creditsBefore = userData.credits_left;
-    if (tier !== 'unlimited') {
-      const { error: deductError } = await supabase
-        .from('users')
-        .update({ credits_left: userData.credits_left - estimatedCost })
-        .eq('id', user.id);
+    const { error: deductError } = await supabase
+      .from('users')
+      .update({ credits_left: userData.credits_left - estimatedCost })
+      .eq('id', user.id);
 
-      if (deductError) {
-        console.error('Error reserving credits:', deductError);
-        return new Response(JSON.stringify({ error: 'Could not reserve credits' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
+    if (deductError) {
+      console.error('Error reserving credits:', deductError);
+      return new Response(JSON.stringify({ error: 'Could not reserve credits' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     // Hämta AI-profil
@@ -375,11 +368,9 @@ Håll dig alltid till UF-reglerna och deadlines.`;
     
     // Settlement: adjust credits based on actual vs reserved
     const settlement = actualCost - estimatedCost;
-    const creditsAfter = tier === 'unlimited' 
-      ? creditsBefore 
-      : creditsBefore - actualCost;
+    const creditsAfter = creditsBefore - actualCost;
 
-    if (tier !== 'unlimited' && settlement !== 0) {
+    if (settlement !== 0) {
       await supabase
         .from('users')
         .update({ credits_left: creditsAfter })

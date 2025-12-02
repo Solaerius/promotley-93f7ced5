@@ -8,12 +8,12 @@ import { useUserCredits } from "@/hooks/useUserCredits";
 
 const plans = [
   {
-    name: "UF Starter",
+    name: "Starter",
     price: "29",
     credits: "50",
     model: "gpt-4o-mini",
     tier: "starter",
-    dbPlan: "pro",
+    dbPlan: "starter",
     tierLevel: 1,
     description: "Perfekt för nya UF-företag som precis börjat",
     features: [
@@ -26,16 +26,16 @@ const plans = [
     popular: false,
   },
   {
-    name: "UF Growth",
+    name: "Growth",
     price: "49",
     credits: "100",
-    model: "gpt-4.1-mini",
+    model: "gpt-4o-mini",
     tier: "growth",
-    dbPlan: "pro_xl",
+    dbPlan: "growth",
     tierLevel: 2,
     description: "Idealisk för snabbväxande UF-team",
     features: [
-      "AI-modell: GPT-4.1 Mini",
+      "AI-modell: GPT-4o Mini",
       "100 AI-krediter per månad",
       "Personlig innehållskalender",
       "5 content-idéer per vecka",
@@ -44,16 +44,16 @@ const plans = [
     popular: true,
   },
   {
-    name: "UF Pro",
+    name: "Pro",
     price: "99",
     credits: "300",
-    model: "gpt-5.1",
+    model: "gpt-4o",
     tier: "pro",
-    dbPlan: "pro_unlimited",
+    dbPlan: "pro",
     tierLevel: 3,
     description: "För etablerade företag med stora ambitioner",
     features: [
-      "AI-modell: GPT-5.1 (senaste)",
+      "AI-modell: GPT-4o (senaste)",
       "300 AI-krediter per månad",
       "Komplett strategi + kalender",
       "Creative Mode (fri AI-generering)",

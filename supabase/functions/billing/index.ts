@@ -10,9 +10,9 @@ const corsHeaders = {
 
 // Plan configuration with lookup keys
 const PLAN_CONFIG: Record<string, { lookupKey: string; credits: number; dbPlan: string }> = {
-  starter: { lookupKey: 'starter_monthly_sek', credits: 50, dbPlan: 'pro' },
-  growth: { lookupKey: 'growth_monthly_sek', credits: 100, dbPlan: 'pro_xl' },
-  pro: { lookupKey: 'pro_monthly_sek', credits: 300, dbPlan: 'pro_unlimited' },
+  starter: { lookupKey: 'starter_monthly_sek', credits: 50, dbPlan: 'starter' },
+  growth: { lookupKey: 'growth_monthly_sek', credits: 100, dbPlan: 'growth' },
+  pro: { lookupKey: 'pro_monthly_sek', credits: 300, dbPlan: 'pro' },
 };
 
 // Fallback prices in case lookup_key prices don't exist yet
@@ -316,7 +316,7 @@ serve(async (req) => {
         return jsonResponse({ error: 'db_error', detail: dbError.message }, 500);
       }
 
-      const isActive = userData.plan !== 'free_trial';
+      const isActive = userData.plan !== 'starter' || (userData.credits_left > 0);
 
       return jsonResponse({
         status: isActive ? 'active' : 'inactive',
@@ -344,8 +344,8 @@ serve(async (req) => {
           const { error: updateError } = await supabaseAdmin
             .from('users')
             .update({
-              plan: 'free_trial',
-              credits_left: 1,
+              plan: 'starter',
+              credits_left: 50,
               max_credits: 50,
               renewal_date: null,
             })
@@ -381,8 +381,8 @@ serve(async (req) => {
         const { error: updateError } = await supabaseAdmin
           .from('users')
           .update({
-            plan: 'free_trial',
-            credits_left: 1,
+            plan: 'starter',
+            credits_left: 50,
             max_credits: 50,
           })
           .eq('id', user.id);
@@ -537,8 +537,8 @@ async function handleWebhook(
           await supabaseAdmin
             .from('users')
             .update({
-              plan: 'free_trial',
-              credits_left: 1,
+              plan: 'starter',
+              credits_left: 50,
               max_credits: 50,
             })
             .eq('id', userId);

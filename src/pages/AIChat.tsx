@@ -53,7 +53,7 @@ const AIChat = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [longLoadingBanner, setLongLoadingBanner] = useState(false);
   
-  const hasInsufficientCredits = credits && credits.credits_left <= 0 && credits.plan !== 'pro_unlimited';
+  const hasInsufficientCredits = credits && credits.credits_left <= 0;
 
   const quickCommands = [
     { icon: BarChart3, text: "Analysera min statistik", color: "from-blue-500 to-cyan-500" },

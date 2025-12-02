@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Gift, Users } from "lucide-react";
 
-type UserPlan = "free_trial" | "pro" | "pro_xl" | "pro_unlimited";
+type UserPlan = "starter" | "growth" | "pro";
 
 interface User {
   id: string;
@@ -23,10 +23,15 @@ interface User {
 }
 
 const PLAN_NAMES: Record<UserPlan, string> = {
-  free_trial: "UF Starter (29 kr)",
-  pro: "UF Growth (49 kr)",
-  pro_xl: "UF Pro (99 kr)",
-  pro_unlimited: "UF Pro Unlimited (199 kr)"
+  starter: "Starter (29 kr)",
+  growth: "Growth (49 kr)",
+  pro: "Pro (99 kr)"
+};
+
+const PLAN_CREDITS: Record<UserPlan, number> = {
+  starter: 50,
+  growth: 100,
+  pro: 300
 };
 
 export default function AdminUserManagement() {
@@ -57,7 +62,8 @@ export default function AdminUserManagement() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      // Cast the data to User[] since we know the plan types are correct
+      setUsers((data || []) as unknown as User[]);
     } catch (error) {
       console.error("Error loading users:", error);
       toast.error("Kunde inte ladda användare");
@@ -76,7 +82,7 @@ export default function AdminUserManagement() {
       const renewalDate = new Date();
       renewalDate.setMonth(renewalDate.getMonth() + 1);
 
-      const maxCredits = plan === "free_trial" ? 50 : plan === "pro" ? 100 : plan === "pro_xl" ? 300 : 1000;
+      const maxCredits = PLAN_CREDITS[plan];
 
       const { error } = await supabase
         .from("users")
@@ -109,7 +115,7 @@ export default function AdminUserManagement() {
       const { error } = await supabase
         .from("users")
         .update({
-          plan: "free_trial",
+          plan: "starter",
           sponsored_until: null,
           max_credits: 50,
           credits_left: 1
@@ -158,7 +164,7 @@ export default function AdminUserManagement() {
                 <div className="space-y-1">
                   <CardTitle className="text-lg">{user.email}</CardTitle>
                   <CardDescription className="flex items-center gap-2">
-                    <Badge variant="outline">{PLAN_NAMES[user.plan]}</Badge>
+                    <Badge variant="outline">{PLAN_NAMES[user.plan] || user.plan}</Badge>
                     {user.sponsored_until && new Date(user.sponsored_until) > new Date() && (
                       <Badge variant="default" className="bg-accent">
                         <Gift className="h-3 w-3 mr-1" />
@@ -186,12 +192,12 @@ export default function AdminUserManagement() {
                     <SelectValue placeholder="Ge paket..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="free_trial-1">UF Starter - 1 mån</SelectItem>
-                    <SelectItem value="free_trial-3">UF Starter - 3 mån</SelectItem>
-                    <SelectItem value="pro-1">UF Growth - 1 mån</SelectItem>
-                    <SelectItem value="pro-3">UF Growth - 3 mån</SelectItem>
-                    <SelectItem value="pro_xl-1">UF Pro - 1 mån</SelectItem>
-                    <SelectItem value="pro_xl-3">UF Pro - 3 mån</SelectItem>
+                    <SelectItem value="starter-1">Starter - 1 mån</SelectItem>
+                    <SelectItem value="starter-3">Starter - 3 mån</SelectItem>
+                    <SelectItem value="growth-1">Growth - 1 mån</SelectItem>
+                    <SelectItem value="growth-3">Growth - 3 mån</SelectItem>
+                    <SelectItem value="pro-1">Pro - 1 mån</SelectItem>
+                    <SelectItem value="pro-3">Pro - 3 mån</SelectItem>
                   </SelectContent>
                 </Select>
 

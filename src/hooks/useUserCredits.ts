@@ -53,10 +53,9 @@ export const useUserCredits = () => {
 
   const getPlanLabel = (plan: string) => {
     switch (plan) {
-      case 'free_trial': return 'Gratis';
-      case 'pro': return 'Starter';
-      case 'pro_xl': return 'Growth';
-      case 'pro_unlimited': return 'Pro';
+      case 'starter': return 'Starter';
+      case 'growth': return 'Growth';
+      case 'pro': return 'Pro';
       default: return plan;
     }
   };
@@ -64,10 +63,9 @@ export const useUserCredits = () => {
   // Get tier level for comparison (higher = better plan)
   const getTierLevel = (plan: string): number => {
     switch (plan) {
-      case 'free_trial': return 0;
-      case 'pro': return 1;
-      case 'pro_xl': return 2;
-      case 'pro_unlimited': return 3;
+      case 'starter': return 1;
+      case 'growth': return 2;
+      case 'pro': return 3;
       default: return 0;
     }
   };

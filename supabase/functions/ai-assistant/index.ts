@@ -251,8 +251,8 @@ serve(async (req) => {
         console.error('Error fetching user credits:', userError);
       }
       
-      // Check if user has enough credits (skip for unlimited plan)
-      if (userData?.plan !== 'pro_unlimited' && (userData?.credits_left || 0) < estimatedCost) {
+      // Check if user has enough credits
+      if ((userData?.credits_left || 0) < estimatedCost) {
         console.log('❌ Insufficient credits:', userData?.credits_left, 'needed:', estimatedCost);
         
         // Return a friendly message instead of error for insufficient credits
@@ -399,15 +399,13 @@ Klicka på "Implementera planen" nedan för att lägga till alla inlägg i din k
               message: explanation,
             });
           
-          // Deduct credits after successful plan creation (skip for unlimited plan)
-          if (userData?.plan !== 'pro_unlimited') {
-            const newCredits = Math.max(0, (userData?.credits_left || 0) - estimatedCost);
-            await supabaseClient
-              .from('users')
-              .update({ credits_left: newCredits })
-              .eq('id', user.id);
-            console.log('💸 Plan credits deducted:', estimatedCost, 'remaining:', newCredits);
-          }
+          // Deduct credits after successful plan creation
+          const newCredits = Math.max(0, (userData?.credits_left || 0) - estimatedCost);
+          await supabaseClient
+            .from('users')
+            .update({ credits_left: newCredits })
+            .eq('id', user.id);
+          console.log('💸 Plan credits deducted:', estimatedCost, 'remaining:', newCredits);
 
           return new Response(
             JSON.stringify({ 
@@ -850,15 +848,13 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
           message: assistantMessage,
         });
       
-      // Deduct credits after successful response (skip for unlimited plan)
-      if (userData?.plan !== 'pro_unlimited') {
-        const newCredits = Math.max(0, (userData?.credits_left || 0) - estimatedCost);
-        await supabaseClient
-          .from('users')
-          .update({ credits_left: newCredits })
-          .eq('id', user.id);
-        console.log('💸 Credits deducted:', estimatedCost, 'remaining:', newCredits);
-      }
+      // Deduct credits after successful response
+      const newCredits = Math.max(0, (userData?.credits_left || 0) - estimatedCost);
+      await supabaseClient
+        .from('users')
+        .update({ credits_left: newCredits })
+        .eq('id', user.id);
+      console.log('💸 Credits deducted:', estimatedCost, 'remaining:', newCredits);
 
       return new Response(
         JSON.stringify({ response: assistantMessage, credits_used: estimatedCost }),
@@ -900,8 +896,8 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
         console.error('Error fetching user credits:', userError);
       }
       
-      // Check if user has enough credits (skip for unlimited plan)
-      if (userData?.plan !== 'pro_unlimited' && (userData?.credits_left || 0) < planCost) {
+      // Check if user has enough credits
+      if ((userData?.credits_left || 0) < planCost) {
         console.log('❌ Insufficient credits for marketing plan:', userData?.credits_left, 'needed:', planCost);
         return new Response(
           JSON.stringify({ 
@@ -1021,15 +1017,13 @@ Vill du implementera denna plan i din kalender? Klicka på "Implementera planen"
             message: explanation,
           });
         
-        // Deduct credits after successful plan creation (skip for unlimited plan)
-        if (userData?.plan !== 'pro_unlimited') {
-          const newCredits = Math.max(0, (userData?.credits_left || 0) - planCost);
-          await supabaseClient
-            .from('users')
-            .update({ credits_left: newCredits })
-            .eq('id', user.id);
-          console.log('💸 Plan credits deducted:', planCost, 'remaining:', newCredits);
-        }
+        // Deduct credits after successful plan creation
+        const newCredits = Math.max(0, (userData?.credits_left || 0) - planCost);
+        await supabaseClient
+          .from('users')
+          .update({ credits_left: newCredits })
+          .eq('id', user.id);
+        console.log('💸 Plan credits deducted:', planCost, 'remaining:', newCredits);
 
         return new Response(
           JSON.stringify({ plan, explanation, credits_used: planCost }),
