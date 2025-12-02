@@ -12,39 +12,62 @@ import CookieConsent from "@/components/CookieConsent";
 import ChatWidget from "@/components/ChatWidget";
 import BackToTop from "@/components/BackToTop";
 import AnimatedSection from "@/components/AnimatedSection";
+import SectionDivider from "@/components/SectionDivider";
 import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <Hero />
+      
+      {/* Fluid transition from Hero to ProblemSection */}
+      <div className="relative -mt-16 z-10">
+        <div className="h-32 bg-gradient-to-b from-transparent to-primary/5 dark:to-primary/10" />
+      </div>
       
       <AnimatedSection animation="slide-up">
         <ProblemSection />
       </AnimatedSection>
       
+      {/* Fluid transition from ProblemSection */}
+      <div className="relative">
+        <div className="h-24 bg-gradient-to-b from-primary/5 via-transparent to-background dark:from-primary/10" />
+      </div>
+      
       <AnimatedSection animation="fade-in-scale" delay={100}>
         <HowItWorks />
       </AnimatedSection>
       
+      <SectionDivider variant="subtle" />
+      
       <ResultsSection />
+      
+      <SectionDivider variant="gradient" />
       
       <AnimatedSection animation="slide-up" delay={100}>
         <AIDemoSection />
       </AnimatedSection>
       
+      <SectionDivider variant="subtle" />
+      
       <AnimatedSection animation="fade-in" delay={100}>
         <Pricing />
       </AnimatedSection>
+      
+      <SectionDivider variant="gradient" />
       
       <AnimatedSection animation="slide-up">
         <Testimonials />
       </AnimatedSection>
       
+      <SectionDivider variant="subtle" />
+      
       <AnimatedSection animation="fade-in-scale" delay={100}>
         <TrustSection />
       </AnimatedSection>
+      
+      <SectionDivider variant="gradient" />
       
       <FinalCTA />
       

@@ -2,10 +2,15 @@ import { AlertCircle, CheckCircle } from "lucide-react";
 
 const ProblemSection = () => {
   return (
-    <section className="py-16 md:py-24 px-4 bg-background font-poppins">
-      {/* Sentinel for header bubble trigger */}
-      <div id="header-bubble-sentinel" aria-hidden="true" className="absolute" />
-      <div className="container mx-auto">
+    <section className="relative py-16 md:py-24 px-4 font-poppins overflow-hidden">
+      {/* Brand gradient background - dark/light mode variants */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/15 to-accent/20 dark:from-primary/30 dark:via-secondary/25 dark:to-accent/30" />
+      {/* Light mode white overlay for readability */}
+      <div className="absolute inset-0 bg-background/60 dark:bg-transparent" />
+      {/* Subtle animated glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-primary/10 dark:bg-primary/20 rounded-full blur-3xl opacity-50" />
+      
+      <div className="container mx-auto relative z-10">
         <div className="max-w-6xl mx-auto">
           {/* Section title */}
           <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-center mb-12 md:mb-16 px-2 leading-tight">
