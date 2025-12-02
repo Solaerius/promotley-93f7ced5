@@ -195,11 +195,10 @@ serve(async (req) => {
         .from('promotley_knowledgebase')
         .list();
 
-      // Get UF rules from ai_knowledge table
-      const { data: ufRules } = await supabaseClient
+      // Get ALL knowledge from ai_knowledge table (not just uf_rules)
+      const { data: allKnowledge } = await supabaseClient
         .from('ai_knowledge')
-        .select('title, content, category')
-        .eq('category', 'uf_rules');
+        .select('title, content, category');
 
       const result = {
         connections: connections || [],
@@ -207,7 +206,7 @@ serve(async (req) => {
         user: user || null,
         knowledgeBase: {
           files: knowledgeFiles?.map(f => f.name) || [],
-          ufRules: ufRules || []
+          allKnowledge: allKnowledge || []
         },
         timestamp: new Date().toISOString()
       };
@@ -434,7 +433,7 @@ Klicka på "Implementera planen" nedan för att lägga till alla inlägg i din k
         connections: userContext.connections.length,
         hasProfile: !!userContext.profile,
         knowledgeFiles: userContext.knowledgeBase.files.length,
-        ufRules: userContext.knowledgeBase.ufRules.length
+        allKnowledge: userContext.knowledgeBase.allKnowledge.length
       });
 
       // Save user message to chat history
@@ -494,9 +493,21 @@ Användarens företagsprofil:
 - Språk: ${userContext.profile.sprakpreferens || 'svenska'}
 ` : '';
 
-      const ufKnowledge = userContext.knowledgeBase.ufRules.length > 0 ? `
-UF-Regler och Riktlinjer:
-${userContext.knowledgeBase.ufRules.map((rule: any) => `- ${rule.title}: ${rule.content.substring(0, 200)}...`).join('\n')}
+      // Group knowledge by category for better prompt organization
+      const knowledgeByCategory: Record<string, any[]> = {};
+      userContext.knowledgeBase.allKnowledge.forEach((k: any) => {
+        if (!knowledgeByCategory[k.category]) {
+          knowledgeByCategory[k.category] = [];
+        }
+        knowledgeByCategory[k.category].push(k);
+      });
+
+      const knowledgeContext = Object.keys(knowledgeByCategory).length > 0 ? `
+KUNSKAPSBAS:
+${Object.entries(knowledgeByCategory).map(([category, items]) => `
+## ${category.toUpperCase().replace(/_/g, ' ')}
+${items.map((k: any) => `${k.title}: ${k.content.substring(0, 500)}...`).join('\n\n')}
+`).join('\n')}
 ` : '';
 
       const messages = [
@@ -519,7 +530,7 @@ ANVÄNDARENS KONTEXT:
 
 ${profileInfo}
 
-${ufKnowledge}
+${knowledgeContext}
 
 ## KRITISK REGEL: Hämta faktisk data innan du svarar
 

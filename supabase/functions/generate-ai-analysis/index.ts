@@ -213,19 +213,31 @@ serve(async (req) => {
       console.error('Error fetching analytics:', analyticsError);
     }
 
-    // Hämta UF-kunskapsregler från databasen
-    const { data: ufKnowledge, error: knowledgeError } = await supabase
+    // Hämta ALL kunskap från databasen (inte bara specifika kategorier)
+    const { data: allKnowledge, error: knowledgeError } = await supabase
       .from('ai_knowledge')
-      .select('content')
-      .in('category', ['uf_rules', 'competition_criteria', 'annual_report']);
+      .select('title, content, category');
 
     if (knowledgeError) {
-      console.error('Error fetching UF knowledge:', knowledgeError);
+      console.error('Error fetching knowledge:', knowledgeError);
     }
 
-    const dynamicUfRules = ufKnowledge && ufKnowledge.length > 0
-      ? ufKnowledge.map(k => k.content).join('\n\n')
-      : UF_RULES;
+    // Organize knowledge by category
+    let dynamicKnowledge = UF_RULES;
+    if (allKnowledge && allKnowledge.length > 0) {
+      const knowledgeByCategory: Record<string, any[]> = {};
+      allKnowledge.forEach(k => {
+        if (!knowledgeByCategory[k.category]) {
+          knowledgeByCategory[k.category] = [];
+        }
+        knowledgeByCategory[k.category].push(k);
+      });
+      
+      dynamicKnowledge = Object.entries(knowledgeByCategory).map(([category, items]) => `
+## ${category.toUpperCase().replace(/_/g, ' ')}
+${items.map(k => `### ${k.title}\n${k.content}`).join('\n\n')}
+`).join('\n\n');
+    }
 
     // Bygg system prompt
     const systemPrompt = `Du är Promotely UF:s AI-expert och marknadsföringsrådgivare.
@@ -288,8 +300,8 @@ ${analytics.map(a => `
 `).join('\n')}
 ` : ''}
 
-## UF-REGLER DU MÅSTE FÖLJA
-${dynamicUfRules}
+## KUNSKAPSBAS OCH REGLER
+${dynamicKnowledge}
 
 ---
 
