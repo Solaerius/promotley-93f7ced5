@@ -3,10 +3,12 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
+import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/integrations/supabase/client";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { useNotifications } from "@/hooks/useNotifications";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
+import { OrganizationSelector } from "@/components/OrganizationSelector";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +32,7 @@ import {
   LogOut,
   Users,
   Shield,
+  Building2,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 
@@ -40,26 +43,18 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { signOut, user } = useAuth();
   const { isAdmin } = useAdminStatus();
+  const { activeOrganization, needsOnboarding, loading: orgLoading } = useOrganization();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { notifications, unreadCount, markAsRead } = useNotifications();
-  const [companyName, setCompanyName] = useState<string | null>(null);
 
+  // Redirect to onboarding if no organization
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user?.id) return;
-      const { data } = await supabase
-        .from('users')
-        .select('company_name')
-        .eq('id', user.id)
-        .single();
-      if (data?.company_name) {
-        setCompanyName(data.company_name);
-      }
-    };
-    fetchUserData();
-  }, [user]);
+    if (!orgLoading && needsOnboarding && !location.pathname.startsWith('/organization')) {
+      navigate('/organization/onboarding');
+    }
+  }, [needsOnboarding, orgLoading, navigate, location.pathname]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -77,6 +72,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { name: "AI-Chat", href: "/ai-chat", icon: MessageSquare },
     { name: "AI-Analys", href: "/ai-dashboard", icon: BarChart3 },
     { name: "Inställningar", href: "/settings", icon: Settings },
+    { name: "Organisation", href: "/organization/settings", icon: Building2 },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -91,6 +87,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <img src={logo} alt="Promotley" className="w-10 h-10" />
             <span className="font-bold text-xl text-foreground">Promotley UF</span>
           </Link>
+
+          {/* Organization Selector */}
+          <div className="px-4 py-3 border-b border-border">
+            <OrganizationSelector />
+          </div>
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2">
@@ -373,7 +374,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <Avatar>
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {companyName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                        {activeOrganization?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>

@@ -27,6 +27,10 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminNotificationSettings from "./pages/AdminNotificationSettings";
 import AdminUserManagement from "./pages/AdminUserManagement";
 import AdminBanManagement from "./pages/AdminBanManagement";
+import OrganizationOnboarding from "./pages/OrganizationOnboarding";
+import OrganizationSettings from "./pages/OrganizationSettings";
+import CreateOrganization from "./pages/CreateOrganization";
+import JoinOrganization from "./pages/JoinOrganization";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
@@ -175,6 +179,32 @@ const App = () => (
             />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
+            {/* Organization routes */}
+            <Route 
+              path="/organization/onboarding" 
+              element={
+                <ProtectedRoute>
+                  <OrganizationOnboarding />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organization/new" 
+              element={
+                <ProtectedRoute>
+                  <CreateOrganization />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organization/settings" 
+              element={
+                <ProtectedRoute>
+                  <OrganizationSettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/join/:code" element={<JoinOrganization />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

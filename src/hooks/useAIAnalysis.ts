@@ -60,8 +60,8 @@ export const useAIAnalysis = () => {
 
       if (error) throw error;
 
-      setHistory((data || []) as AIAnalysis[]);
-      setLatestAnalysis(data && data.length > 0 ? (data[0] as AIAnalysis) : null);
+      setHistory((data || []) as unknown as AIAnalysis[]);
+      setLatestAnalysis(data && data.length > 0 ? (data[0] as unknown as AIAnalysis) : null);
     } catch (error) {
       console.error('Error fetching AI analyses:', error);
     } finally {
