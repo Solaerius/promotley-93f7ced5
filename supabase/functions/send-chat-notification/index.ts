@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,7 +17,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Get notification settings
     const { data: settings, error: settingsError } = await supabaseClient
       .from("notification_settings")
       .select("*")
@@ -33,92 +31,83 @@ serve(async (req) => {
     }
 
     const { message, sessionId, timestamp } = await req.json();
+    const results = { discord: false, email: false, sms: false };
 
-    const results = {
-      discord: false,
-      email: false,
-      sms: false,
-    };
-
-    // Send Discord notification (embed)
+    // Discord notification
     if (settings.discord_webhook_url) {
       try {
-        const adminUrl = `${Deno.env.get("CUSTOM_DOMAIN")}/admin/chat`;
-
-        const embedPayload = {
-          username: "Promotely Chat Bot",
-          embeds: [
-            {
-              title: "🔔 Ny chatt på Promotely!",
-              description: `[Öppna Admin-Chatt](https://promotley.se/admin/chat)`,
-              color: 0xee593d, // Promotely färg (orange)
-              fields: [
-                {
-                  name: "📩 Meddelande",
-                  value: message || "–",
-                },
-                {
-                  name: "🆔 Session",
-                  value: sessionId || "–",
-                },
-                {
-                  name: "⏰ Tid",
-                  value: new Date(timestamp).toLocaleString("sv-SE"),
-                },
-              ],
-              footer: {
-                text: "Promotely UF – Livechatt notifikation",
-              },
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        };
-
         const discordResponse = await fetch(settings.discord_webhook_url, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(embedPayload),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: "Promotely Chat Bot",
+            embeds: [{
+              title: "🔔 Ny chatt på Promotely!",
+              description: `[Öppna Admin-Chatt](https://promotley.se/admin/chat)`,
+              color: 0xee593d,
+              fields: [
+                { name: "📩 Meddelande", value: message || "–" },
+                { name: "🆔 Session", value: sessionId || "–" },
+                { name: "⏰ Tid", value: new Date(timestamp).toLocaleString("sv-SE") },
+              ],
+              footer: { text: "Promotely UF – Livechatt notifikation" },
+              timestamp: new Date().toISOString(),
+            }],
+          }),
         });
-
         results.discord = discordResponse.ok;
-
-        if (!discordResponse.ok) {
-          const errorText = await discordResponse.text();
-          console.error("Discord error response:", errorText);
-        } else {
-          console.log("Discord embed sent successfully");
-        }
       } catch (error) {
         console.error("Discord notification failed:", error);
       }
     }
 
-    // Send email notification (placeholder - would need email service configured)
+    // Email notification via Resend API
     if (settings.notification_email) {
-      // TODO: Implement email sending using Resend or similar service
-      console.log("Email notification would be sent to:", settings.notification_email);
-      results.email = false; // Set to true when implemented
+      try {
+        const resendApiKey = Deno.env.get("RESEND_API_KEY");
+        if (resendApiKey) {
+          const emailResponse = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${resendApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: Deno.env.get("MAIL_FROM") || "Promotely <support@promotley.se>",
+              to: [settings.notification_email],
+              subject: `Ny chattförfrågan på Promotely`,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <h2 style="color: #EE593D;">🔔 Ny chatt på Promotely!</h2>
+                  <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>Meddelande:</strong></p>
+                    <p style="background: white; padding: 15px; border-radius: 4px;">${message || "–"}</p>
+                    <p><strong>Session ID:</strong> ${sessionId || "–"}</p>
+                    <p><strong>Tid:</strong> ${new Date(timestamp).toLocaleString("sv-SE")}</p>
+                  </div>
+                  <a href="https://promotley.se/admin/chat" style="display: inline-block; background: #EE593D; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px;">Öppna Admin-Chatt</a>
+                </div>
+              `,
+            }),
+          });
+          results.email = emailResponse.ok;
+          console.log("Email sent:", results.email);
+        }
+      } catch (error) {
+        console.error("Email notification failed:", error);
+      }
     }
 
-    // Send SMS notification via Twilio
-    if (
-      settings.twilio_account_sid &&
-      settings.twilio_auth_token &&
-      settings.twilio_phone_number &&
-      settings.recipient_phone_number
-    ) {
+    // SMS notification via Twilio
+    if (settings.twilio_account_sid && settings.twilio_auth_token && settings.twilio_phone_number && settings.recipient_phone_number) {
       try {
-        const twilioAuth = btoa(`${settings.twilio_account_sid}:${settings.twilio_auth_token}`);
-
         const smsResponse = await fetch(
           `https://api.twilio.com/2010-04-01/Accounts/${settings.twilio_account_sid}/Messages.json`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
-              Authorization: `Basic ${twilioAuth}`,
+              Authorization: `Basic ${btoa(`${settings.twilio_account_sid}:${settings.twilio_auth_token}`)}`,
             },
             body: new URLSearchParams({
               From: settings.twilio_phone_number,
@@ -127,9 +116,7 @@ serve(async (req) => {
             }),
           },
         );
-
         results.sms = smsResponse.ok;
-        console.log("SMS notification sent:", results.sms);
       } catch (error) {
         console.error("SMS notification failed:", error);
       }
@@ -141,8 +128,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error in send-chat-notification:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

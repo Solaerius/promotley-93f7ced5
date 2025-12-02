@@ -86,11 +86,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-card border-r border-border">
         <div className="flex flex-col flex-1">
-          {/* Logo */}
-          <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
+          {/* Logo - clickable to homepage */}
+          <Link to="/" className="flex items-center gap-3 px-6 py-5 border-b border-border hover:bg-muted/50 transition-colors">
             <img src={logo} alt="Promotley" className="w-10 h-10" />
-            <span className="font-bold text-xl text-foreground">Promotley</span>
-          </div>
+            <span className="font-bold text-xl text-foreground">Promotley UF</span>
+          </Link>
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2">
@@ -194,12 +194,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         }`}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
+          {/* Logo - clickable to homepage */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-            <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity" onClick={() => setSidebarOpen(false)}>
               <img src={logo} alt="Promotley" className="w-10 h-10" />
-              <span className="font-bold text-xl text-foreground">Promotley</span>
-            </div>
+              <span className="font-bold text-xl text-foreground">Promotley UF</span>
+            </Link>
             <Button
               variant="ghost"
               size="icon"

@@ -254,17 +254,17 @@ const Analytics = () => {
             <CardTitle>Plattformsoversikt</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="instagram" className="w-full">
+            <Tabs defaultValue={isConnected('meta_ig') ? 'instagram' : isConnected('tiktok') ? 'tiktok' : isConnected('meta_fb') ? 'facebook' : 'instagram'} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="instagram" disabled={!isConnected('meta_ig')}>
+                <TabsTrigger value="instagram" className={!isConnected('meta_ig') ? 'opacity-50' : ''}>
                   <Instagram className="w-4 h-4 mr-2" />
                   Instagram
                 </TabsTrigger>
-                <TabsTrigger value="tiktok" disabled={!isConnected('tiktok')}>
+                <TabsTrigger value="tiktok" className={!isConnected('tiktok') ? 'opacity-50' : ''}>
                   <Music2 className="w-4 h-4 mr-2" />
                   TikTok
                 </TabsTrigger>
-                <TabsTrigger value="facebook" disabled={!isConnected('meta_fb')}>
+                <TabsTrigger value="facebook" className={!isConnected('meta_fb') ? 'opacity-50' : ''}>
                   <Facebook className="w-4 h-4 mr-2" />
                   Facebook
                 </TabsTrigger>

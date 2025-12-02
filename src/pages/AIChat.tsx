@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -22,11 +22,13 @@ import {
   Paperclip,
   Loader2,
   AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useUserCredits } from "@/hooks/useUserCredits";
+import { useAIProfile } from "@/hooks/useAIProfile";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarketingPlanCard from "@/components/MarketingPlanCard";
 import CreditsDisplay from "@/components/CreditsDisplay";
@@ -45,6 +47,7 @@ const AIChat = () => {
   const navigate = useNavigate();
   const { messages, loading, sendMessage, analyzeStats, implementPlan } = useAIAssistant();
   const { credits } = useUserCredits();
+  const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
   const [inputMessage, setInputMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -54,6 +57,16 @@ const AIChat = () => {
   const [longLoadingBanner, setLongLoadingBanner] = useState(false);
   
   const hasInsufficientCredits = credits && credits.credits_left <= 0;
+  
+  // Check if AI profile is complete enough to use AI features
+  const isAIProfileComplete = aiProfile && (
+    aiProfile.branch || 
+    aiProfile.malgrupp || 
+    aiProfile.produkt_beskrivning || 
+    aiProfile.malsattning
+  );
+  
+  const isAIBlocked = !isAIProfileComplete && !aiProfileLoading;
 
   const quickCommands = [
     { icon: BarChart3, text: "Analysera min statistik", color: "from-blue-500 to-cyan-500" },
@@ -233,6 +246,27 @@ const AIChat = () => {
           <CreditsDisplay variant="compact" />
         </div>
 
+        {/* AI Profile Required Warning */}
+        {isAIBlocked && (
+          <Alert variant="destructive" className="mb-6 border-2 border-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            <AlertTitle className="text-lg font-bold">AI-profil krävs</AlertTitle>
+            <AlertDescription className="mt-2">
+              <p className="mb-3">
+                Du måste fylla i din AI-profil innan du kan använda AI-funktionerna. 
+                AI:n behöver information om ditt företag för att ge relevanta rekommendationer.
+              </p>
+              <Button 
+                onClick={() => navigate('/settings')}
+                variant="outline"
+                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                Gå till Inställningar och fyll i AI-profil
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Quick Commands */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           {quickCommands.map((cmd, index) => {
@@ -243,7 +277,7 @@ const AIChat = () => {
                 variant="outline"
                 className="h-auto p-4 justify-start hover:shadow-soft transition-all duration-300 group"
                 onClick={() => handleQuickCommand(cmd.text)}
-                disabled={loading}
+                disabled={loading || isAIBlocked}
                 aria-label={cmd.text}
               >
                 <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cmd.color} flex items-center justify-center mr-3 group-hover:scale-110 transition-transform`}>
@@ -394,37 +428,39 @@ const AIChat = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => toast({ title: "Filuppladdning", description: "Kommer snart!" })}
-                  disabled={hasInsufficientCredits}
+                  disabled={hasInsufficientCredits || isAIBlocked}
                   aria-label="Bifoga fil"
                 >
                   <Paperclip className="w-4 h-4" />
                 </Button>
                 <Input
-                  placeholder={hasInsufficientCredits ? "Inga krediter kvar..." : "Skriv ditt meddelande..."}
+                  placeholder={isAIBlocked ? "Fyll i AI-profil först..." : hasInsufficientCredits ? "Inga krediter kvar..." : "Skriv ditt meddelande..."}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey && !hasInsufficientCredits) {
+                    if (e.key === "Enter" && !e.shiftKey && !hasInsufficientCredits && !isAIBlocked) {
                       e.preventDefault();
                       handleSendMessage();
                     }
                   }}
                   className="flex-1"
-                  disabled={hasInsufficientCredits || loading}
+                  disabled={hasInsufficientCredits || loading || isAIBlocked}
                   aria-label="Meddelande"
                 />
                 <Button
                   variant="gradient"
                   size="icon"
                   onClick={() => handleSendMessage()}
-                  disabled={!inputMessage.trim() || loading || hasInsufficientCredits}
+                  disabled={!inputMessage.trim() || loading || hasInsufficientCredits || isAIBlocked}
                   aria-label="Skicka meddelande"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                {hasInsufficientCredits 
+                {isAIBlocked
+                  ? "Fyll i din AI-profil i Inställningar för att börja chatta"
+                  : hasInsufficientCredits 
                   ? "Uppgradera din plan för att fortsätta chatta med AI"
                   : "AI kan göra misstag. Kontrollera viktig information."}
               </p>

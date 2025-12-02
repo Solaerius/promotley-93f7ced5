@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Gift, Users, Mail, Search } from "lucide-react";
+import { Loader2, Gift, Users, Mail, Search, ArrowLeft } from "lucide-react";
 
 type UserPlan = "starter" | "growth" | "pro";
 
@@ -192,6 +192,16 @@ export default function AdminUserManagement() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Back button */}
+      <Button 
+        variant="ghost" 
+        onClick={() => navigate('/admin')}
+        className="mb-2"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Tillbaka till admin
+      </Button>
+
       <div className="flex items-center gap-3">
         <Users className="h-8 w-8 text-primary" />
         <div>

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, X, Send, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { MessageCircle, X, Send, Wifi, WifiOff, RefreshCw, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
+import { filterMessage } from "@/lib/contentFilter";
 
 interface Message {
   id: string;
@@ -13,6 +14,7 @@ interface Message {
   sender_id: string | null;
   read: boolean;
   created_at: string;
+  is_automated?: boolean;
 }
 
 const ChatWidget = () => {
@@ -37,8 +39,8 @@ const ChatWidget = () => {
   const pollingTickCountRef = useRef(0);
 
   // Draggable and resizable state - smaller initial size
-  const [position, setPosition] = useState({ x: 24, y: window.innerHeight - 474 }); // bottom-6 right-6
-  const [size, setSize] = useState({ width: 340, height: 450 }); // Smaller initial size
+  const [position, setPosition] = useState({ x: 24, y: window.innerHeight - 474 });
+  const [size, setSize] = useState({ width: 340, height: 450 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string>('');
@@ -134,7 +136,7 @@ const ChatWidget = () => {
       } catch (err) {
         console.error("❌ Polling exception:", err);
       }
-    }, 4000); // 4 second interval
+    }, 4000);
   };
 
   const stopPolling = () => {
@@ -225,7 +227,7 @@ const ChatWidget = () => {
       console.log("📡 Setting up Realtime subscription for session:", sessionId);
       
       const channel = supabase
-        .channel(`live_chat_${sessionId}_${Date.now()}`) // Unique channel name
+        .channel(`live_chat_${sessionId}_${Date.now()}`)
         .on(
           "postgres_changes",
           {
@@ -278,9 +280,8 @@ const ChatWidget = () => {
           console.log("📡 Realtime subscription status:", status, err ? `Error: ${err}` : '');
           
           if (status === 'SUBSCRIBED') {
-            setConnectionStatus('connecting'); // Stay connecting until we get an actual event
+            setConnectionStatus('connecting');
             console.log("✅ Subscribed to Realtime, waiting for first event...");
-            // Note: We do NOT stop polling here - wait for actual event
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
             console.warn("⚠️ Realtime channel error/timeout, ensuring polling is active");
             setConnectionStatus('disconnected');
@@ -352,12 +353,26 @@ const ChatWidget = () => {
     const newSessionId = crypto.randomUUID();
     localStorage.setItem("live_chat_session_id", newSessionId);
     
-    // Reset state - setSessionId will trigger loadMessages via useEffect
+    // Reset state
     setMessages([]);
     setAutoReplyHasBeenSent(false);
     setIsChatClosed(false);
     setInputValue("");
     setSessionId(newSessionId);
+  };
+
+  const handleCloseAndReset = () => {
+    // Clear session data
+    localStorage.removeItem("live_chat_session_id");
+    localStorage.removeItem("live_chat_auto_reply_sent");
+    
+    // Reset state and close widget
+    setMessages([]);
+    setAutoReplyHasBeenSent(false);
+    setIsChatClosed(false);
+    setInputValue("");
+    setSessionId(null);
+    handleClose();
   };
 
   // Drag handlers
@@ -432,6 +447,13 @@ const ChatWidget = () => {
   const handleSend = async () => {
     if (!inputValue.trim() || !sessionId) return;
 
+    // Filter message for inappropriate content
+    const { filtered, wasCensored } = filterMessage(inputValue);
+    
+    if (wasCensored) {
+      setSendError("Meddelandet innehöll olämpligt innehåll som har filtrerats.");
+    }
+
     setIsLoading(true);
     setSendError(null);
 
@@ -440,7 +462,7 @@ const ChatWidget = () => {
     const optimisticMessage: Message = {
       id: tempId,
       session_id: sessionId,
-      message: inputValue,
+      message: filtered,
       sender_type: "user",
       created_at: new Date().toISOString(),
       read: false,
@@ -448,8 +470,8 @@ const ChatWidget = () => {
     };
 
     setMessages((prev) => [...prev, optimisticMessage]);
-    const messageText = inputValue;
-    setInputValue(""); // Clear input immediately for better UX
+    const messageText = filtered;
+    setInputValue("");
 
     const { data, error } = await supabase.from("live_chat_messages").insert({
       session_id: sessionId,
@@ -463,7 +485,7 @@ const ChatWidget = () => {
       
       // Remove optimistic message on error
       setMessages((prev) => prev.filter(m => m.id !== tempId));
-      setInputValue(messageText); // Restore input
+      setInputValue(messageText);
     } else {
       console.log("✅ Message sent successfully", data);
       
@@ -496,6 +518,13 @@ const ChatWidget = () => {
   const handleOpen = () => {
     setIsOpen(true);
     setIsClosing(false);
+    
+    // Create session if needed
+    if (!sessionId) {
+      const newSessionId = crypto.randomUUID();
+      localStorage.setItem("live_chat_session_id", newSessionId);
+      setSessionId(newSessionId);
+    }
   };
 
   const handleClose = () => {
@@ -504,6 +533,20 @@ const ChatWidget = () => {
       setIsOpen(false);
       setIsClosing(false);
     }, 250);
+  };
+
+  // Check if message is automated (first admin message after user's first message)
+  const isAutomatedMessage = (msg: Message, index: number) => {
+    if (msg.sender_type !== 'admin') return false;
+    
+    // Find if this is the first admin message
+    const adminMessages = messages.filter(m => m.sender_type === 'admin');
+    const isFirstAdmin = adminMessages.length > 0 && adminMessages[0].id === msg.id;
+    
+    // Check if it's the standard auto-reply
+    const isAutoReplyContent = msg.message.includes("Tack för ditt meddelande! Vi kan vara upptagna");
+    
+    return isFirstAdmin && isAutoReplyContent;
   };
 
   // Connection status indicator component
@@ -601,20 +644,28 @@ const ChatWidget = () => {
           {/* Messages Area */}
           <ScrollArea className="flex-1 p-4">
             {isChatClosed ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="flex flex-col items-center justify-center h-full text-center p-4">
                 <div className="mb-4 p-4 rounded-full bg-muted/50">
                   <X className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Chatten avslutades av support</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Du kan starta en ny chatt om du har fler frågor
+                <h3 className="text-lg font-semibold mb-2">Chatten har avslutats</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Support har avslutat denna chatt. Du kan starta en ny chatt om du har fler frågor.
                 </p>
-                <Button
-                  onClick={handleStartNewChat}
-                  className="bg-gradient-primary hover:opacity-90"
-                >
-                  Starta ny chatt
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleCloseAndReset}
+                  >
+                    Stäng chatt
+                  </Button>
+                  <Button
+                    onClick={handleStartNewChat}
+                    className="bg-gradient-primary hover:opacity-90"
+                  >
+                    Starta ny chatt
+                  </Button>
+                </div>
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
@@ -628,30 +679,52 @@ const ChatWidget = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.sender_type === "user" ? "justify-end" : "justify-start"}`}
-                  >
+                {messages.map((msg, index) => {
+                  const isAutomated = isAutomatedMessage(msg, index);
+                  
+                  return (
                     <div
-                      className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm ${
-                        msg.sender_type === "user"
-                          ? "bg-gradient-primary text-primary-foreground rounded-br-sm"
-                          : "bg-muted/80 text-foreground rounded-bl-sm"
-                      } ${msg.id.startsWith('temp-') ? 'opacity-70' : ''}`}
+                      key={msg.id}
+                      className={`flex ${msg.sender_type === "user" ? "justify-end" : "justify-start"}`}
                     >
-                      <p className="break-words whitespace-pre-wrap">{msg.message}</p>
-                      <p className={`text-[10px] mt-1 ${
-                        msg.sender_type === "user" ? "text-primary-foreground/70" : "text-muted-foreground"
-                      }`}>
-                        {msg.id.startsWith('temp-') ? 'Skickar...' : new Date(msg.created_at).toLocaleTimeString("sv-SE", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
+                      <div className="max-w-[85%]">
+                        {/* Sender label for admin messages */}
+                        {msg.sender_type === "admin" && (
+                          <div className="flex items-center gap-1 mb-1 text-xs text-muted-foreground">
+                            {isAutomated ? (
+                              <>
+                                <Bot className="w-3 h-3" />
+                                <span>Automatiserat meddelande</span>
+                              </>
+                            ) : (
+                              <>
+                                <User className="w-3 h-3" />
+                                <span>Från support</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        <div
+                          className={`px-4 py-2 rounded-2xl text-sm ${
+                            msg.sender_type === "user"
+                              ? "bg-gradient-primary text-primary-foreground rounded-br-sm"
+                              : "bg-muted/80 text-foreground rounded-bl-sm"
+                          } ${msg.id.startsWith('temp-') ? 'opacity-70' : ''}`}
+                        >
+                          <p className="break-words whitespace-pre-wrap">{msg.message}</p>
+                          <p className={`text-[10px] mt-1 ${
+                            msg.sender_type === "user" ? "text-primary-foreground/70" : "text-muted-foreground"
+                          }`}>
+                            {msg.id.startsWith('temp-') ? 'Skickar...' : new Date(msg.created_at).toLocaleTimeString("sv-SE", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
             )}

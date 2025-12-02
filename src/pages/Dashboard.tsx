@@ -21,6 +21,7 @@ import { ConnectionManager } from "@/components/ConnectionManager";
 import { useTikTokData } from "@/hooks/useTikTokData";
 import { useMetaData } from "@/hooks/useMetaData";
 import { useConnections } from "@/hooks/useConnections";
+import ChatWidget from "@/components/ChatWidget";
 
 // Format number for display
 const formatNumber = (num: number): string => {
@@ -267,7 +268,7 @@ const Dashboard = () => {
                 Anslut dina sociala media-konton för att se statistik och AI-insikter
               </p>
               <p className="text-sm text-muted-foreground">
-                Använd Connection Manager ovan för att komma igång
+                Gå till "Anslutna konton" ovan eller "Inställningar" för att koppla dina konton
               </p>
             </Card>
           ) : (
@@ -373,6 +374,9 @@ const Dashboard = () => {
           </div>
         </Card>
       </div>
+      
+      {/* Chat Widget */}
+      <ChatWidget />
     </DashboardLayout>
   );
 };

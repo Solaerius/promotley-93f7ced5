@@ -90,12 +90,12 @@ const AIDashboard = () => {
                 }
               }
             }}
-            disabled={generating || !hasAccess}
+            disabled={generating || !hasAccess || !aiProfile}
             size="lg"
             className="gap-2"
           >
             <Sparkles className="h-5 w-5" />
-            {generating ? 'Genererar...' : 'Generera Ny Analys'}
+            {generating ? 'Genererar...' : !aiProfile ? 'Fyll i AI-profil först' : 'Generera Ny Analys'}
           </Button>
         </div>
 
@@ -115,13 +115,25 @@ const AIDashboard = () => {
           </Alert>
         )}
 
-        {/* Varning om profil saknas */}
+        {/* Varning om profil saknas - LARGER */}
         {!aiProfile && hasAccess && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Du behöver fylla i din AI-profil i Inställningar för att få skräddarsydda rekommendationer.
-            </AlertDescription>
+          <Alert variant="destructive" className="border-2 border-destructive">
+            <AlertCircle className="h-5 w-5" />
+            <div className="ml-2">
+              <p className="font-bold text-lg mb-1">AI-profil krävs!</p>
+              <p className="mb-3">
+                Du måste fylla i din AI-profil i Inställningar innan du kan generera analyser. 
+                AI:n behöver information om ditt företag för att ge relevanta rekommendationer.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => window.location.href = '/settings'}
+                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                Gå till Inställningar
+              </Button>
+            </div>
           </Alert>
         )}
 

@@ -661,6 +661,12 @@ const Settings = () => {
                   </div>
                 );
               })}
+              
+              {/* Coming soon platforms */}
+              <div className="p-4 border border-dashed rounded-lg text-center text-muted-foreground">
+                <p className="text-sm font-medium">Fler plattformar kommer snart...</p>
+                <p className="text-xs mt-1">LinkedIn, Twitter, YouTube</p>
+              </div>
             </div>
           </Card>
 
