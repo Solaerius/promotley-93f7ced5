@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { MessageCircle, X, Send, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,6 +29,12 @@ const ChatWidget = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastMessageTimestampRef = useRef<string | null>(null);
+  
+  // New refs for robust realtime
+  const gotRealtimeEventRef = useRef(false);
+  const sanityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const noEventWarningRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingTickCountRef = useRef(0);
 
   // Draggable and resizable state - smaller initial size
   const [position, setPosition] = useState({ x: 24, y: window.innerHeight - 474 }); // bottom-6 right-6
@@ -74,44 +80,101 @@ const ChatWidget = () => {
     }
   };
 
-  // Polling fallback for when realtime fails
+  // Polling fallback - runs every 3-5 seconds
   const startPolling = () => {
     if (pollingIntervalRef.current) return;
     
-    console.log("Starting polling fallback");
+    console.log("🔄 Starting polling fallback (every 4s)");
+    setConnectionStatus('disconnected');
+    
     pollingIntervalRef.current = setInterval(async () => {
       if (!sessionId) return;
       
-      const { data } = await supabase
-        .from("live_chat_messages")
-        .select("*")
-        .eq("session_id", sessionId)
-        .gt("created_at", lastMessageTimestampRef.current || new Date(0).toISOString())
-        .order("created_at", { ascending: true });
+      pollingTickCountRef.current++;
+      console.log(`📊 Polling tick #${pollingTickCountRef.current}`);
       
-      if (data && data.length > 0) {
-        console.log("Polling: New messages found", data);
-        setMessages((prev) => {
-          const existing = new Set(prev.map(m => m.id));
-          const newMessages = data.filter(m => !existing.has(m.id));
-          return [...prev, ...newMessages];
-        });
-        lastMessageTimestampRef.current = data[data.length - 1].created_at;
+      try {
+        const { data, error } = await supabase
+          .from("live_chat_messages")
+          .select("*")
+          .eq("session_id", sessionId)
+          .gt("created_at", lastMessageTimestampRef.current || new Date(0).toISOString())
+          .order("created_at", { ascending: true });
+        
+        if (error) {
+          console.error("❌ Polling error:", error);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          console.log(`✅ Polling: Found ${data.length} new message(s)`, data);
+          setMessages((prev) => {
+            const existingIds = new Set(prev.map(m => m.id));
+            const newMessages = data.filter(m => !existingIds.has(m.id) && !m.id.startsWith('temp-'));
+            if (newMessages.length > 0) {
+              return [...prev.filter(m => !m.id.startsWith('temp-')), ...newMessages];
+            }
+            return prev;
+          });
+          lastMessageTimestampRef.current = data[data.length - 1].created_at;
+        } else {
+          console.log("📊 Polling: No new messages");
+        }
+        
+        // Also check for session closure
+        const { data: sessionData } = await supabase
+          .from("live_chat_sessions")
+          .select("status")
+          .eq("session_id", sessionId)
+          .maybeSingle();
+        
+        if (sessionData?.status === "closed") {
+          setIsChatClosed(true);
+        }
+      } catch (err) {
+        console.error("❌ Polling exception:", err);
       }
-    }, 5000);
+    }, 4000); // 4 second interval
   };
 
   const stopPolling = () => {
     if (pollingIntervalRef.current) {
-      console.log("Stopping polling");
+      console.log("⏹️ Stopping polling");
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
+    }
+  };
+
+  // Force reload messages (sanity check)
+  const forceReloadMessages = async () => {
+    if (!sessionId) return;
+    
+    console.log("🔄 Force reloading messages (sanity check)");
+    const { data } = await supabase
+      .from("live_chat_messages")
+      .select("*")
+      .eq("session_id", sessionId)
+      .gt("created_at", lastMessageTimestampRef.current || new Date(0).toISOString())
+      .order("created_at", { ascending: true });
+    
+    if (data && data.length > 0) {
+      console.log(`✅ Sanity check: Found ${data.length} new message(s)`);
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map(m => m.id));
+        const fresh = data.filter(m => !existingIds.has(m.id));
+        return [...prev.filter(m => !m.id.startsWith('temp-')), ...fresh];
+      });
+      lastMessageTimestampRef.current = data[data.length - 1].created_at;
     }
   };
 
   // Load messages when session is ready
   useEffect(() => {
     if (!sessionId) return;
+
+    // Reset refs for new session
+    gotRealtimeEventRef.current = false;
+    pollingTickCountRef.current = 0;
 
     const loadMessages = async () => {
       const { data, error } = await supabase
@@ -128,22 +191,41 @@ const ChatWidget = () => {
           lastMessageTimestampRef.current = data[data.length - 1].created_at;
         }
       }
+      
+      // CRITICAL: Start polling immediately as fallback
+      startPolling();
+      
+      // Sanity timer: force reload after 10s if no realtime events
+      sanityTimerRef.current = setTimeout(() => {
+        if (!gotRealtimeEventRef.current) {
+          console.log("⚠️ No realtime events after 10s, force reloading");
+          forceReloadMessages();
+        }
+      }, 10000);
+      
+      // Warning timer: log if no events after 30s despite SUBSCRIBED
+      noEventWarningRef.current = setTimeout(() => {
+        if (!gotRealtimeEventRef.current) {
+          console.warn("⚠️ WARNING: 30 seconds without any Realtime events!");
+          console.warn("Check that:");
+          console.warn("1. Table 'live_chat_messages' is in publication supabase_realtime");
+          console.warn("2. RLS SELECT policy allows this client to see the rows");
+          console.warn("3. Network is not blocking WebSocket connections");
+        }
+      }, 30000);
     };
 
     loadMessages();
 
-    // Subscribe to realtime updates with retry logic
+    // Subscribe to realtime updates
     let retryCount = 0;
     const maxRetries = 3;
     
     const setupRealtimeSubscription = () => {
+      console.log("📡 Setting up Realtime subscription for session:", sessionId);
+      
       const channel = supabase
-        .channel(`live_chat_${sessionId}`, {
-          config: {
-            broadcast: { self: true },
-            presence: { key: sessionId },
-          },
-        })
+        .channel(`live_chat_${sessionId}_${Date.now()}`) // Unique channel name
         .on(
           "postgres_changes",
           {
@@ -153,16 +235,24 @@ const ChatWidget = () => {
             filter: `session_id=eq.${sessionId}`,
           },
           (payload) => {
-            console.log("✅ Realtime: New message received", payload.new);
+            console.log("✅ Realtime INSERT event received!", payload.new);
+            
+            // Mark that we received a realtime event
+            gotRealtimeEventRef.current = true;
+            
+            // Stop polling since realtime is working
+            stopPolling();
+            setConnectionStatus('connected');
+            
             const newMessage = payload.new as Message;
             setMessages((prev) => {
-              // Remove any optimistic messages and avoid duplicates
-              const filtered = prev.filter(m => m.id !== newMessage.id && !m.id.startsWith('temp-'));
+              // Check for duplicates and remove temp messages
+              const filtered = prev.filter(m => 
+                m.id !== newMessage.id && !m.id.startsWith('temp-')
+              );
               return [...filtered, newMessage];
             });
             lastMessageTimestampRef.current = newMessage.created_at;
-            setConnectionStatus('connected');
-            stopPolling(); // Stop polling if realtime works
           }
         )
         .on(
@@ -174,22 +264,26 @@ const ChatWidget = () => {
             filter: `session_id=eq.${sessionId}`,
           },
           (payload: any) => {
-            console.log("✅ Realtime: Session update received", payload.new);
+            console.log("✅ Realtime session UPDATE event received!", payload.new);
+            gotRealtimeEventRef.current = true;
+            stopPolling();
+            setConnectionStatus('connected');
+            
             if (payload.new?.status === "closed") {
               setIsChatClosed(true);
             }
           }
         )
-        .subscribe((status) => {
-          console.log("📡 Realtime subscription status:", status);
+        .subscribe((status, err) => {
+          console.log("📡 Realtime subscription status:", status, err ? `Error: ${err}` : '');
           
           if (status === 'SUBSCRIBED') {
-            setConnectionStatus('connected');
-            stopPolling();
-            retryCount = 0;
+            setConnectionStatus('connecting'); // Stay connecting until we get an actual event
+            console.log("✅ Subscribed to Realtime, waiting for first event...");
+            // Note: We do NOT stop polling here - wait for actual event
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.warn("⚠️ Realtime channel error/timeout, ensuring polling is active");
             setConnectionStatus('disconnected');
-            console.warn("⚠️ Realtime failed, starting polling fallback");
             startPolling();
             
             // Retry connection
@@ -202,6 +296,7 @@ const ChatWidget = () => {
               }, 2000 * retryCount);
             }
           } else if (status === 'CLOSED') {
+            console.log("📡 Realtime channel closed");
             setConnectionStatus('disconnected');
             startPolling();
           }
@@ -216,6 +311,15 @@ const ChatWidget = () => {
       console.log("🧹 Cleaning up: Unsubscribing and stopping polling");
       stopPolling();
       supabase.removeChannel(channel);
+      
+      if (sanityTimerRef.current) {
+        clearTimeout(sanityTimerRef.current);
+        sanityTimerRef.current = null;
+      }
+      if (noEventWarningRef.current) {
+        clearTimeout(noEventWarningRef.current);
+        noEventWarningRef.current = null;
+      }
     };
   }, [sessionId]);
 
@@ -402,6 +506,32 @@ const ChatWidget = () => {
     }, 250);
   };
 
+  // Connection status indicator component
+  const ConnectionIndicator = () => {
+    if (connectionStatus === 'connected') {
+      return (
+        <div className="flex items-center gap-1 text-xs text-green-500">
+          <Wifi className="w-3 h-3" />
+          <span>Live</span>
+        </div>
+      );
+    } else if (connectionStatus === 'connecting') {
+      return (
+        <div className="flex items-center gap-1 text-xs text-yellow-500">
+          <RefreshCw className="w-3 h-3 animate-spin" />
+          <span>Ansluter...</span>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <WifiOff className="w-3 h-3" />
+          <span>Uppdaterar var 4s</span>
+        </div>
+      );
+    }
+  };
+
   return (
     <>
       {/* Chat Button */}
@@ -456,9 +586,7 @@ const ChatWidget = () => {
               </div>
               <div>
                 <h3 className="font-semibold">Promotely Support</h3>
-                <p className="text-xs text-hero-muted/80">
-                  Online • Svarar snabbt
-                </p>
+                <ConnectionIndicator />
               </div>
             </div>
             <button
@@ -483,7 +611,7 @@ const ChatWidget = () => {
                 </p>
                 <Button
                   onClick={handleStartNewChat}
-                  className="bg-gradient-primary hover:shadow-glow"
+                  className="bg-gradient-primary hover:opacity-90"
                 >
                   Starta ny chatt
                 </Button>
@@ -493,9 +621,9 @@ const ChatWidget = () => {
                 <div className="mb-4 p-4 rounded-full bg-muted/50">
                   <MessageCircle className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Skicka din fråga</h3>
+                <h3 className="text-lg font-semibold mb-2">Hej! 👋</h3>
                 <p className="text-sm text-muted-foreground">
-                  Vi svarar så snart vi kan
+                  Skriv ett meddelande så återkommer vi så snart vi kan!
                 </p>
               </div>
             ) : (
@@ -503,20 +631,20 @@ const ChatWidget = () => {
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${
-                      msg.sender_type === "user" ? "justify-end" : "justify-start"
-                    }`}
+                    className={`flex ${msg.sender_type === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                      className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm ${
                         msg.sender_type === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-foreground"
-                      }`}
+                          ? "bg-gradient-primary text-primary-foreground rounded-br-sm"
+                          : "bg-muted/80 text-foreground rounded-bl-sm"
+                      } ${msg.id.startsWith('temp-') ? 'opacity-70' : ''}`}
                     >
-                      <p className="text-sm">{msg.message}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {new Date(msg.created_at).toLocaleTimeString("sv-SE", {
+                      <p className="break-words whitespace-pre-wrap">{msg.message}</p>
+                      <p className={`text-[10px] mt-1 ${
+                        msg.sender_type === "user" ? "text-primary-foreground/70" : "text-muted-foreground"
+                      }`}>
+                        {msg.id.startsWith('temp-') ? 'Skickar...' : new Date(msg.created_at).toLocaleTimeString("sv-SE", {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
@@ -529,38 +657,34 @@ const ChatWidget = () => {
             )}
           </ScrollArea>
 
-          {/* Input */}
-          <div className="p-4 border-t border-border/50">
-            <div className="flex flex-col gap-2">
+          {/* Input Area */}
+          {!isChatClosed && (
+            <div className="p-4 border-t border-border/50">
+              {sendError && (
+                <p className="text-xs text-destructive mb-2" role="alert" aria-live="polite">
+                  {sendError}
+                </p>
+              )}
               <div className="flex gap-2">
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && !isLoading && !isChatClosed && handleSend()}
-                  placeholder="Skriv ditt meddelande..."
-                  className="flex-1 bg-background"
-                  disabled={isLoading || isChatClosed}
-                  aria-label="Skicka fråga"
-                  aria-live="polite"
-                  aria-describedby={sendError ? "send-error" : undefined}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                  placeholder="Skriv ett meddelande..."
+                  className="flex-1 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                  disabled={isLoading}
                 />
                 <Button
                   onClick={handleSend}
+                  disabled={!inputValue.trim() || isLoading}
                   size="icon"
-                  disabled={isLoading || !inputValue.trim() || isChatClosed}
-                  className="bg-gradient-primary hover:shadow-glow"
-                  aria-label="Skicka meddelande"
+                  className="bg-gradient-primary hover:opacity-90 transition-opacity"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
-              {sendError && (
-                <p id="send-error" className="text-xs text-destructive" role="alert">
-                  {sendError}
-                </p>
-              )}
             </div>
-          </div>
+          )}
         </div>
       )}
     </>
