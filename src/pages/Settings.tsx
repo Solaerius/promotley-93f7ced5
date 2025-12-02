@@ -63,20 +63,25 @@ const Settings = () => {
     { id: "large", name: "Large", credits: 100, price: 59 },
   ];
 
-  // Fetch user's company name
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
+
+  // Fetch user's company name and profile images
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user?.id) return;
       
       const { data, error } = await supabase
         .from('users')
-        .select('company_name, email')
+        .select('company_name, email, avatar_url, company_logo_url')
         .eq('id', user.id)
         .single();
       
       if (!error && data) {
         setCompanyName(data.company_name || "");
         setOriginalCompanyName(data.company_name || "");
+        setAvatarUrl(data.avatar_url);
+        setCompanyLogoUrl(data.company_logo_url);
       }
     };
     
