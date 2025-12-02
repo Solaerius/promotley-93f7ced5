@@ -3,8 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Copy, Check } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Sparkles, Copy, Check, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAIProfile } from "@/hooks/useAIProfile";
+import { useNavigate } from "react-router-dom";
 import { suggestionSchema } from "@/lib/validations";
 
 interface Suggestion {
@@ -22,6 +25,19 @@ export const AISuggestions = () => {
   const [hasAccess, setHasAccess] = useState(true);
   const [accessError, setAccessError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
+  const navigate = useNavigate();
+
+  // Check if AI profile has enough fields filled (minimum 3)
+  const filledFields = aiProfile ? [
+    aiProfile.branch,
+    aiProfile.malgrupp,
+    aiProfile.produkt_beskrivning,
+    aiProfile.malsattning
+  ].filter(Boolean).length : 0;
+  
+  const isAIProfileComplete = filledFields >= 3;
+  const isAIBlocked = !isAIProfileComplete && !aiProfileLoading;
 
   const generateSuggestion = async () => {
     setLoading(true);
@@ -140,6 +156,27 @@ export const AISuggestions = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* AI Profile Required Warning */}
+          {isAIBlocked && (
+            <Alert variant="destructive" className="border-2 border-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              <AlertDescription className="ml-2">
+                <p className="font-bold mb-1">AI-profil krävs</p>
+                <p className="mb-2 text-sm">
+                  Du måste fylla i minst 3 fält i din AI-profil (bransch, målgrupp, produktbeskrivning, målsättning) innan du kan använda AI-förslag.
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/settings')}
+                  className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  Gå till Inställningar
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {!hasAccess && accessError && (
             <div className="p-4 border border-primary/20 rounded-lg bg-primary/5">
               <h4 className="font-semibold mb-2">AI-förslag låsta</h4>
@@ -148,14 +185,14 @@ export const AISuggestions = () => {
                 {accessError === 'no_credits' && 'Dina krediter är slut. Fyll på för att fortsätta'}
                 {accessError === 'paywall' && 'Uppgradera ditt paket för fler AI-förslag'}
               </p>
-              <Button variant="gradient" size="sm" onClick={() => window.location.href = '/pricing'}>
+              <Button variant="gradient" size="sm" onClick={() => navigate('/pricing')}>
                 Visa paket
               </Button>
             </div>
           )}
           
           <div className="flex gap-4">
-            <Select value={platform} onValueChange={setPlatform} disabled={!hasAccess}>
+            <Select value={platform} onValueChange={setPlatform} disabled={!hasAccess || isAIBlocked}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Välj plattform" />
               </SelectTrigger>
@@ -168,22 +205,22 @@ export const AISuggestions = () => {
 
             <Button
               onClick={generateSuggestion}
-              disabled={loading || !hasAccess}
+              disabled={loading || !hasAccess || isAIBlocked}
               className="gap-2"
               variant="gradient"
-              aria-label="Generate AI content suggestions"
+              aria-label="Generera AI-innehållsförslag"
             >
               <Sparkles className="h-4 w-4" />
-              {loading ? "Generating..." : "Generate suggestions"}
+              {loading ? "Genererar..." : isAIBlocked ? "Fyll i AI-profil" : "Generera förslag"}
             </Button>
           </div>
 
-          {/* Example AI-Generated Post Preview */}
+          {/* Exempel på AI-genererat inlägg */}
           {!suggestion && (
             <div className="mt-6 space-y-3 p-6 rounded-lg border border-dashed border-primary/30 bg-muted/20">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <p className="text-sm font-semibold text-muted-foreground">Example AI-Generated Post</p>
+                <p className="text-sm font-semibold text-muted-foreground">Exempel på AI-genererat inlägg</p>
               </div>
               <div className="space-y-2 opacity-75">
                 <p className="text-sm font-medium">💡 Idé: Behind-the-scenes av er produktutveckling</p>

@@ -12,10 +12,21 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 const AIDashboard = () => {
   const { latestAnalysis, loading, generating, generateAnalysis } = useAIAnalysis();
-  const { profile: aiProfile } = useAIProfile();
+  const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [hasAccess, setHasAccess] = useState(true);
   const [accessError, setAccessError] = useState<string | null>(null);
+
+  // Check if AI profile has enough fields filled (minimum 3 of 4 key fields)
+  const filledFields = aiProfile ? [
+    aiProfile.branch,
+    aiProfile.malgrupp,
+    aiProfile.produkt_beskrivning,
+    aiProfile.malsattning
+  ].filter(Boolean).length : 0;
+  
+  const isAIProfileComplete = filledFields >= 3;
+  const isAIBlocked = !isAIProfileComplete && !aiProfileLoading;
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
@@ -90,12 +101,12 @@ const AIDashboard = () => {
                 }
               }
             }}
-            disabled={generating || !hasAccess || !aiProfile}
+            disabled={generating || !hasAccess || isAIBlocked}
             size="lg"
             className="gap-2"
           >
             <Sparkles className="h-5 w-5" />
-            {generating ? 'Genererar...' : !aiProfile ? 'Fyll i AI-profil först' : 'Generera Ny Analys'}
+            {generating ? 'Genererar...' : isAIBlocked ? 'Fyll i AI-profil först' : 'Generera Ny Analys'}
           </Button>
         </div>
 
@@ -115,15 +126,15 @@ const AIDashboard = () => {
           </Alert>
         )}
 
-        {/* Varning om profil saknas - LARGER */}
-        {!aiProfile && hasAccess && (
+        {/* Varning om profil saknas */}
+        {isAIBlocked && hasAccess && (
           <Alert variant="destructive" className="border-2 border-destructive">
             <AlertCircle className="h-5 w-5" />
             <div className="ml-2">
               <p className="font-bold text-lg mb-1">AI-profil krävs!</p>
               <p className="mb-3">
-                Du måste fylla i din AI-profil i Inställningar innan du kan generera analyser. 
-                AI:n behöver information om ditt företag för att ge relevanta rekommendationer.
+                Du måste fylla i minst 3 av följande fält i din AI-profil: bransch, målgrupp, produktbeskrivning och målsättning.
+                AI:n behöver denna information för att ge relevanta rekommendationer.
               </p>
               <Button 
                 variant="outline" 

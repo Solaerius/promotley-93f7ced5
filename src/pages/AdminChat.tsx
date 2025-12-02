@@ -317,7 +317,7 @@ const AdminChat = () => {
                   <div className="flex items-center gap-2 mb-1">
                     <MessageCircle className="w-4 h-4" />
                     <span className="font-semibold text-sm">
-                      Session {session.session_id.slice(0, 8)}
+                      Chatt {session.session_id.slice(0, 8)}
                     </span>
                     {session.status === "closed" && (
                       <span className="ml-auto bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs">

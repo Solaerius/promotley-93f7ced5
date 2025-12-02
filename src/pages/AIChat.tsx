@@ -58,14 +58,15 @@ const AIChat = () => {
   
   const hasInsufficientCredits = credits && credits.credits_left <= 0;
   
-  // Check if AI profile is complete enough to use AI features
-  const isAIProfileComplete = aiProfile && (
-    aiProfile.branch || 
-    aiProfile.malgrupp || 
-    aiProfile.produkt_beskrivning || 
+  // Check if AI profile has enough fields filled (minimum 3 of 4 key fields)
+  const filledFields = aiProfile ? [
+    aiProfile.branch,
+    aiProfile.malgrupp,
+    aiProfile.produkt_beskrivning,
     aiProfile.malsattning
-  );
+  ].filter(Boolean).length : 0;
   
+  const isAIProfileComplete = filledFields >= 3;
   const isAIBlocked = !isAIProfileComplete && !aiProfileLoading;
 
   const quickCommands = [
@@ -253,8 +254,8 @@ const AIChat = () => {
             <AlertTitle className="text-lg font-bold">AI-profil krävs</AlertTitle>
             <AlertDescription className="mt-2">
               <p className="mb-3">
-                Du måste fylla i din AI-profil innan du kan använda AI-funktionerna. 
-                AI:n behöver information om ditt företag för att ge relevanta rekommendationer.
+                Du måste fylla i minst 3 av följande fält i din AI-profil: bransch, målgrupp, produktbeskrivning och målsättning.
+                AI:n behöver denna information för att ge relevanta rekommendationer.
               </p>
               <Button 
                 onClick={() => navigate('/settings')}
