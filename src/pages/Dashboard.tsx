@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { FeatureCard } from "@/components/ui/FeatureCard";
+import { HeroBanner } from "@/components/ui/HeroBanner";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { motion } from "framer-motion";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -14,14 +19,34 @@ import {
   Instagram,
   Music2,
   Facebook,
-  ArrowRight
+  ArrowRight,
+  Calendar,
+  MessageSquare,
+  BarChart3,
+  FileText,
+  Target,
+  Zap
 } from "lucide-react";
 import { AISuggestions } from "@/components/AISuggestions";
 import { ConnectionManager } from "@/components/ConnectionManager";
 import { useTikTokData } from "@/hooks/useTikTokData";
 import { useMetaData } from "@/hooks/useMetaData";
 import { useConnections } from "@/hooks/useConnections";
+import { useUserCredits } from "@/hooks/useUserCredits";
+import { useCalendar } from "@/hooks/useCalendar";
 import ChatWidget from "@/components/ChatWidget";
+import { Link } from "react-router-dom";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
 
 // Format number for display
 const formatNumber = (num: number): string => {
@@ -34,345 +59,333 @@ const formatNumber = (num: number): string => {
   return num.toString();
 };
 
-interface Metric {
-  label: string;
-  value: string;
-  change: string;
-  trending: "up" | "down" | "neutral";
-  tooltip?: string;
-}
+// Mock data for charts (will be replaced with real data)
+const weeklyData = [
+  { day: "Mån", value: 65 },
+  { day: "Tis", value: 72 },
+  { day: "Ons", value: 68 },
+  { day: "Tor", value: 85 },
+  { day: "Fre", value: 90 },
+  { day: "Lör", value: 88 },
+  { day: "Sön", value: 92 },
+];
 
-interface AIInsight {
-  metric: string;
-  message: string;
-  type: "success" | "suggestion";
-}
-
-interface PlatformStat {
-  platform: string;
-  icon: any;
-  color: string;
-  username?: string;
-  metrics: Metric[];
-  aiInsight?: AIInsight;
-}
+const progressData = [
+  { week: "Vecka 1", value: 25 },
+  { week: "Vecka 2", value: 45 },
+  { week: "Vecka 3", value: 60 },
+  { week: "Vecka 4", value: 78 },
+];
 
 const Dashboard = () => {
-  const { isConnected } = useConnections();
+  const { isConnected, connections } = useConnections();
   const tiktokData = useTikTokData();
   const metaData = useMetaData();
+  const { credits } = useUserCredits();
+  const { posts, hasPosts } = useCalendar();
 
-  // Build stats array dynamically based on connected platforms
-  const stats: PlatformStat[] = [];
+  // Calculate total metrics
+  const totalFollowers = 
+    (isConnected('meta_ig') && metaData.instagram?.followers_count || 0) +
+    (isConnected('tiktok') && tiktokData.user?.follower_count || 0) +
+    (isConnected('meta_fb') && metaData.facebook?.followers_count || 0);
 
-  // Instagram (real data)
-  if (isConnected('meta_ig') && metaData.instagram && !metaData.instagram.error) {
-    stats.push({
-      platform: "Instagram",
-      icon: Instagram,
-      color: "from-pink-500 to-purple-500",
-      username: metaData.instagram.username,
-      metrics: [
-        { 
-          label: "Följare", 
-          value: formatNumber(metaData.instagram.followers_count || 0), 
-          change: "", 
-          trending: "neutral" as const
-        },
-        { 
-          label: "Följer", 
-          value: formatNumber(metaData.instagram.follows_count || 0), 
-          change: "", 
-          trending: "neutral" as const
-        },
-        { 
-          label: "Inlägg", 
-          value: formatNumber(metaData.instagram.media_count || 0), 
-          change: "", 
-          trending: "neutral" as const
-        },
-        { 
-          label: "Namn", 
-          value: metaData.instagram.name || "N/A", 
-          change: "", 
-          trending: "neutral" as const
-        },
-      ],
-      aiInsight: {
-        metric: "Följare",
-        message: `Du har ${formatNumber(metaData.instagram.followers_count || 0)} följare på Instagram!`,
-        type: "success" as const
-      }
-    });
-  }
+  const totalViews = tiktokData.stats?.totalViews || 0;
+  const totalLikes = tiktokData.stats?.totalLikes || 0;
+  const upcomingPosts = posts?.filter(p => new Date(p.date) >= new Date()).length || 0;
 
-  // TikTok (real data)
-  if (isConnected('tiktok')) {
-    // Check if there's a scope error or limited access
-    const hasScopeError = tiktokData.error?.message?.includes('saknar nödvändiga behörigheter') || 
-                          tiktokData.error?.message?.includes('scope_not_authorized') ||
-                          tiktokData.limited_access;
-    
-    if (hasScopeError) {
-      // Show limited access warning with clear instructions
-      stats.push({
-        platform: "TikTok",
-        icon: Music2,
-        color: "from-cyan-500 to-pink-500",
-        username: "Begränsad åtkomst",
-        metrics: [
-          { 
-            label: "Status", 
-            value: "⚠️ Login Kit", 
-            change: "", 
-            trending: "neutral" as const
-          },
-          { 
-            label: "Behörigheter", 
-            value: "Begränsade", 
-            change: "", 
-            trending: "down" as const
-          },
-          { 
-            label: "Profilinfo", 
-            value: "Tillgänglig", 
-            change: "", 
-            trending: "neutral" as const
-          },
-          { 
-            label: "Videodata", 
-            value: "Ej tillgänglig", 
-            change: "", 
-            trending: "down" as const
-          },
-        ],
-        aiInsight: {
-          metric: "API-åtkomst",
-          message: "Din TikTok-anslutning använder Login Kit med begränsade behörigheter. För full statistikåtkomst och videodata krävs Content Posting API med scopes: video.query och video.data. Ansök om dessa via TikTok Developer Portal på developers.tiktok.com.",
-          type: "suggestion" as const
-        }
-      });
-    } else if (tiktokData.user && tiktokData.stats) {
-      // Show full data
-      stats.push({
-        platform: "TikTok",
-        icon: Music2,
-        color: "from-cyan-500 to-pink-500",
-        username: tiktokData.user.display_name,
-        metrics: [
-          { 
-            label: "Följare", 
-            value: formatNumber(tiktokData.user.follower_count || 0), 
-            change: "", 
-            trending: "neutral" as const
-          },
-          { 
-            label: "Visningar", 
-            value: formatNumber(tiktokData.stats.totalViews), 
-            change: "", 
-            trending: "neutral" as const
-          },
-          { 
-            label: "Likes", 
-            value: formatNumber(tiktokData.stats.totalLikes), 
-            change: "", 
-            trending: "neutral" as const
-          },
-          { 
-            label: "Engagemang", 
-            value: (parseFloat(tiktokData.stats.avgEngagementRate as any) === 0 ? "0%" : tiktokData.stats.avgEngagementRate + "%"), 
-            change: "", 
-            trending: "neutral" as const,
-            tooltip: "Genomsnittlig engagemangsgrad de senaste 30 dagarna"
-          },
-        ],
-        aiInsight: tiktokData.stats.totalViews > 0 ? {
-          metric: "Engagemang",
-          message: `Du har ${tiktokData.stats.videoCount} videor med totalt ${formatNumber(tiktokData.stats.totalViews)} visningar!`,
-          type: "success" as const
-        } : undefined
-      });
-    }
-  }
+  // Quick actions for hero banner
+  const quickActions = [
+    {
+      icon: Sparkles,
+      title: "AI-analys",
+      subtitle: "Få insikter om din statistik",
+      onClick: () => window.location.href = '/ai-dashboard',
+    },
+    {
+      icon: Calendar,
+      title: "Planera innehåll",
+      subtitle: `${upcomingPosts} kommande inlägg`,
+      onClick: () => window.location.href = '/calendar',
+    },
+  ];
 
-  // Facebook (real data)
-  if (isConnected('meta_fb') && metaData.facebook && !metaData.facebook.error) {
-    stats.push({
-      platform: "Facebook",
-      icon: Facebook,
-      color: "from-blue-600 to-blue-400",
-      username: metaData.facebook.name,
-      metrics: [
-        { 
-          label: "Följare", 
-          value: formatNumber(metaData.facebook.followers_count || 0), 
-          change: "", 
-          trending: "neutral" as const
-        },
-        { 
-          label: "Sidnamn", 
-          value: metaData.facebook.name || "N/A", 
-          change: "", 
-          trending: "neutral" as const
-        },
-        { 
-          label: "Sida ID", 
-          value: metaData.facebook.page_id || metaData.facebook.user_id || "N/A", 
-          change: "", 
-          trending: "neutral" as const
-        },
-        { 
-          label: "Status", 
-          value: "Ansluten", 
-          change: "", 
-          trending: "neutral" as const
-        },
-      ],
-      aiInsight: {
-        metric: "Följare",
-        message: `Din Facebook-sida är ansluten med ${formatNumber(metaData.facebook.followers_count || 0)} följare!`,
-        type: "success" as const
-      }
-    });
-  }
+  // Feature tools
+  const featureTools = [
+    {
+      icon: MessageSquare,
+      title: "AI-Assistent",
+      description: "Chatta med AI för personliga marknadsföringsråd",
+      href: "/ai-chat",
+      iconColor: "bg-primary/10 text-primary",
+    },
+    {
+      icon: BarChart3,
+      title: "Statistik",
+      description: "Se din prestanda på sociala medier",
+      href: "/analytics",
+      iconColor: "bg-secondary/10 text-secondary",
+    },
+    {
+      icon: Calendar,
+      title: "Kalender",
+      description: "Planera och schemalägg ditt innehåll",
+      href: "/calendar",
+      iconColor: "bg-success/10 text-success",
+    },
+  ];
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 animate-fade-in">
-        {/* Hero Header */}
-        <div className="mb-12 text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-            Maximera din tillväxt med AI-drivna innehållsinsikter
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Få personliga AI-förslag för att växa snabbare på sociala medier
-          </p>
+      <div className="space-y-6 max-w-7xl mx-auto">
+        {/* Hero Banner */}
+        <HeroBanner
+          title="Välkommen tillbaka"
+          subtitle="Din resa fortsätter med styrka och framsteg"
+          quickActions={quickActions}
+        />
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="content-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Veckoframsteg</p>
+                    <p className="text-2xl font-bold">{connections.length > 0 ? "85%" : "0%"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <Card className="content-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Totala följare</p>
+                    <p className="text-2xl font-bold">{formatNumber(totalFollowers)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="content-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Planerade inlägg</p>
+                    <p className="text-2xl font-bold">{upcomingPosts}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <Card className="content-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-warning" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">AI-krediter</p>
+                    <p className="text-2xl font-bold">{credits?.credits_left || 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Progress Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="chart-container">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold">Tillväxtframsteg</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={progressData}>
+                    <defs>
+                      <linearGradient id="progressGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "12px",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      fill="url(#progressGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Weekly Score Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+          >
+            <Card className="chart-container">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold">Veckoengagemang</CardTitle>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" size="sm" className="h-7 text-xs">Daglig</Button>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs">Vecka</Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={weeklyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "12px",
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{ fill: "hsl(var(--primary))", strokeWidth: 2 }}
+                      activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         {/* Connection Manager */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
           <ConnectionManager />
-        </div>
+        </motion.div>
+
+        {/* Feature Tools Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+          <h2 className="text-xl font-semibold mb-4">Verktyg</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {featureTools.map((tool, index) => (
+              <FeatureCard
+                key={index}
+                icon={tool.icon}
+                title={tool.title}
+                description={tool.description}
+                href={tool.href}
+                iconColor={tool.iconColor}
+                delay={index}
+              />
+            ))}
+          </div>
+        </motion.div>
 
         {/* AI Suggestions */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
           <AISuggestions />
-        </div>
+        </motion.div>
 
-
-        {/* Platform stats */}
-        <div className="space-y-6">
-          {stats.length === 0 ? (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">
-                Anslut dina sociala media-konton för att se statistik och AI-insikter
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Gå till "Anslutna konton" ovan eller "Inställningar" för att koppla dina konton
-              </p>
-            </Card>
-          ) : (
-            stats.map((platform, index) => {
-              const PlatformIcon = platform.icon;
-              return (
-                <Card key={index} className="p-6 hover:shadow-elegant transition-all duration-300">
-                  {/* Platform header */}
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${platform.color} flex items-center justify-center`}>
-                      <PlatformIcon className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">{platform.platform}</h2>
-                      {platform.username && (
-                        <p className="text-sm text-muted-foreground">@{platform.username}</p>
-                      )}
-                      {!platform.username && (
-                        <p className="text-sm text-muted-foreground">Senaste 30 dagarna</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Metrics grid */}
-                  <TooltipProvider>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                      {platform.metrics.map((metric, mIndex) => (
-                        <div key={mIndex} className="space-y-2">
-                          <div className="flex items-center gap-1">
-                            <p className="text-sm text-muted-foreground">{metric.label}</p>
-                            {metric.tooltip && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="text-muted-foreground cursor-help">ⓘ</span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="max-w-xs">{metric.tooltip}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                          <p className="text-2xl font-bold">{metric.value}</p>
-                          {metric.change && (
-                            <div className="flex items-center gap-1">
-                              {metric.trending === "up" ? (
-                                <TrendingUp className="w-4 h-4 text-accent" />
-                              ) : metric.trending === "down" ? (
-                                <TrendingDown className="w-4 h-4 text-destructive" />
-                              ) : null}
-                              <span className={`text-sm font-medium ${
-                                metric.trending === "up" ? "text-accent" : 
-                                metric.trending === "down" ? "text-destructive" : 
-                                "text-muted-foreground"
-                              }`}>
-                                {metric.change}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </TooltipProvider>
-
-                  {/* AI Insight */}
-                  {platform.aiInsight && (
-                    <div className={`p-4 rounded-lg border-l-4 ${
-                      platform.aiInsight.type === "success" 
-                        ? "bg-accent/10 border-accent" 
-                        : "bg-primary/10 border-primary"
-                    }`}>
-                      <div className="flex items-start gap-3">
-                        <Sparkles className={`w-5 h-5 mt-0.5 ${
-                          platform.aiInsight.type === "success" ? "text-accent" : "text-primary"
-                        }`} />
-                        <div className="flex-1">
-                          <p className="font-medium mb-1">AI-insikt · {platform.aiInsight.metric}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {platform.aiInsight.message}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </Card>
-              );
-            })
-          )}
-        </div>
-
-        {/* Bottom CTA */}
-        <Card className="mt-8 p-8 bg-gradient-hero border-primary/20">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-3xl font-bold mb-3">
-              Uppgradera till Pro
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Obegränsade AI-förslag, exporterbara innehållskalendrar och prioriterad support
-            </p>
-            <Button variant="gradient" size="lg" onClick={() => window.location.href = '/#pricing'}>
-              Se prisplaner
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
-        </Card>
+        {/* Upgrade CTA */}
+        {credits && credits.plan === 'starter' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+          >
+            <GlassCard variant="hero" className="p-8">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="text-center md:text-left">
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    Uppgradera till Pro
+                  </h3>
+                  <p className="text-white/80">
+                    Få fler AI-krediter, avancerad analys och prioriterad support
+                  </p>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="lg" 
+                  className="whitespace-nowrap"
+                  onClick={() => window.location.href = '/#pricing'}
+                >
+                  Se prisplaner
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+            </GlassCard>
+          </motion.div>
+        )}
       </div>
       
       {/* Chat Widget */}
