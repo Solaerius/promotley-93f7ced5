@@ -54,7 +54,6 @@ const AIChat = () => {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [pendingPlan, setPendingPlan] = useState<any>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [longLoadingBanner, setLongLoadingBanner] = useState(false);
   
   const hasInsufficientCredits = credits && credits.credits_left <= 0;
   
@@ -76,16 +75,7 @@ const AIChat = () => {
     { icon: TrendingUp, text: "Skapa 30-dagars strategi", color: "from-green-500 to-emerald-500" },
   ];
 
-  // Show long loading banner after 2 seconds
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    if (loading) {
-      timer = setTimeout(() => setLongLoadingBanner(true), 2000);
-    } else {
-      setLongLoadingBanner(false);
-    }
-    return () => clearTimeout(timer);
-  }, [loading]);
+  // No longer needed - removed "Skapar plan..." banner
 
   // Check if user is near bottom of scroll area
   const checkIfNearBottom = () => {
@@ -293,13 +283,6 @@ const AIChat = () => {
         {/* Chat Container */}
         <Card className="flex-1 flex flex-col overflow-hidden relative rounded-2xl shadow-elegant">
           <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-            {/* Long loading banner */}
-            {longLoadingBanner && loading && (
-              <div className="absolute top-0 left-0 right-0 z-10 bg-primary/10 border-b border-primary/20 px-4 py-2 text-center">
-                <p className="text-sm text-primary">Skapar plan... detta kan ta några sekunder</p>
-              </div>
-            )}
-
             {/* Messages with proper scroll handling */}
             <div 
               className="flex-1 overflow-y-auto p-4 md:p-6"
