@@ -265,7 +265,7 @@ const AIChatContent = () => {
                   type: "spring",
                   stiffness: 500,
                   damping: 30,
-                  delay: msg.isOptimistic ? 0 : 0.05
+                  delay: 'isOptimistic' in msg && msg.isOptimistic ? 0 : 0.05
                 }}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
@@ -274,7 +274,7 @@ const AIChatContent = () => {
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-muted rounded-bl-md"
-                  } ${msg.isOptimistic ? "opacity-80" : ""}`}
+                  } ${'isOptimistic' in msg && msg.isOptimistic ? "opacity-80" : ""}`}
                 >
                   {msg.role === "assistant" ? (
                     <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -290,7 +290,7 @@ const AIChatContent = () => {
                   )}
                   <p className={`text-[10px] mt-2 ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                     {new Date(msg.timestamp).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })}
-                    {msg.isOptimistic && " • Skickar..."}
+                    {'isOptimistic' in msg && msg.isOptimistic && " • Skickar..."}
                   </p>
                 </div>
               </motion.div>
