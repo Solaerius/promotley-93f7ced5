@@ -312,10 +312,11 @@ const AIChat = () => {
               }}
             >
               <div className="space-y-6">
-                {messages.map((msg: any) => (
+              {messages.map((msg: any, index: number) => (
                   <div
                     key={msg.id}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-fade-in-up`}
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <div className={`max-w-[80%] lg:max-w-[60%] ${msg.role === "user" ? "order-2" : "order-1"}`}>
                       {msg.role === "assistant" && (
@@ -327,10 +328,10 @@ const AIChat = () => {
                         </div>
                       )}
                       <div
-                        className={`rounded-2xl p-4 shadow-soft ${
+                        className={`rounded-2xl p-4 shadow-soft transition-all duration-300 ${
                           msg.role === "user"
-                            ? "bg-gradient-primary text-white ml-auto"
-                            : "bg-muted text-foreground"
+                            ? "bg-gradient-primary text-white ml-auto hover:shadow-glow"
+                            : "bg-muted text-foreground hover:shadow-elegant"
                         }`}
                       >
                         {msg.role === "user" ? (
@@ -356,21 +357,21 @@ const AIChat = () => {
                   </div>
                 ))}
 
-                {/* Typing indicator */}
+                {/* Typing indicator with enhanced animation */}
                 {loading && (
-                  <div className="flex justify-start">
+                  <div className="flex justify-start animate-fade-in-scale">
                     <div className="max-w-[80%] lg:max-w-[60%]">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center animate-pulse">
                           <Sparkles className="w-4 h-4 text-white" />
                         </div>
-                        <span className="text-sm font-medium">Promotley AI</span>
+                        <span className="text-sm font-medium text-muted-foreground">Promotley AI tänker...</span>
                       </div>
-                      <div className="rounded-2xl p-4 bg-muted">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-                          <div className="w-2 h-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-                          <div className="w-2 h-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+                      <div className="rounded-2xl p-4 bg-muted/80 backdrop-blur-sm shadow-soft">
+                        <div className="flex gap-1.5 items-center">
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms", animationDuration: "0.6s" }} />
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms", animationDuration: "0.6s" }} />
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms", animationDuration: "0.6s" }} />
                         </div>
                       </div>
                     </div>

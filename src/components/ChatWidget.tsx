@@ -455,6 +455,16 @@ const ChatWidget = () => {
     const messageText = filtered;
     setInputValue("");
 
+    // Ensure session exists in live_chat_sessions table first
+    const { error: sessionError } = await supabase.from("live_chat_sessions").upsert({
+      session_id: sessionId,
+      status: 'open',
+    }, { onConflict: 'session_id' });
+
+    if (sessionError) {
+      console.error("Error creating session:", sessionError);
+    }
+
     const { data, error } = await supabase.from("live_chat_messages").insert({
       session_id: sessionId,
       sender_type: "user",
