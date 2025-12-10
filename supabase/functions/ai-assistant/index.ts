@@ -511,14 +511,14 @@ ${items.map((k: any) => `### ${k.title}\nFULL INNEHÅLL:\n${k.content}`).join('\
 ` : '';
 
       // Determine AI model based on user plan
-      // Model mapping: Starter → gpt-4o-mini, Growth → gpt-4.1-mini-2025-04-14, Pro → gpt-5-mini-2025-08-07
+      // Model mapping: Starter → gpt-4o-mini, Growth → gpt-4.1-mini-2025-04-14, Pro → gpt-4o
       let aiModel = 'gpt-4o-mini';
       switch (userData?.plan) {
         case 'growth':
           aiModel = 'gpt-4.1-mini-2025-04-14';
           break;
         case 'pro':
-          aiModel = 'gpt-5-mini-2025-08-07';
+          aiModel = 'gpt-4o';
           break;
         default:
           aiModel = 'gpt-4o-mini';

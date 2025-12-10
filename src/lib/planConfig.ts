@@ -18,12 +18,12 @@ export interface PlanConfig {
 /**
  * CONFIG.MODEL_BY_TIER - Single source of truth
  * This mapping MUST be enforced server-side
- * Starter → GPT-4o Mini, Growth → GPT-4.1 Mini, Pro → GPT-5 Mini
+ * Starter → GPT-4o Mini, Growth → GPT-4.1 Mini, Pro → GPT-4o
  */
 export const MODEL_BY_TIER = {
   starter: 'gpt-4o-mini',
   growth: 'gpt-4.1-mini-2025-04-14', 
-  pro: 'gpt-5-mini-2025-08-07'
+  pro: 'gpt-4o'
 } as const;
 
 /**

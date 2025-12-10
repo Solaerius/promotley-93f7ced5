@@ -119,7 +119,7 @@ serve(async (req) => {
     }
 
     // Determine tier and enforce model policy
-    // Model mapping: Starter → gpt-4o-mini, Growth → gpt-4.1-mini-2025-04-14, Pro → gpt-5-mini-2025-08-07
+    // Model mapping: Starter → gpt-4o-mini, Growth → gpt-4.1-mini-2025-04-14, Pro → gpt-4o
     let tier = 'starter';
     let aiModel = 'gpt-4o-mini';
     let estimatedCost = 2;
@@ -137,7 +137,7 @@ serve(async (req) => {
         break;
       case 'pro':
         tier = 'pro';
-        aiModel = 'gpt-5-mini-2025-08-07';
+        aiModel = 'gpt-4o';
         estimatedCost = 1;
         break;
     }
