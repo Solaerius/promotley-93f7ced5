@@ -1,20 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Send,
-  Sparkles,
   BarChart3,
   Calendar,
   FileText,
@@ -33,26 +23,16 @@ import CreditsDisplay from "@/components/CreditsDisplay";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface Message {
-  id: string;
-  sender: "user" | "ai";
-  message: string;
-  timestamp: Date;
-  plan?: any;
-}
-
 const AIChatContent = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { messages, loading, sendMessage, analyzeStats, implementPlan } = useAIAssistant();
+  const { messages, loading, sendMessage, implementPlan } = useAIAssistant();
   const { credits } = useUserCredits();
   const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
   const [inputMessage, setInputMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [pendingPlan, setPendingPlan] = useState<any>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   
   const hasInsufficientCredits = credits && credits.credits_left <= 0;
   
@@ -111,21 +91,12 @@ const AIChatContent = () => {
     await sendMessage(command);
   };
 
-  const handleImplementPlan = (plan: any) => {
-    setPendingPlan(plan);
-    setShowConfirmDialog(true);
-  };
-
-  const confirmImplementPlan = async () => {
-    if (pendingPlan) {
-      await implementPlan(pendingPlan);
-      setPendingPlan(null);
-      setShowConfirmDialog(false);
-      toast({
-        title: "Plan implementerad",
-        description: "Inläggen har lagts till i din kalender",
-      });
-    }
+  const handleImplementPlan = async (plan: any, requestId: string): Promise<void> => {
+    await implementPlan(plan, requestId);
+    toast({
+      title: "Plan implementerad",
+      description: "Inläggen har lagts till i din kalender",
+    });
   };
 
   return (
@@ -205,7 +176,7 @@ const AIChatContent = () => {
                       <MarkdownRenderer content={msg.message} />
                       {msg.plan && (
                         <div className="mt-4">
-                          <MarketingPlanCard plan={msg.plan} onImplement={() => handleImplementPlan(msg.plan)} />
+                          <MarketingPlanCard plan={msg.plan} onImplement={handleImplementPlan} />
                         </div>
                       )}
                     </div>
@@ -274,21 +245,6 @@ const AIChatContent = () => {
         </Button>
       </div>
 
-      {/* Confirm Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Implementera plan?</DialogTitle>
-            <DialogDescription>
-              Detta kommer lägga till {pendingPlan?.posts?.length || 0} inlägg i din kalender.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>Avbryt</Button>
-            <Button onClick={confirmImplementPlan}>Implementera</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

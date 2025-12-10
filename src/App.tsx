@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RequireVerifiedEmail } from "@/components/RequireVerifiedEmail";
@@ -13,11 +13,10 @@ import VerifyEmail from "./pages/VerifyEmail";
 import AuthCallback from "./pages/AuthCallback";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
-import Analytics from "./pages/Analytics";
+import AnalyticsPage from "./pages/AnalyticsPage";
 import Calendar from "./pages/Calendar";
-import AIChat from "./pages/AIChat";
-import AIDashboard from "./pages/AIDashboard";
-import Settings from "./pages/Settings";
+import AIPage from "./pages/AIPage";
+import AccountPage from "./pages/AccountPage";
 import Pricing from "./pages/Pricing";
 import Checkout from "./pages/Checkout";
 import BuyCredits from "./pages/BuyCredits";
@@ -76,7 +75,7 @@ const App = () => (
               path="/analytics" 
               element={
                 <ProtectedRoute>
-                  <Analytics />
+                  <AnalyticsPage />
                 </ProtectedRoute>
               } 
             />
@@ -89,29 +88,26 @@ const App = () => (
               } 
             />
             <Route 
-              path="/ai-chat" 
+              path="/ai" 
               element={
                 <RequireVerifiedEmail>
-                  <AIChat />
+                  <AIPage />
                 </RequireVerifiedEmail>
               } 
             />
+            {/* Redirects for old routes */}
+            <Route path="/ai-chat" element={<Navigate to="/ai" replace />} />
+            <Route path="/ai-dashboard" element={<Navigate to="/ai" replace />} />
             <Route 
-              path="/ai-dashboard" 
-              element={
-                <RequireVerifiedEmail>
-                  <AIDashboard />
-                </RequireVerifiedEmail>
-              } 
-            />
-            <Route 
-              path="/settings" 
+              path="/account" 
               element={
                 <ProtectedRoute>
-                  <Settings />
+                  <AccountPage />
                 </ProtectedRoute>
               } 
             />
+            {/* Redirect old settings route */}
+            <Route path="/settings" element={<Navigate to="/account" replace />} />
             <Route 
               path="/admin" 
               element={
