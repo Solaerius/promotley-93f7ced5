@@ -257,30 +257,42 @@
     transform: translateY(0);
   }
 
-  /* Tab Bar - Mobile Bottom Nav */
+  /* Tab Bar - Universal Bottom Nav (Desktop & Mobile) */
   .tab-bar {
     @apply fixed bottom-0 left-0 right-0 z-50;
     @apply flex items-center justify-around;
-    @apply px-2 py-2 pb-safe;
-    background: hsl(var(--card) / 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    @apply px-1 sm:px-4 py-2 pb-safe;
+    @apply max-w-2xl mx-auto;
+    background: hsl(var(--card) / 0.98);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: 0 -4px 20px hsl(var(--foreground) / 0.03);
+  }
+
+  @media (min-width: 640px) {
+    .tab-bar {
+      @apply bottom-4 left-1/2 -translate-x-1/2 rounded-2xl;
+      border: 1px solid hsl(var(--border) / 0.5);
+      box-shadow: var(--shadow-float);
+    }
   }
 
   .tab-bar-item {
-    @apply flex flex-col items-center gap-1 px-4 py-2 rounded-xl;
+    @apply flex flex-col items-center gap-0.5 sm:gap-1 px-2 sm:px-4 py-2 rounded-xl;
     @apply text-muted-foreground text-xs font-medium;
+    @apply min-w-[48px] sm:min-w-[56px];
     transition: all var(--transition-fast);
   }
 
   .tab-bar-item:hover {
-    @apply text-foreground bg-muted;
+    @apply text-foreground;
+    background: hsl(var(--muted) / 0.8);
   }
 
   .tab-bar-item.active {
-    @apply text-primary;
-    background: hsl(var(--primary) / 0.1);
+    @apply text-primary font-semibold;
+    background: hsl(var(--primary) / 0.12);
   }
 
   /* Top Nav - Glass style */

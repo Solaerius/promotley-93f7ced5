@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Bell, Settings, Menu, ArrowLeft } from "lucide-react";
+import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,10 +22,9 @@ import { supabase } from "@/integrations/supabase/client";
 interface TopNavProps {
   showBackButton?: boolean;
   title?: string;
-  onMenuClick?: () => void;
 }
 
-export function TopNav({ showBackButton, title, onMenuClick }: TopNavProps) {
+export function TopNav({ showBackButton, title }: TopNavProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { activeOrganization } = useOrganization();
@@ -54,10 +53,10 @@ export function TopNav({ showBackButton, title, onMenuClick }: TopNavProps) {
 
   return (
     <header className="top-nav">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Left side */}
         <div className="flex items-center gap-3">
-          {showBackButton ? (
+          {showBackButton && (
             <Button
               variant="ghost"
               size="icon"
@@ -65,15 +64,6 @@ export function TopNav({ showBackButton, title, onMenuClick }: TopNavProps) {
               className="rounded-xl"
             >
               <ArrowLeft className="w-5 h-5" />
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onMenuClick}
-              className="lg:hidden rounded-xl"
-            >
-              <Menu className="w-5 h-5" />
             </Button>
           )}
           
