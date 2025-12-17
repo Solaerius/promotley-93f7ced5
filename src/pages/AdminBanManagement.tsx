@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +25,6 @@ interface BannedUser {
 }
 
 export default function AdminBanManagement() {
-  const { isAdmin, loading: adminLoading } = useAdminStatus();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [bannedUsers, setBannedUsers] = useState<BannedUser[]>([]);
@@ -40,16 +38,8 @@ export default function AdminBanManagement() {
   const [banPermanent, setBanPermanent] = useState(true);
 
   useEffect(() => {
-    if (!adminLoading && !isAdmin) {
-      navigate("/dashboard");
-    }
-  }, [isAdmin, adminLoading, navigate]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      loadBannedUsers();
-    }
-  }, [isAdmin]);
+    loadBannedUsers();
+  }, []);
 
   const loadBannedUsers = async () => {
     try {
@@ -127,16 +117,12 @@ export default function AdminBanManagement() {
     }
   };
 
-  if (adminLoading || loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!isAdmin) {
-    return null;
   }
 
   return (

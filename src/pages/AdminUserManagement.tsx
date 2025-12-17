@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Gift, Users, Mail, Search, ArrowLeft } from "lucide-react";
+import { Loader2, Gift, Users, Mail, ArrowLeft } from "lucide-react";
 
 type UserPlan = "starter" | "growth" | "pro";
 
@@ -36,7 +35,6 @@ const PLAN_CREDITS: Record<UserPlan, number> = {
 };
 
 export default function AdminUserManagement() {
-  const { isAdmin, loading: adminLoading } = useAdminStatus();
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,16 +44,8 @@ export default function AdminUserManagement() {
   const [selectedPlanByEmail, setSelectedPlanByEmail] = useState<string>("");
 
   useEffect(() => {
-    if (!adminLoading && !isAdmin) {
-      navigate("/dashboard");
-    }
-  }, [isAdmin, adminLoading, navigate]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      loadUsers();
-    }
-  }, [isAdmin]);
+    loadUsers();
+  }, []);
 
   const loadUsers = async () => {
     try {
@@ -66,7 +56,6 @@ export default function AdminUserManagement() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      // Cast the data to User[] since we know the plan types are correct
       setUsers((data || []) as unknown as User[]);
     } catch (error) {
       console.error("Error loading users:", error);
@@ -178,16 +167,12 @@ export default function AdminUserManagement() {
     }
   };
 
-  if (adminLoading || loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!isAdmin) {
-    return null;
   }
 
   return (
