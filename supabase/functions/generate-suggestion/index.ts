@@ -12,6 +12,25 @@ const securityHeaders = {
   'X-XSS-Protection': '1; mode=block',
 };
 
+// Patterns that may indicate prompt injection attempts
+const PROMPT_INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?previous\s+instructions?/i,
+  /ignore\s+the\s+above/i,
+  /disregard\s+(all\s+)?previous/i,
+  /new\s+instructions?:\s*/i,
+  /system\s*:\s*/i,
+  /you\s+are\s+now\s+a/i,
+  /pretend\s+you\s+are/i,
+  /jailbreak/i,
+  /bypass\s+(your\s+)?restrictions?/i,
+];
+
+// Check for prompt injection in user-provided content
+function checkForInjection(text: string): boolean {
+  if (!text || typeof text !== 'string') return false;
+  return PROMPT_INJECTION_PATTERNS.some(pattern => pattern.test(text));
+}
+
 interface SuggestionRequest {
   platform: string;
   brand?: string;
@@ -135,7 +154,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse request body
     const body: SuggestionRequest = await req.json();
     const { platform, brand, keywords, recentMetrics } = body;
 
@@ -180,6 +198,28 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
+    }
+
+    // Check for prompt injection in user-provided fields
+    const fieldsToCheck = [brand, ...(keywords || []), recentMetrics].filter(Boolean);
+    for (const field of fieldsToCheck) {
+      if (checkForInjection(field as string)) {
+        console.warn('⚠️ Potential prompt injection in generate-suggestion:', field);
+        await supabaseAdmin.rpc('log_security_event', {
+          _user_id: user.id,
+          _event_type: 'prompt_injection_attempt',
+          _event_details: { endpoint: 'generate-suggestion', field_preview: String(field).slice(0, 50) },
+          _ip_address: clientIp,
+          _user_agent: userAgent,
+        });
+        return new Response(
+          JSON.stringify({ error: "Ogiltigt innehåll i förfrågan" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
     }
 
     // Bygg prompt

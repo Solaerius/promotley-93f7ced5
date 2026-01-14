@@ -10,6 +10,73 @@ const corsHeaders = {
 const statsCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 60000; // 60 seconds
 
+// =====================================================
+// PROMPT INJECTION PROTECTION
+// =====================================================
+
+// Patterns that may indicate prompt injection attempts
+const PROMPT_INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?previous\s+instructions?/i,
+  /ignore\s+the\s+above/i,
+  /disregard\s+(all\s+)?previous/i,
+  /forget\s+(all\s+)?previous/i,
+  /new\s+instructions?:\s*/i,
+  /system\s*:\s*/i,
+  /you\s+are\s+now\s+a/i,
+  /pretend\s+you\s+are/i,
+  /act\s+as\s+if/i,
+  /jailbreak/i,
+  /DAN\s*mode/i,
+  /developer\s+mode/i,
+  /bypass\s+(your\s+)?restrictions?/i,
+  /override\s+(your\s+)?instructions?/i,
+  /reveal\s+(your\s+)?system\s+prompt/i,
+  /show\s+(me\s+)?(your\s+)?instructions?/i,
+  /what\s+are\s+your\s+instructions?/i,
+  /print\s+(your\s+)?system\s+prompt/i,
+  /output\s+(your\s+)?initial\s+prompt/i,
+  /\[SYSTEM\]/i,
+  /\[INST\]/i,
+  /<<SYS>>/i,
+  /<\|im_start\|>/i,
+  /\{\{system\}\}/i,
+];
+
+// Sanitize user message to prevent prompt injection
+function sanitizeUserMessage(message: string): { sanitized: string; flagged: boolean; reason?: string } {
+  if (!message || typeof message !== 'string') {
+    return { sanitized: '', flagged: true, reason: 'Invalid message type' };
+  }
+
+  // Check message length (prevent resource exhaustion)
+  if (message.length > 10000) {
+    return { sanitized: message.slice(0, 10000), flagged: true, reason: 'Message too long' };
+  }
+
+  // Check for prompt injection patterns
+  for (const pattern of PROMPT_INJECTION_PATTERNS) {
+    if (pattern.test(message)) {
+      console.warn('⚠️ Potential prompt injection detected:', pattern.toString());
+      return { 
+        sanitized: message, 
+        flagged: true, 
+        reason: 'Potential prompt injection detected' 
+      };
+    }
+  }
+
+  // Remove potential control characters and invisible characters
+  const sanitized = message
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control chars except tab, newline, carriage return
+    .replace(/\u200B/g, '') // Zero-width space
+    .replace(/\u200C/g, '') // Zero-width non-joiner
+    .replace(/\u200D/g, '') // Zero-width joiner
+    .replace(/\uFEFF/g, '') // BOM
+    .trim();
+
+  return { sanitized, flagged: false };
+}
+
 // Credit cost estimation based on request type and complexity
 const estimateCreditCost = (action: string, message?: string): number => {
   // Marketing plans are expensive (uses gpt-4o, multiple posts)
@@ -218,16 +285,43 @@ serve(async (req) => {
     // POST /ai-assistant/chat - Chat with AI (handles both regular chat and marketing plan creation)
     if (action === 'chat' && req.method === 'POST') {
       const body = await req.json();
-      const { message, history, calendarContextDigest = [], meta } = body;
+      const { message: rawMessage, history, calendarContextDigest = [], meta } = body;
 
-      if (!message) {
+      if (!rawMessage) {
         return new Response(
           JSON.stringify({ error: 'Message required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      console.log('Processing chat message:', message);
+      // Sanitize user message for prompt injection protection
+      const { sanitized: message, flagged, reason } = sanitizeUserMessage(rawMessage);
+      
+      if (flagged) {
+        console.warn('⚠️ Message flagged:', reason, 'User:', user.id);
+        // Log security event for flagged messages
+        await supabaseClient.rpc('log_security_event', {
+          _user_id: user.id,
+          _event_type: 'prompt_injection_attempt',
+          _event_details: { reason, message_preview: rawMessage.slice(0, 100) },
+          _ip_address: req.headers.get('x-forwarded-for') || 'unknown',
+          _user_agent: req.headers.get('user-agent') || 'unknown',
+        });
+        
+        // For severe injection attempts, reject the message
+        if (reason === 'Potential prompt injection detected') {
+          return new Response(
+            JSON.stringify({ 
+              error: 'INVALID_MESSAGE',
+              message: 'Ditt meddelande kunde inte bearbetas. Försök formulera om din fråga.',
+              response: 'Jag kunde inte bearbeta ditt meddelande. Kan du försöka formulera om din fråga?'
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      console.log('Processing chat message:', message.slice(0, 100) + '...');
       console.log('Meta:', meta);
 
       // Check if this is a marketing plan request (via meta action)

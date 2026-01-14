@@ -30,7 +30,10 @@ async function encryptToken(token: string, key: CryptoKey): Promise<string> {
 }
 
 async function getEncryptionKey(): Promise<CryptoKey> {
-  const secret = Deno.env.get("META_APP_SECRET") || "fallback-key-for-dev";
+  const secret = Deno.env.get("META_APP_SECRET");
+  if (!secret) {
+    throw new Error("SECURITY_ERROR: META_APP_SECRET is not configured. Token encryption cannot proceed without a valid encryption key.");
+  }
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secret.padEnd(32, "0").slice(0, 32));
 
