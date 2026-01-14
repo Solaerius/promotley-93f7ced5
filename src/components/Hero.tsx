@@ -1,98 +1,129 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import gamlastan from "@/assets/gamlastan.png";
 import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
 
 const Hero = () => {
   const { user } = useAuth();
-  
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [showAccent, setShowAccent] = useState(false);
+
+  useEffect(() => {
+    // Trigger initial animation after mount
+    const loadTimer = setTimeout(() => setIsLoaded(true), 100);
+    // Trigger accent color after headline is visible
+    const accentTimer = setTimeout(() => setShowAccent(true), 1600);
+    
+    return () => {
+      clearTimeout(loadTimer);
+      clearTimeout(accentTimer);
+    };
+  }, []);
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden font-poppins">
-      {/* Background image */}
-      <div className="absolute inset-0">
-        <img 
-          src={gamlastan} 
-          alt="Stockholm Gamla Stan background" 
-          className="w-full h-full object-cover object-[center_67%] blur-[3px] opacity-40"
-        />
-      </div>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-16">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-hero" />
       
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
-      
-      {/* Floating glow elements */}
-      <div className="absolute top-32 left-10 w-64 h-64 md:w-96 md:h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-32 right-10 w-72 h-72 md:w-[28rem] md:h-[28rem] bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
-      
-      {/* Content */}
-      <div className="container relative z-10 px-4 py-32 md:py-40 mx-auto">
-        <div className="max-w-4xl mx-auto text-center space-y-8 md:space-y-10">
+      {/* Decorative blur orbs - reduced for cleaner look */}
+      <div className="blur-orb blur-orb-primary w-[500px] h-[500px] -top-48 -right-48" />
+      <div className="blur-orb blur-orb-secondary w-[400px] h-[400px] bottom-0 -left-32" />
+
+      <div className="container mx-auto px-4 md:px-6 relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 backdrop-blur-sm rounded-full border border-primary/20 text-foreground text-sm font-medium animate-fade-in">
+          <div 
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 transition-all duration-700 ${
+              isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`}
+          >
             <Sparkles className="w-4 h-4 text-primary" />
-            AI-driven marknadsföring för UF-företag
+            <span className="text-sm font-medium text-primary">AI-driven marknadsföring för UF-företag</span>
           </div>
 
-          {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight animate-fade-in text-foreground leading-[1.1] px-2 text-balance">
-            Bli företaget alla{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-primary">
-              pratar om
+          {/* Main Headline with two-stage animation */}
+          <h1 
+            className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight transition-all duration-700 delay-100 ${
+              isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`}
+            style={{ textWrap: 'balance' }}
+          >
+            <span className="text-foreground">Bli företaget </span>
+            <span 
+              className={`transition-all duration-700 ease-out ${
+                showAccent 
+                  ? 'text-transparent bg-clip-text bg-gradient-primary' 
+                  : 'text-foreground'
+              }`}
+            >
+              alla pratar om
             </span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-slide-up font-medium px-4">
-            AI som hjälper UF-företag och startups att växa snabbare på sociala medier
+          <p 
+            className={`text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed transition-all duration-700 delay-200 ${
+              isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`}
+            style={{ textWrap: 'balance' }}
+          >
+            Promotley analyserar din målgrupp och skapar personliga innehållsstrategier 
+            som hjälper ditt UF-företag att växa på sociala medier.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-slide-up px-4" style={{ animationDelay: "0.2s" }}>
+          <div 
+            className={`flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 transition-all duration-700 delay-300 ${
+              isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`}
+          >
             <Link to="/auth">
-              <Button variant="gradient" size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 shadow-elegant font-semibold">
+              <Button 
+                variant="gradient" 
+                size="lg"
+                className="text-base px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
+              >
                 Starta gratis
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link to={user ? "/join-organization" : "/auth?mode=join"}>
-              <Button variant="outline" size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 border-border/50 hover:bg-accent/5 font-medium">
-                Anslut till företag
-              </Button>
-            </Link>
+            
+            {!user && (
+              <Link to="/join">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="text-base px-8 py-6 border-border/50 hover:border-border hover:bg-muted/50 transition-all duration-200"
+                >
+                  <Users className="mr-2 h-5 w-5" />
+                  Anslut till företag
+                </Button>
+              </Link>
+            )}
           </div>
 
-          {/* Secondary link */}
-          <div className="animate-slide-up" style={{ animationDelay: "0.3s" }}>
-            <a href="#how-it-works">
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                Se hur det funkar
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </a>
-          </div>
-
-          {/* Social proof */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8 text-muted-foreground animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-primary" />
-              </div>
-              <div className="text-left">
-                <p className="font-bold text-foreground">100+</p>
-                <p className="text-sm">UF-företag växer med oss</p>
-              </div>
+          {/* Social Proof */}
+          <div 
+            className={`flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground transition-all duration-700 delay-400 ${
+              isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-success" />
+              <span>Gratis att börja</span>
             </div>
-            <div className="hidden sm:block w-px h-10 bg-border" />
-            <div className="text-sm">
-              <span className="text-foreground font-medium">Ingen kortinformation krävs</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-success" />
+              <span>Inget kort krävs</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-success" />
+              <span>GDPR-säkert</span>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 };
