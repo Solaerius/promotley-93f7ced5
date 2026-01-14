@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Link2, BarChart3, Lightbulb, ArrowRight, Zap } from "lucide-react";
+import { Link2, BarChart3, Lightbulb, Zap } from "lucide-react";
 
 const steps = [
   {
@@ -22,8 +22,8 @@ const steps = [
 const HowItWorks = () => {
   return (
     <section id="how-it-works" className="relative py-24 md:py-32 bg-background overflow-hidden">
-      {/* Subtle surface gradient */}
-      <div className="absolute inset-0 bg-gradient-surface" />
+      {/* Top transition from dark section */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-accent/10 to-transparent pointer-events-none" />
       
       <div className="container mx-auto px-4 md:px-6 relative z-10 max-w-6xl">
         {/* Section Header */}
@@ -84,6 +84,9 @@ const HowItWorks = () => {
           ))}
         </div>
       </div>
+      
+      {/* Bottom transition to dark section */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-accent to-transparent pointer-events-none" />
     </section>
   );
 };
