@@ -127,7 +127,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8 max-w-4xl mx-auto">
-        {/* Hero Banner */}
+        {/* Hero Banner with glass effect */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -140,7 +140,7 @@ const Dashboard = () => {
           />
         </motion.div>
 
-        {/* Stats Row - Seamless grid */}
+        {/* Stats Row - Glass cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {statsCards.map((stat, index) => {
             const Icon = stat.icon;
@@ -150,15 +150,22 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + index * 0.05, duration: 0.4 }}
-                className="bg-muted/30 rounded-2xl p-5 hover:bg-muted/50 transition-colors"
+                className="backdrop-blur-xl rounded-2xl p-5 border border-white/20 transition-all duration-300 hover:border-white/40 hover:scale-[1.02]"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%)',
+                }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20"
+                    style={{
+                      background: 'linear-gradient(135deg, hsl(9 90% 55% / 0.3) 0%, hsl(331 70% 45% / 0.2) 100%)',
+                    }}
+                  >
+                    <Icon className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">{stat.title}</p>
-                    <p className="text-xl font-bold">{stat.value}</p>
+                    <p className="text-xs text-white/60">{stat.title}</p>
+                    <p className="text-xl font-bold text-white">{stat.value}</p>
                   </div>
                 </div>
               </motion.div>
@@ -166,7 +173,7 @@ const Dashboard = () => {
           })}
         </div>
 
-        {/* Quick Links - Clean buttons */}
+        {/* Quick Links - Glass buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -180,52 +187,65 @@ const Dashboard = () => {
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex items-center gap-4 p-4 bg-muted/30 hover:bg-muted/50 rounded-2xl transition-colors cursor-pointer"
+                  className="flex items-center gap-4 p-4 rounded-2xl transition-all cursor-pointer backdrop-blur-xl border border-white/20 hover:border-white/40"
+                  style={{
+                    background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%)',
+                  }}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/20"
+                    style={{
+                      background: 'linear-gradient(135deg, hsl(9 90% 55% / 0.3) 0%, hsl(331 70% 45% / 0.2) 100%)',
+                    }}
+                  >
+                    <Icon className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium">{link.title}</p>
-                    <p className="text-sm text-muted-foreground">{link.description}</p>
+                    <p className="font-medium text-white">{link.title}</p>
+                    <p className="text-sm text-white/60">{link.description}</p>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                  <ArrowRight className="w-4 h-4 text-white/60" />
                 </motion.div>
               </Link>
             );
           })}
         </motion.div>
 
-        {/* Chart - Seamless */}
+        {/* Chart - Glass card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.4 }}
-          className="bg-muted/30 rounded-2xl p-6"
+          className="rounded-2xl p-6 backdrop-blur-xl border border-white/20"
+          style={{
+            background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%)',
+          }}
         >
-          <h3 className="text-lg font-semibold mb-4">Tillväxt</h3>
+          <h3 className="text-lg font-semibold mb-4 text-white">Tillväxt</h3>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={progressData}>
               <defs>
                 <linearGradient id="progressGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="hsl(9, 90%, 55%)" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="hsl(331, 70%, 45%)" stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+              <XAxis dataKey="week" stroke="rgba(255,255,255,0.5)" fontSize={12} />
+              <YAxis stroke="rgba(255,255,255,0.5)" fontSize={12} />
               <RechartsTooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "rgba(0,0,0,0.8)",
+                  border: "1px solid rgba(255,255,255,0.2)",
                   borderRadius: "12px",
+                  backdropFilter: "blur(12px)",
                 }}
+                labelStyle={{ color: "white" }}
+                itemStyle={{ color: "white" }}
               />
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke="hsl(var(--primary))"
+                stroke="hsl(9, 90%, 55%)"
                 strokeWidth={2}
                 fill="url(#progressGradient)"
               />
@@ -233,34 +253,41 @@ const Dashboard = () => {
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Connection Manager */}
+        {/* Connection Manager - Glass styled */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.4 }}
+          className="rounded-2xl p-6 backdrop-blur-xl border border-white/20"
+          style={{
+            background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%)',
+          }}
         >
           <ConnectionManager />
         </motion.div>
 
-        {/* Upgrade CTA - Subtle */}
+        {/* Upgrade CTA - Vibrant gradient */}
         {credits && credits.plan === 'starter' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45, duration: 0.4 }}
-            className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 rounded-2xl p-6"
+            className="rounded-2xl p-6 border border-white/30"
+            style={{
+              background: 'linear-gradient(135deg, hsl(9 90% 55% / 0.3) 0%, hsl(331 70% 45% / 0.3) 50%, hsl(344 60% 35% / 0.3) 100%)',
+            }}
           >
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-center sm:text-left">
-                <h3 className="text-lg font-bold mb-1">
+                <h3 className="text-lg font-bold mb-1 text-white">
                   Uppgradera till Pro
                 </h3>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-white/70 text-sm">
                   Fler krediter och avancerad analys
                 </p>
               </div>
               <Button 
-                variant="default" 
+                variant="gradient" 
                 size="sm" 
                 className="whitespace-nowrap"
                 onClick={() => window.location.href = '/#pricing'}

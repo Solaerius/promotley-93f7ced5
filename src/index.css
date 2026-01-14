@@ -159,7 +159,39 @@
   .badge-light { @apply inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white border border-white/20 text-sm font-medium; }
   .divider { @apply h-px w-full bg-gradient-to-r from-transparent via-border to-transparent; }
   .input-field { @apply w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary; }
-  .tab-bar { @apply fixed bottom-0 left-0 right-0 z-50 py-2 px-4 pb-safe border-t border-border/30 shadow-lg; background: hsl(var(--background) / 0.95); backdrop-filter: blur(16px); }
+  /* Liquid glass card for dashboard */
+  .liquid-glass {
+    @apply rounded-2xl border border-white/20 backdrop-blur-xl;
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.12) 0%, hsl(0 0% 100% / 0.06) 100%);
+    box-shadow: 
+      0 8px 32px hsl(0 0% 0% / 0.15),
+      inset 0 1px 1px hsl(0 0% 100% / 0.1);
+  }
+  .liquid-glass:hover {
+    border-color: hsl(0 0% 100% / 0.3);
+    box-shadow: 
+      0 12px 40px hsl(0 0% 0% / 0.2),
+      inset 0 1px 1px hsl(0 0% 100% / 0.15);
+  }
+  
+  /* Vibrant glass button */
+  .glass-button {
+    @apply rounded-xl px-6 py-3 font-semibold backdrop-blur-sm border border-white/20 transition-all duration-300;
+    background: linear-gradient(135deg, hsl(9 90% 55% / 0.25) 0%, hsl(331 70% 45% / 0.2) 100%);
+    color: white;
+  }
+  .glass-button:hover {
+    border-color: hsl(0 0% 100% / 0.4);
+    background: linear-gradient(135deg, hsl(9 90% 55% / 0.35) 0%, hsl(331 70% 45% / 0.3) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px hsl(9 90% 55% / 0.3);
+  }
+  
+  /* Dashboard text gradient - more vibrant */
+  .dashboard-text-gradient {
+    @apply bg-clip-text text-transparent font-bold;
+    background-image: linear-gradient(135deg, hsl(9 95% 60%) 0%, hsl(331 80% 55%) 50%, hsl(344 65% 45%) 100%);
+  }
   
   /* Section with gradient background */
   .section-gradient {
