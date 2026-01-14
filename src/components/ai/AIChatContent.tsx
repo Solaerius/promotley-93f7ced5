@@ -218,8 +218,8 @@ const AIChatContent = () => {
             className="mb-6"
           >
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold mb-2">Hur kan jag hjälpa dig?</h2>
-              <p className="text-muted-foreground">Välj ett snabbkommando eller skriv ditt eget meddelande</p>
+              <h2 className="text-2xl font-bold mb-2 dashboard-heading-dark">Hur kan jag hjälpa dig?</h2>
+              <p className="dashboard-subheading-dark">Välj ett snabbkommando eller skriv ditt eget meddelande</p>
             </div>
             <div className="grid grid-cols-2 gap-3 max-w-xl mx-auto">
               {quickCommands.map((cmd, index) => (
@@ -231,7 +231,7 @@ const AIChatContent = () => {
                 >
                   <Button
                     variant="ghost"
-                    className="h-auto py-4 px-4 w-full flex flex-col items-center gap-3 bg-muted/50 hover:bg-muted border-0 rounded-2xl transition-all hover:scale-[1.02]"
+                    className="h-auto py-4 px-4 w-full flex flex-col items-center gap-3 liquid-glass-light hover:border-white/30 border-0 rounded-2xl transition-all hover:scale-[1.02]"
                     onClick={() => handleQuickCommand(cmd.text)}
                     disabled={loading || hasInsufficientCredits || isSending}
                   >
@@ -360,7 +360,7 @@ const AIChatContent = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex gap-2 items-center bg-muted/50 rounded-2xl p-2 border border-border/50">
+        <div className="flex gap-2 items-center liquid-glass-light rounded-2xl p-2 border border-white/20">
           <Input
             placeholder={isAIBlocked ? "Fyll i AI-profil först..." : "Skriv ett meddelande..."}
             value={inputMessage}

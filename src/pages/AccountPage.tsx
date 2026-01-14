@@ -15,37 +15,37 @@ const AccountPage = () => {
   return (
     <DashboardLayout>
       <div className="w-full max-w-4xl mx-auto">
-        {/* Header - Clean and centered */}
+        {/* Header - Force dark mode colors */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold dashboard-heading-dark mb-2">
             Konto & Inställningar
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="dashboard-subheading-dark text-sm">
             Hantera ditt konto, organisation och appinställningar
           </p>
         </div>
 
-        {/* Tabs - Pill style, centered */}
+        {/* Tabs - Glass styling */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-center mb-8">
-            <TabsList className="inline-flex h-11 items-center justify-center rounded-full bg-muted/50 p-1">
+            <TabsList className="inline-flex h-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1">
               <TabsTrigger 
                 value="konto" 
-                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
               >
                 <User className="w-4 h-4" />
                 Konto
               </TabsTrigger>
               <TabsTrigger 
                 value="organisation" 
-                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
               >
                 <Building2 className="w-4 h-4" />
                 Organisation
               </TabsTrigger>
               <TabsTrigger 
                 value="app" 
-                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
               >
                 <Palette className="w-4 h-4" />
                 App

@@ -69,7 +69,7 @@ const AIToolsContent = () => {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-muted-foreground">
+        <p className="dashboard-subheading-dark">
           Snabbverktyg för att skapa innehåll med AI
         </p>
       </div>
@@ -78,36 +78,36 @@ const AIToolsContent = () => {
         {tools.map((tool) => (
           <Card 
             key={tool.title} 
-            className="group cursor-pointer hover:shadow-elegant transition-all duration-300 hover:scale-[1.02]"
+            className="group cursor-pointer liquid-glass-light hover:shadow-elegant transition-all duration-300 hover:scale-[1.02]"
             onClick={() => handleToolClick(tool.action)}
           >
             <CardHeader className="pb-3">
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${tool.color} flex items-center justify-center mb-3`}>
                 <tool.icon className="w-6 h-6 text-white" />
               </div>
-              <CardTitle className="text-lg flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center justify-between dashboard-heading-dark">
                 {tool.title}
-                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-white" />
               </CardTitle>
-              <CardDescription>{tool.description}</CardDescription>
+              <CardDescription className="dashboard-subheading-dark">{tool.description}</CardDescription>
             </CardHeader>
           </Card>
         ))}
       </div>
 
       {/* Info Card */}
-      <Card className="bg-gradient-hero border-primary/20">
+      <Card className="liquid-glass-light border-white/30">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold mb-1">AI-profil viktigt!</h3>
-              <p className="text-sm text-muted-foreground mb-3">
+              <h3 className="font-semibold mb-1 dashboard-heading-dark">AI-profil viktigt!</h3>
+              <p className="text-sm dashboard-subheading-dark mb-3">
                 Ju mer du fyller i din AI-profil under Konto, desto bättre och mer relevanta svar får du.
               </p>
-              <Button variant="outline" size="sm" onClick={() => navigate('/account')}>
+              <Button variant="gradient" size="sm" onClick={() => navigate('/account')}>
                 Uppdatera AI-profil
               </Button>
             </div>
