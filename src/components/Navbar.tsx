@@ -1,38 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const { user } = useAuth();
-  const [isBubble, setIsBubble] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      // Trigger bubble after scrolling just 100px
-      setIsBubble(window.scrollY > 100);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Check initial position
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   return (
     <nav 
       id="site-header"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-[750ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] backdrop-blur-xl ${
-        isBubble 
-          ? 'mt-2 mx-4 md:mx-6 lg:mx-12 rounded-[18px] md:rounded-[22px] lg:rounded-[24px] shadow-elegant translate-y-[6px]' 
-          : 'mt-0 mx-0 rounded-none border-b border-border/30 translate-y-0 shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.15)]'
-      }`}
+      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl mt-2 mx-4 md:mx-6 lg:mx-12 rounded-[18px] md:rounded-[22px] lg:rounded-[24px] shadow-elegant translate-y-[6px]"
       style={{
-        transitionProperty: 'margin, border-radius, background-color, backdrop-filter, box-shadow, opacity, transform',
         background: 'linear-gradient(135deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--secondary) / 0.12) 50%, hsl(var(--accent) / 0.15) 100%)',
       }}
     >
@@ -72,9 +54,7 @@ const Navbar = () => {
                 <Link to="/auth">
                   <Button 
                     variant="gradient"
-                    className={`transition-shadow duration-300 ${
-                      isBubble ? 'shadow-[0_6px_18px_rgba(238,89,61,0.35)] hover:shadow-[0_8px_24px_rgba(238,89,61,0.45)]' : ''
-                    }`}
+                    className="transition-shadow duration-300 shadow-[0_6px_18px_rgba(238,89,61,0.35)] hover:shadow-[0_8px_24px_rgba(238,89,61,0.45)]"
                   >
                     Starta gratis
                   </Button>
