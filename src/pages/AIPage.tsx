@@ -14,28 +14,28 @@ const AIPage = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col h-full min-h-0">
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-4 -mx-4 px-4 pt-2 border-b border-border/50 mb-4">
+        {/* Sticky Header - Transparent with glass effect */}
+        <div className="sticky top-0 z-20 backdrop-blur-xl pb-4 -mx-4 px-4 pt-2 border-b border-white/10 mb-4">
           <div className="mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">AI-Assistent</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-2xl md:text-3xl font-bold dashboard-heading-dark">AI-Assistent</h1>
+            <p className="text-sm dashboard-subheading-dark">
               Din personliga AI för marknadsföring och innehåll
             </p>
           </div>
 
-          {/* Tabs */}
+          {/* Tabs - Glass styling */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="inline-flex h-10 items-center justify-center rounded-full bg-muted/50 p-1">
+            <TabsList className="inline-flex h-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1">
               <TabsTrigger 
                 value="chat" 
-                className="flex items-center gap-2 rounded-full px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="flex items-center gap-2 rounded-full px-4 text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
               >
                 <MessageSquare className="w-4 h-4" />
                 Chat
               </TabsTrigger>
               <TabsTrigger 
                 value="verktyg" 
-                className="flex items-center gap-2 rounded-full px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="flex items-center gap-2 rounded-full px-4 text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
               >
                 <Wand2 className="w-4 h-4" />
                 Verktyg

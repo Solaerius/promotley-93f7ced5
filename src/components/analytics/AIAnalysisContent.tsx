@@ -55,11 +55,12 @@ const AIAnalysisContent = () => {
       {/* Generate Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <p className="text-muted-foreground">
+          <p className="dashboard-subheading-dark">
             Få skräddarsydda rekommendationer baserat på UF-regler
           </p>
         </div>
         <Button
+          variant="gradient"
           onClick={async () => {
             try {
               await generateAnalysis();
@@ -86,14 +87,14 @@ const AIAnalysisContent = () => {
 
       {/* Warnings */}
       {!hasAccess && accessError && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="liquid-glass-light border-destructive/30">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
             <span>
               {accessError === 'no_plan' && 'Du behöver ett aktivt paket för AI-analys'}
               {accessError === 'no_credits' && 'Dina krediter är slut'}
             </span>
-            <Button variant="outline" size="sm" onClick={() => window.location.href = '/pricing'}>
+            <Button variant="gradient" size="sm" onClick={() => window.location.href = '/pricing'}>
               Visa paket
             </Button>
           </AlertDescription>
@@ -112,12 +113,12 @@ const AIAnalysisContent = () => {
 
       {/* No Analysis State */}
       {!latestAnalysis ? (
-        <Card>
+        <Card className="liquid-glass-light">
           <CardContent className="pt-6">
             <div className="text-center py-12">
-              <Sparkles className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Ingen analys genererad än</h3>
-              <p className="text-muted-foreground">
+              <Sparkles className="h-16 w-16 text-white/40 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2 dashboard-heading-dark">Ingen analys genererad än</h3>
+              <p className="dashboard-subheading-dark">
                 Klicka på "Generera Analys" för att få din AI-drivna marknadsföringsplan
               </p>
             </div>
@@ -126,13 +127,13 @@ const AIAnalysisContent = () => {
       ) : (
         <>
           {/* Summary */}
-          <Card>
+          <Card className="liquid-glass-light">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <Target className="h-5 w-5 text-primary" />
                 Sammanfattning
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="dashboard-subheading-dark">
                 Genererad {new Date(latestAnalysis.created_at).toLocaleDateString('sv-SE')}
               </CardDescription>
             </CardHeader>
@@ -142,9 +143,9 @@ const AIAnalysisContent = () => {
           </Card>
 
           {/* Social Media Analysis */}
-          <Card>
+          <Card className="liquid-glass-light">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <TrendingUp className="h-5 w-5 text-primary" />
                 Analys av Sociala Medier
               </CardTitle>
@@ -155,9 +156,9 @@ const AIAnalysisContent = () => {
           </Card>
 
           {/* 7-Day Plan */}
-          <Card>
+          <Card className="liquid-glass-light">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <Calendar className="h-5 w-5 text-primary" />
                 7-Dagars Handlingsplan
               </CardTitle>
@@ -165,13 +166,13 @@ const AIAnalysisContent = () => {
             <CardContent>
               <div className="space-y-4">
                 {(latestAnalysis.ai_output?.["7_dagars_plan"] ?? []).map((item: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                  <div key={index} className="border border-white/20 rounded-lg p-4 hover:bg-white/5 transition-colors">
                     <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-semibold text-lg">{item.dag}</h4>
+                      <h4 className="font-semibold text-lg dashboard-heading-dark">{item.dag}</h4>
                       <Badge className={getPlatformColor(item.plattform)}>{item.plattform}</Badge>
                     </div>
-                    <p className="font-medium mb-1">{item.aktivitet}</p>
-                    <p className="text-sm text-muted-foreground">{item.beskrivning}</p>
+                    <p className="font-medium mb-1 dashboard-heading-dark">{item.aktivitet}</p>
+                    <p className="text-sm dashboard-subheading-dark">{item.beskrivning}</p>
                   </div>
                 ))}
               </div>
@@ -179,9 +180,9 @@ const AIAnalysisContent = () => {
           </Card>
 
           {/* Content Suggestions */}
-          <Card>
+          <Card className="liquid-glass-light">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <Lightbulb className="h-5 w-5 text-primary" />
                 Content-Förslag
               </CardTitle>
@@ -189,15 +190,15 @@ const AIAnalysisContent = () => {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 {(latestAnalysis.ai_output?.content_forslag ?? []).map((item: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div key={index} className="border border-white/20 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-semibold">{item.titel}</h4>
+                      <h4 className="font-semibold dashboard-heading-dark">{item.titel}</h4>
                       <div className="flex gap-2">
-                        <Badge variant="outline">{item.format}</Badge>
+                        <Badge variant="outline" className="border-white/30 text-white/80">{item.format}</Badge>
                         <Badge className={getPlatformColor(item.plattform)}>{item.plattform}</Badge>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">{item.beskrivning}</p>
+                    <p className="text-sm dashboard-subheading-dark">{item.beskrivning}</p>
                   </div>
                 ))}
               </div>
@@ -205,9 +206,9 @@ const AIAnalysisContent = () => {
           </Card>
 
           {/* UF Strategy */}
-          <Card>
+          <Card className="liquid-glass-light">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <Target className="h-5 w-5 text-primary" />
                 UF-Tävlingsstrategi
               </CardTitle>
@@ -218,9 +219,9 @@ const AIAnalysisContent = () => {
           </Card>
 
           {/* Recommendations */}
-          <Card>
+          <Card className="liquid-glass-light">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <CheckCircle2 className="h-5 w-5 text-primary" />
                 Rekommendationer
               </CardTitle>
@@ -228,14 +229,14 @@ const AIAnalysisContent = () => {
             <CardContent>
               <div className="space-y-4">
                 {(latestAnalysis.ai_output?.rekommendationer ?? []).map((item: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-4">
+                  <div key={index} className="border border-white/20 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge variant={getPriorityColor(item.prioritet)}>{item.prioritet}</Badge>
-                      <Badge variant="outline">{item.kategori}</Badge>
+                      <Badge variant="outline" className="border-white/30 text-white/80">{item.kategori}</Badge>
                     </div>
-                    <h4 className="font-semibold text-lg">{item.titel}</h4>
-                    <p className="text-sm text-muted-foreground mb-2">{item.beskrivning}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <h4 className="font-semibold text-lg dashboard-heading-dark">{item.titel}</h4>
+                    <p className="text-sm dashboard-subheading-dark mb-2">{item.beskrivning}</p>
+                    <p className="text-xs dashboard-subheading-dark">
                       <strong>Deadline:</strong> {item.deadline}
                     </p>
                   </div>

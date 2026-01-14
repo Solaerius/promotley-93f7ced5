@@ -77,15 +77,15 @@ const AnalyticsContent = () => {
 
   if (!hasConnections) {
     return (
-      <Card className="border-2 border-dashed">
+      <Card className="border-2 border-dashed liquid-glass-light">
         <CardContent className="p-12 text-center">
-          <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-xl font-semibold mb-2">Inga konton kopplade</h3>
-          <p className="text-muted-foreground mb-6">
+          <Users className="w-16 h-16 mx-auto mb-4 text-white/60" />
+          <h3 className="text-xl font-semibold mb-2 dashboard-heading-dark">Inga konton kopplade</h3>
+          <p className="dashboard-subheading-dark mb-6">
             Koppla dina sociala medier-konton för att se statistik
           </p>
           <Link to="/account">
-            <Button>Gå till konto</Button>
+            <Button variant="gradient">Gå till konto</Button>
           </Link>
         </CardContent>
       </Card>
@@ -100,15 +100,15 @@ const AnalyticsContent = () => {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="hover:shadow-elegant transition-all duration-300">
+              <Card key={index} className="liquid-glass-light hover:shadow-elegant transition-all duration-300">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
                       <Icon className="w-5 h-5 text-white" />
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-                  <p className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-sm dashboard-subheading-dark mb-1">{stat.title}</p>
+                  <p className="text-2xl md:text-3xl font-bold dashboard-heading-dark">{stat.value}</p>
                 </CardContent>
               </Card>
             );
@@ -118,9 +118,9 @@ const AnalyticsContent = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="liquid-glass-light">
           <CardHeader>
-            <CardTitle>Historik</CardTitle>
+            <CardTitle className="dashboard-heading-dark">Historik</CardTitle>
           </CardHeader>
           <CardContent>
             {analyticsData.some(a => a.history && Array.isArray(a.history) && a.history.length > 0) ? (
@@ -141,25 +141,25 @@ const AnalyticsContent = () => {
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+              <div className="h-[300px] flex items-center justify-center">
                 <div className="text-center">
-                  <Eye className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Ingen historikdata ännu</p>
+                  <Eye className="w-12 h-12 mx-auto mb-2 text-white/40" />
+                  <p className="dashboard-subheading-dark">Ingen historikdata ännu</p>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="liquid-glass-light">
           <CardHeader>
-            <CardTitle>Engagemangsöversikt</CardTitle>
+            <CardTitle className="dashboard-heading-dark">Engagemangsöversikt</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            <div className="h-[300px] flex items-center justify-center">
               <div className="text-center">
-                <Heart className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Ingen historikdata ännu</p>
+                <Heart className="w-12 h-12 mx-auto mb-2 text-white/40" />
+                <p className="dashboard-subheading-dark">Ingen historikdata ännu</p>
               </div>
             </div>
           </CardContent>
@@ -167,22 +167,22 @@ const AnalyticsContent = () => {
       </div>
 
       {/* Platform Breakdown */}
-      <Card>
+      <Card className="liquid-glass-light">
         <CardHeader>
-          <CardTitle>Plattformsöversikt</CardTitle>
+          <CardTitle className="dashboard-heading-dark">Plattformsöversikt</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={isConnected('meta_ig') ? 'instagram' : isConnected('tiktok') ? 'tiktok' : 'facebook'} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="instagram" className={!isConnected('meta_ig') ? 'opacity-50' : ''}>
+            <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-1">
+              <TabsTrigger value="instagram" className={`rounded-full text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white ${!isConnected('meta_ig') ? 'opacity-50' : ''}`}>
                 <Instagram className="w-4 h-4 mr-2" />
                 Instagram
               </TabsTrigger>
-              <TabsTrigger value="tiktok" className={!isConnected('tiktok') ? 'opacity-50' : ''}>
+              <TabsTrigger value="tiktok" className={`rounded-full text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white ${!isConnected('tiktok') ? 'opacity-50' : ''}`}>
                 <Music2 className="w-4 h-4 mr-2" />
                 TikTok
               </TabsTrigger>
-              <TabsTrigger value="facebook" className={!isConnected('meta_fb') ? 'opacity-50' : ''}>
+              <TabsTrigger value="facebook" className={`rounded-full text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white ${!isConnected('meta_fb') ? 'opacity-50' : ''}`}>
                 <Facebook className="w-4 h-4 mr-2" />
                 Facebook
               </TabsTrigger>
@@ -191,67 +191,67 @@ const AnalyticsContent = () => {
             <TabsContent value="instagram" className="pt-4">
               {isConnected('meta_ig') && metaData.instagram ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Följare</p>
-                    <p className="text-2xl font-bold">{metaData.instagram.followers_count?.toLocaleString()}</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Följare</p>
+                    <p className="text-2xl font-bold dashboard-heading-dark">{metaData.instagram.followers_count?.toLocaleString()}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Följer</p>
-                    <p className="text-2xl font-bold">{metaData.instagram.follows_count?.toLocaleString()}</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Följer</p>
+                    <p className="text-2xl font-bold dashboard-heading-dark">{metaData.instagram.follows_count?.toLocaleString()}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Inlägg</p>
-                    <p className="text-2xl font-bold">{metaData.instagram.media_count?.toLocaleString()}</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Inlägg</p>
+                    <p className="text-2xl font-bold dashboard-heading-dark">{metaData.instagram.media_count?.toLocaleString()}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Namn</p>
-                    <p className="text-xl font-bold">{metaData.instagram.name}</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Namn</p>
+                    <p className="text-xl font-bold dashboard-heading-dark">{metaData.instagram.name}</p>
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground">Anslut Instagram för att se statistik</p>
+                <p className="dashboard-subheading-dark">Anslut Instagram för att se statistik</p>
               )}
             </TabsContent>
 
             <TabsContent value="tiktok" className="pt-4">
               {isConnected('tiktok') && tiktokData.user && tiktokData.stats ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Följare</p>
-                    <p className="text-2xl font-bold">{tiktokData.user.follower_count?.toLocaleString() || 0}</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Följare</p>
+                    <p className="text-2xl font-bold dashboard-heading-dark">{tiktokData.user.follower_count?.toLocaleString() || 0}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Visningar</p>
-                    <p className="text-2xl font-bold">{tiktokData.stats.totalViews?.toLocaleString() || 0}</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Visningar</p>
+                    <p className="text-2xl font-bold dashboard-heading-dark">{tiktokData.stats.totalViews?.toLocaleString() || 0}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Likes</p>
-                    <p className="text-2xl font-bold">{tiktokData.stats.totalLikes?.toLocaleString() || 0}</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Likes</p>
+                    <p className="text-2xl font-bold dashboard-heading-dark">{tiktokData.stats.totalLikes?.toLocaleString() || 0}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Engagemang</p>
-                    <p className="text-2xl font-bold">{tiktokData.stats.avgEngagementRate || "0"}%</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Engagemang</p>
+                    <p className="text-2xl font-bold dashboard-heading-dark">{tiktokData.stats.avgEngagementRate || "0"}%</p>
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground">Anslut TikTok för att se statistik</p>
+                <p className="dashboard-subheading-dark">Anslut TikTok för att se statistik</p>
               )}
             </TabsContent>
 
             <TabsContent value="facebook" className="pt-4">
               {isConnected('meta_fb') && metaData.facebook ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Följare</p>
-                    <p className="text-2xl font-bold">{metaData.facebook.followers_count?.toLocaleString()}</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Följare</p>
+                    <p className="text-2xl font-bold dashboard-heading-dark">{metaData.facebook.followers_count?.toLocaleString()}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-muted">
-                    <p className="text-sm text-muted-foreground mb-1">Sidnamn</p>
-                    <p className="text-xl font-bold">{metaData.facebook.name}</p>
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <p className="text-sm dashboard-subheading-dark mb-1">Sidnamn</p>
+                    <p className="text-xl font-bold dashboard-heading-dark">{metaData.facebook.name}</p>
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground">Anslut Facebook för att se statistik</p>
+                <p className="dashboard-subheading-dark">Anslut Facebook för att se statistik</p>
               )}
             </TabsContent>
           </Tabs>

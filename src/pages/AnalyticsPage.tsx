@@ -14,22 +14,28 @@ const AnalyticsPage = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        {/* Header */}
+        {/* Header - Force dark mode colors */}
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Data & Insikter</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl md:text-4xl font-bold dashboard-heading-dark mb-2">Data & Insikter</h1>
+          <p className="dashboard-subheading-dark">
             Statistik och AI-driven analys av dina sociala medier
           </p>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - Glass styling */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="statistik" className="flex items-center gap-2">
+          <TabsList className="inline-flex h-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+            <TabsTrigger 
+              value="statistik" 
+              className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+            >
               <BarChart3 className="w-4 h-4" />
               Statistik
             </TabsTrigger>
-            <TabsTrigger value="ai-analys" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="ai-analys" 
+              className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+            >
               <Sparkles className="w-4 h-4" />
               AI-Analys
             </TabsTrigger>
