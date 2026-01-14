@@ -39,7 +39,7 @@ const ChatWidget = () => {
   const pollingTickCountRef = useRef(0);
 
   // Draggable and resizable state - smaller initial size
-  const [position, setPosition] = useState({ x: 24, y: window.innerHeight - 474 });
+  const [position, setPosition] = useState({ x: window.innerWidth - 340 - 24, y: window.innerHeight - 474 });
   const [size, setSize] = useState({ width: 340, height: 450 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
