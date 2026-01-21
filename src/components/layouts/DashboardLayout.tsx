@@ -47,8 +47,7 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
   const location = useLocation();
 
   const isTopNav = position === 'top';
-
-  // Redirect to onboarding if no organization
+  const isVerticalNav = position === 'left' || position === 'right';
   useEffect(() => {
     if (!orgLoading && needsOnboarding && !location.pathname.startsWith('/organization')) {
       navigate('/organization/onboarding');
@@ -134,8 +133,12 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
         <motion.main 
           key={location.pathname}
           className={cn(
-            "flex-1 relative z-10 p-4 md:p-6 lg:p-8",
-            isTopNav ? "pt-28 md:pt-32 pb-8" : "pt-8 pb-48 md:pb-40"
+            "flex-1 relative z-10 p-4 md:p-6",
+            // Padding based on navbar position
+            isVerticalNav && position === 'left' && "pl-16 md:pl-20",
+            isVerticalNav && position === 'right' && "pr-16 md:pr-20",
+            isTopNav && "pt-24 md:pt-28 pb-8",
+            position === 'bottom' && "pt-6 pb-32 md:pb-28"
           )}
           variants={pageVariants}
           initial="initial"

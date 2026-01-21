@@ -9,7 +9,7 @@ import {
   Bell,
   Settings,
   ArrowLeft,
-  ArrowUpDown
+  Move
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
   const { user, signOut } = useAuth();
   const { activeOrganization } = useOrganization();
   const { notifications, unreadCount, markAsRead } = useNotifications();
-  const { position, togglePosition } = useNavbarPosition();
+  const { position, cyclePosition, getPositionLabel } = useNavbarPosition();
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -95,47 +95,215 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
     return location.pathname.startsWith(path);
   };
 
-  const isTopPosition = position === 'top';
+  const isVertical = position === 'left' || position === 'right';
 
+  // Position classes
+  const getNavbarPositionClasses = () => {
+    switch (position) {
+      case 'top':
+        return 'fixed top-0 left-0 right-0 z-50 mx-4 md:mx-6 lg:mx-12 mt-2';
+      case 'bottom':
+        return 'fixed bottom-0 left-0 right-0 z-50 mx-4 md:mx-6 lg:mx-12 mb-2 pb-safe';
+      case 'left':
+        return 'fixed left-0 top-1/2 -translate-y-1/2 z-50 ml-2';
+      case 'right':
+        return 'fixed right-0 top-1/2 -translate-y-1/2 z-50 mr-2';
+    }
+  };
+
+  // Vertical (left/right) layout
+  if (isVertical) {
+    return (
+      <nav className={getNavbarPositionClasses()}>
+        <div 
+          className="rounded-2xl border border-white/20 backdrop-blur-xl p-2"
+          style={{
+            background: 'linear-gradient(180deg, hsl(var(--accent) / 0.95) 0%, hsl(var(--secondary) / 0.85) 50%, hsl(var(--primary) / 0.8) 100%)',
+          }}
+        >
+          <div className="flex flex-col items-center gap-1">
+            {/* Logo */}
+            <Link to="/dashboard" className="p-2 mb-2">
+              <img src={logo} alt="Promotley" className="w-7 h-7" />
+            </Link>
+
+            {/* Navigation tabs */}
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = isActive(tab.href);
+              
+              return (
+                <TooltipProvider key={tab.name}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        to={tab.href}
+                        className={cn(
+                          "relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors",
+                          active 
+                            ? "text-white bg-white/20" 
+                            : "text-white/60 hover:text-white hover:bg-white/10"
+                        )}
+                      >
+                        {active && (
+                          <motion.div
+                            layoutId="activeTabVertical"
+                            className="absolute inset-0 rounded-xl bg-white/15 border border-white/20"
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          />
+                        )}
+                        <Icon className="w-4 h-4 relative z-10" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side={position === 'left' ? 'right' : 'left'}>
+                      <p>{tab.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
+
+            {/* Separator */}
+            <div className="w-6 h-px bg-white/20 my-2" />
+
+            {/* Position toggle */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={cyclePosition}
+                    className="w-9 h-9 rounded-xl text-white/50 hover:text-white hover:bg-white/10"
+                  >
+                    <Move className="w-3.5 h-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side={position === 'left' ? 'right' : 'left'}>
+                  <p>Flytta: {getPositionLabel(position)}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <DarkModeToggle />
+
+            {/* Notifications */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10">
+                  <Bell className="w-4 h-4" />
+                  {unreadCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side={position === 'left' ? 'right' : 'left'} className="w-72">
+                <div className="px-3 py-2 border-b">
+                  <h3 className="font-semibold text-sm">Notiser</h3>
+                </div>
+                <ScrollArea className="h-[250px]">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground text-sm">
+                      Inga notiser
+                    </div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className="flex flex-col items-start p-3 cursor-pointer"
+                        onClick={() => markAsRead(notification.id)}
+                      >
+                        <div className="flex items-start justify-between w-full">
+                          <div className="flex-1">
+                            <p className="font-medium text-xs">{notification.title}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{notification.message}</p>
+                          </div>
+                          {!notification.read && (
+                            <div className="h-2 w-2 bg-primary rounded-full ml-2" />
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </ScrollArea>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* User Profile */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full hover:bg-white/10">
+                  <Avatar className="w-7 h-7 border border-white/30">
+                    <AvatarImage src={userAvatarUrl || undefined} />
+                    <AvatarFallback className="bg-white/20 text-white text-xs">
+                      {activeOrganization?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side={position === 'left' ? 'right' : 'left'} className="w-48">
+                <div className="px-2 py-1.5">
+                  <p className="text-xs font-medium truncate">{user?.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/account" className="cursor-pointer text-sm">
+                    <Settings className="mr-2 h-3.5 w-3.5" />
+                    Inställningar
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive text-sm">
+                  Logga ut
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  // Horizontal (top/bottom) layout
   return (
-    <nav 
-      className={cn(
-        "fixed left-0 right-0 z-50 mx-4 md:mx-6 lg:mx-12",
-        isTopPosition ? "top-0 mt-2" : "bottom-0 mb-2 pb-safe"
-      )}
-    >
+    <nav className={getNavbarPositionClasses()}>
       <div 
-        className="rounded-2xl shadow-elegant border border-white/20 backdrop-blur-xl"
+        className="rounded-2xl border border-white/20 backdrop-blur-xl"
         style={{
           background: 'linear-gradient(135deg, hsl(var(--accent) / 0.95) 0%, hsl(var(--secondary) / 0.85) 50%, hsl(var(--primary) / 0.8) 100%)',
         }}
       >
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
+        <div className="px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
             {/* Left side - Logo/Back button */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {showBackButton ? (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="rounded-xl text-white/90 hover:text-white hover:bg-white/10"
+                  className="rounded-xl text-white/90 hover:text-white hover:bg-white/10 w-8 h-8"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4" />
                 </Button>
               ) : (
                 <Link to="/dashboard" className="flex items-center gap-2 group">
-                  <img src={logo} alt="Promotley" className="w-8 h-8 transition-transform duration-200 group-hover:scale-105" />
-                  <span className="font-bold text-lg text-white hidden sm:inline">Promotley</span>
+                  <img src={logo} alt="Promotley" className="w-7 h-7" />
+                  <span className="font-semibold text-sm text-white hidden sm:inline">Promotley</span>
                 </Link>
               )}
               {title && (
-                <h1 className="font-semibold text-lg text-white">{title}</h1>
+                <h1 className="font-medium text-sm text-white">{title}</h1>
               )}
             </div>
 
             {/* Center - Navigation tabs (desktop) */}
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-0.5">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const active = isActive(tab.href);
@@ -145,28 +313,28 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                     key={tab.name}
                     to={tab.href}
                     className={cn(
-                      "relative flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200",
+                      "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors",
                       active 
                         ? "text-white bg-white/20" 
-                        : "text-white/70 hover:text-white hover:bg-white/10"
+                        : "text-white/60 hover:text-white hover:bg-white/10"
                     )}
                   >
                     {active && (
                       <motion.div
                         layoutId="activeTabDesktop"
-                        className="absolute inset-0 rounded-xl bg-white/15 border border-white/20"
+                        className="absolute inset-0 rounded-lg bg-white/15 border border-white/20"
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       />
                     )}
-                    <Icon className="w-4 h-4 relative z-10" />
-                    <span className="text-sm font-medium relative z-10">{tab.name}</span>
+                    <Icon className="w-3.5 h-3.5 relative z-10" />
+                    <span className="text-xs font-medium relative z-10">{tab.name}</span>
                   </Link>
                 );
               })}
             </div>
 
             {/* Right side - Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {/* Position toggle */}
               <TooltipProvider>
                 <Tooltip>
@@ -174,14 +342,14 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      onClick={togglePosition}
-                      className="rounded-xl text-white/70 hover:text-white hover:bg-white/10"
+                      onClick={cyclePosition}
+                      className="w-8 h-8 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
                     >
-                      <ArrowUpDown className="w-4 h-4" />
+                      <Move className="w-3.5 h-3.5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Flytta navbar {isTopPosition ? 'ner' : 'upp'}</p>
+                    <p>Flytta: {getPositionLabel(position)}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -191,41 +359,41 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative rounded-xl text-white/70 hover:text-white hover:bg-white/10">
-                    <Bell className="w-5 h-5" />
+                  <Button variant="ghost" size="icon" className="relative w-8 h-8 rounded-lg text-white/60 hover:text-white hover:bg-white/10">
+                    <Bell className="w-4 h-4" />
                     {unreadCount > 0 && (
                       <Badge 
                         variant="destructive" 
-                        className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                        className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
                       >
                         {unreadCount > 9 ? "9+" : unreadCount}
                       </Badge>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <div className="px-4 py-2 border-b">
-                    <h3 className="font-semibold">Notiser</h3>
+                <DropdownMenuContent align="end" className="w-72">
+                  <div className="px-3 py-2 border-b">
+                    <h3 className="font-semibold text-sm">Notiser</h3>
                   </div>
-                  <ScrollArea className="h-[300px]">
+                  <ScrollArea className="h-[250px]">
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-muted-foreground">
+                      <div className="p-4 text-center text-muted-foreground text-sm">
                         Inga notiser
                       </div>
                     ) : (
                       notifications.map((notification) => (
                         <DropdownMenuItem
                           key={notification.id}
-                          className="flex flex-col items-start p-4 cursor-pointer"
+                          className="flex flex-col items-start p-3 cursor-pointer"
                           onClick={() => markAsRead(notification.id)}
                         >
                           <div className="flex items-start justify-between w-full">
                             <div className="flex-1">
-                              <p className="font-medium text-sm">{notification.title}</p>
-                              <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
+                              <p className="font-medium text-xs">{notification.title}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">{notification.message}</p>
                             </div>
                             {!notification.read && (
-                              <div className="h-2 w-2 bg-primary rounded-full ml-2 mt-1" />
+                              <div className="h-2 w-2 bg-primary rounded-full ml-2" />
                             )}
                           </div>
                         </DropdownMenuItem>
@@ -238,28 +406,28 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
               {/* User Profile */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                    <Avatar className="w-8 h-8 border-2 border-white/30">
+                  <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full hover:bg-white/10">
+                    <Avatar className="w-7 h-7 border border-white/30">
                       <AvatarImage src={userAvatarUrl || undefined} />
-                      <AvatarFallback className="bg-white/20 text-white text-sm">
+                      <AvatarFallback className="bg-white/20 text-white text-xs">
                         {activeOrganization?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-48">
                   <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium truncate">{user?.email}</p>
+                    <p className="text-xs font-medium truncate">{user?.email}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/settings" className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
+                    <Link to="/account" className="cursor-pointer text-sm">
+                      <Settings className="mr-2 h-3.5 w-3.5" />
                       Inställningar
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive text-sm">
                     Logga ut
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -268,7 +436,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
           </div>
 
           {/* Mobile navigation tabs */}
-          <div className="flex md:hidden items-center justify-around mt-3 pt-3 border-t border-white/10">
+          <div className="flex md:hidden items-center justify-around mt-2 pt-2 border-t border-white/10">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const active = isActive(tab.href);
@@ -278,21 +446,21 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                   key={tab.name}
                   to={tab.href}
                   className={cn(
-                    "relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200",
+                    "relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors",
                     active 
                       ? "text-white" 
-                      : "text-white/60 hover:text-white"
+                      : "text-white/50 hover:text-white"
                   )}
                 >
                   {active && (
                     <motion.div
                       layoutId="activeTabMobile"
-                      className="absolute inset-0 rounded-xl bg-white/15"
+                      className="absolute inset-0 rounded-lg bg-white/15"
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     />
                   )}
-                  <Icon className={cn("w-5 h-5 relative z-10", active && "text-white")} />
-                  <span className={cn("relative z-10 text-[10px]", active && "font-semibold")}>{tab.name}</span>
+                  <Icon className={cn("w-4 h-4 relative z-10", active && "text-white")} />
+                  <span className={cn("relative z-10 text-[9px]", active && "font-medium")}>{tab.name}</span>
                 </Link>
               );
             })}

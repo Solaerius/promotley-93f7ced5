@@ -221,24 +221,24 @@ const AIChatContent = () => {
               <h2 className="text-2xl font-bold mb-2 dashboard-heading-dark">Hur kan jag hjälpa dig?</h2>
               <p className="dashboard-subheading-dark">Välj ett snabbkommando eller skriv ditt eget meddelande</p>
             </div>
-            <div className="grid grid-cols-2 gap-3 max-w-xl mx-auto">
+            <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
               {quickCommands.map((cmd, index) => (
                 <motion.div
                   key={cmd.text}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.05 }}
                 >
                   <Button
                     variant="ghost"
-                    className="h-auto py-4 px-4 w-full flex flex-col items-center gap-3 liquid-glass-light hover:border-white/30 border-0 rounded-2xl transition-all hover:scale-[1.02]"
+                    className="h-auto py-3 px-3 w-full flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl transition-colors"
                     onClick={() => handleQuickCommand(cmd.text)}
                     disabled={loading || hasInsufficientCredits || isSending}
                   >
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${cmd.color} flex items-center justify-center shadow-lg`}>
-                      <cmd.icon className="w-6 h-6 text-white" />
+                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                      <cmd.icon className="w-4 h-4 text-white/80" />
                     </div>
-                    <span className="text-sm text-center font-medium">{cmd.text}</span>
+                    <span className="text-xs text-left text-white/80">{cmd.text}</span>
                   </Button>
                 </motion.div>
               ))}
