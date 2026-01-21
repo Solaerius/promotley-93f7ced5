@@ -140,6 +140,22 @@ const SwishCheckout = () => {
 
       if (error) throw error;
 
+      // Send Discord notification about new order
+      try {
+        await supabase.functions.invoke("notify-swish-order", {
+          body: {
+            orderId,
+            productName: itemName,
+            amount: itemPrice,
+            customerName: formData.name,
+            customerEmail: formData.email,
+          },
+        });
+      } catch (notifyError) {
+        console.error("Failed to send notification:", notifyError);
+        // Don't fail the order if notification fails
+      }
+
       setStep("confirmation");
       toast.success("Din betalning har registrerats!");
     } catch (error) {
