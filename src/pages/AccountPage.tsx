@@ -28,24 +28,24 @@ const AccountPage = () => {
         {/* Tabs - Glass styling */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-center mb-8">
-            <TabsList className="inline-flex h-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1">
+            <TabsList className="inline-flex h-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1 gap-1">
               <TabsTrigger 
                 value="konto" 
-                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white transition-all"
               >
                 <User className="w-4 h-4" />
                 Konto
               </TabsTrigger>
               <TabsTrigger 
                 value="organisation" 
-                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white transition-all"
               >
                 <Building2 className="w-4 h-4" />
                 Organisation
               </TabsTrigger>
               <TabsTrigger 
                 value="app" 
-                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white transition-all"
               >
                 <Palette className="w-4 h-4" />
                 App

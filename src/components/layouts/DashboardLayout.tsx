@@ -45,9 +45,6 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
   const { position } = useNavbarPosition();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const isTopNav = position === 'top';
-  const isVerticalNav = position === 'left' || position === 'right';
   useEffect(() => {
     if (!orgLoading && needsOnboarding && !location.pathname.startsWith('/organization')) {
       navigate('/organization/onboarding');
@@ -133,12 +130,14 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
         <motion.main 
           key={location.pathname}
           className={cn(
-            "flex-1 relative z-10 p-4 md:p-6",
-            // Padding based on navbar position
-            isVerticalNav && position === 'left' && "pl-16 md:pl-20",
-            isVerticalNav && position === 'right' && "pr-16 md:pr-20",
-            isTopNav && "pt-24 md:pt-28 pb-8",
-            position === 'bottom' && "pt-6 pb-32 md:pb-28"
+            "flex-1 relative z-10",
+            // Base padding
+            "p-4 md:p-6 lg:p-8",
+            // Padding based on navbar position - more generous spacing
+            position === 'left' && "pl-20 md:pl-24 lg:pl-28",
+            position === 'right' && "pr-20 md:pr-24 lg:pr-28",
+            position === 'top' && "pt-20 md:pt-24 pb-8",
+            position === 'bottom' && "pt-6 pb-28 md:pb-24"
           )}
           variants={pageVariants}
           initial="initial"

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -226,12 +226,12 @@ const AIChat = () => {
   return (
     <DashboardLayout>
       <div className="h-[calc(100vh-8rem)] min-h-[680px] md:min-h-[780px] flex flex-col animate-fade-in max-w-screen-xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Header with Credits integrated */}
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">AI-Assistent</h1>
-            <p className="text-muted-foreground">
-              Chatta med Promotleys AI för personliga råd och insikter
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">AI-Assistent</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Chatta med Promotleys AI för personliga råd
             </p>
           </div>
           <CreditsDisplay variant="compact" />
@@ -406,38 +406,53 @@ const AIChat = () => {
               </div>
             )}
 
-            {/* Input Area */}
-            <div className="border-t border-border p-3 md:p-4 rounded-b-2xl">
-              <div className="flex gap-2">
+            {/* Input Area - Seamless */}
+            <div className="border-t border-border/50 p-3 md:p-4 bg-background/50 backdrop-blur-sm">
+              <div className="flex gap-2 items-end">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon"
                   onClick={() => toast({ title: "Filuppladdning", description: "Kommer snart!" })}
                   disabled={hasInsufficientCredits || isAIBlocked}
                   aria-label="Bifoga fil"
+                  className="shrink-0 h-9 w-9"
                 >
                   <Paperclip className="w-4 h-4" />
                 </Button>
-                <Input
+                <Textarea
                   placeholder={isAIBlocked ? "Fyll i AI-profil först..." : hasInsufficientCredits ? "Inga krediter kvar..." : "Skriv ditt meddelande..."}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
+                  onChange={(e) => {
+                    setInputMessage(e.target.value);
+                    // Auto-resize textarea
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px';
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey && !hasInsufficientCredits && !isAIBlocked) {
                       e.preventDefault();
                       handleSendMessage();
+                      // Reset height after sending
+                      e.currentTarget.style.height = 'auto';
                     }
                   }}
-                  className="flex-1"
+                  className="flex-1 min-h-[40px] max-h-[150px] resize-none py-2 bg-muted/50 border-0 focus-visible:ring-1"
                   disabled={hasInsufficientCredits || loading || isAIBlocked}
                   aria-label="Meddelande"
+                  rows={1}
                 />
                 <Button
                   variant="gradient"
                   size="icon"
-                  onClick={() => handleSendMessage()}
+                  onClick={() => {
+                    handleSendMessage();
+                    // Reset textarea height
+                    const textarea = document.querySelector('textarea');
+                    if (textarea) textarea.style.height = 'auto';
+                  }}
                   disabled={!inputMessage.trim() || loading || hasInsufficientCredits || isAIBlocked}
                   aria-label="Skicka meddelande"
+                  className="shrink-0 h-9 w-9"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
