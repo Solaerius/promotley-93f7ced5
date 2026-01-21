@@ -57,21 +57,16 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Gradient Background */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          background: 'linear-gradient(135deg, hsl(344 55% 12%) 0%, hsl(331 65% 28%) 40%, hsl(9 85% 48%) 100%)',
-        }}
-      />
+      {/* Gradient Background - Light mode: clean white / Dark mode: darker slate */}
+      <div className="fixed inset-0 z-0 bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" />
       
-      {/* Animated blur orbs for liquid glass effect */}
+      {/* Animated blur orbs for liquid glass effect - more subtle */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <motion.div 
-          className="absolute w-[600px] h-[600px] rounded-full opacity-30"
+          className="absolute w-[600px] h-[600px] rounded-full opacity-20 dark:opacity-15"
           style={{
-            background: 'radial-gradient(circle, hsl(9 90% 55% / 0.4) 0%, transparent 70%)',
-            filter: 'blur(80px)',
+            background: 'radial-gradient(circle, hsl(9 70% 45% / 0.3) 0%, transparent 70%)',
+            filter: 'blur(100px)',
             top: '10%',
             right: '-10%',
           }}
@@ -86,10 +81,10 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
           }}
         />
         <motion.div 
-          className="absolute w-[500px] h-[500px] rounded-full opacity-25"
+          className="absolute w-[500px] h-[500px] rounded-full opacity-15 dark:opacity-10"
           style={{
-            background: 'radial-gradient(circle, hsl(331 70% 45% / 0.4) 0%, transparent 70%)',
-            filter: 'blur(80px)',
+            background: 'radial-gradient(circle, hsl(331 50% 35% / 0.3) 0%, transparent 70%)',
+            filter: 'blur(100px)',
             bottom: '10%',
             left: '-10%',
           }}
@@ -104,16 +99,16 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
           }}
         />
         <motion.div 
-          className="absolute w-[400px] h-[400px] rounded-full opacity-20"
+          className="absolute w-[400px] h-[400px] rounded-full opacity-15 dark:opacity-10"
           style={{
-            background: 'radial-gradient(circle, hsl(344 60% 35% / 0.4) 0%, transparent 70%)',
-            filter: 'blur(60px)',
+            background: 'radial-gradient(circle, hsl(344 40% 25% / 0.3) 0%, transparent 70%)',
+            filter: 'blur(80px)',
             top: '50%',
             left: '30%',
           }}
           animate={{
             scale: [1, 1.1, 1],
-            opacity: [0.2, 0.3, 0.2],
+            opacity: [0.1, 0.15, 0.1],
           }}
           transition={{
             duration: 6,
