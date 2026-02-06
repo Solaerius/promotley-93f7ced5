@@ -296,13 +296,13 @@ Deno.serve(async (req) => {
       const videoListResponse = await fetch(
         'https://open.tiktokapis.com/v2/video/list/?fields=id,create_time,cover_image_url,share_url,video_description,duration,title,like_count,comment_count,share_count,view_count',
         {
-          method: 'POST',
+        method: 'POST',
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            max_count: 50,
+            max_count: 20,
           }),
         }
       );
