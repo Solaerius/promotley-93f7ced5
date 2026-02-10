@@ -100,12 +100,12 @@ export function cleanupExpiredReservations(): number {
 /**
  * Calculate estimated cost based on tier and request type
  */
-export function estimateCost(tier: string, requestType: 'chat' | 'analysis' | 'suggestion'): number {
+export function estimateCost(tier: string, requestType: 'chat' | 'analysis' | 'suggestion' | 'analysis_deep' | 'plan_premium'): number {
   const baseCosts = {
-    starter: { chat: 2, analysis: 5, suggestion: 2 },
-    growth: { chat: 1, analysis: 3, suggestion: 1 },
-    pro: { chat: 1, analysis: 2, suggestion: 1 },
-    unlimited: { chat: 0, analysis: 0, suggestion: 0 }
+    starter: { chat: 2, analysis: 5, suggestion: 2, analysis_deep: 5, plan_premium: 5 },
+    growth: { chat: 1, analysis: 3, suggestion: 1, analysis_deep: 3, plan_premium: 5 },
+    pro: { chat: 1, analysis: 2, suggestion: 1, analysis_deep: 5, plan_premium: 8 },
+    unlimited: { chat: 0, analysis: 0, suggestion: 0, analysis_deep: 0, plan_premium: 0 }
   };
 
   return baseCosts[tier as keyof typeof baseCosts]?.[requestType] || 2;

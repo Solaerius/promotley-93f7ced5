@@ -79,9 +79,9 @@ function sanitizeUserMessage(message: string): { sanitized: string; flagged: boo
 
 // Credit cost estimation based on request type and complexity
 const estimateCreditCost = (action: string, message?: string): number => {
-  // Marketing plans are expensive (uses gpt-4o, multiple posts)
+  // Marketing plans are expensive (uses gpt-4o for Pro, multiple posts)
   if (action === 'create-marketing-plan') {
-    return 5;
+    return 8; // Premium cost for marketing plans
   }
   
   // Analysis requests
@@ -605,14 +605,14 @@ ${items.map((k: any) => `### ${k.title}\nFULL INNEHÅLL:\n${k.content}`).join('\
 ` : '';
 
       // Determine AI model based on user plan
-      // Model mapping: Starter → gpt-4o-mini, Growth → gpt-4.1-mini-2025-04-14, Pro → gpt-4o
+      // Model mapping: Starter → gpt-4o-mini, Growth → gpt-4.1-mini, Pro → gpt-4.1-mini (default), gpt-4o (premium)
       let aiModel = 'gpt-4o-mini';
       switch (userData?.plan) {
         case 'growth':
           aiModel = 'gpt-4.1-mini-2025-04-14';
           break;
         case 'pro':
-          aiModel = 'gpt-4o';
+          aiModel = 'gpt-4.1-mini-2025-04-14'; // Pro uses gpt-4.1-mini for standard chat, gpt-4o reserved for premium features
           break;
         default:
           aiModel = 'gpt-4o-mini';

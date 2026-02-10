@@ -23,6 +23,13 @@ export interface PlanConfig {
 export const MODEL_BY_TIER = {
   starter: 'gpt-4o-mini',
   growth: 'gpt-4.1-mini-2025-04-14', 
+  pro: 'gpt-4.1-mini-2025-04-14'
+} as const;
+
+/**
+ * Premium model for Pro tier (used for deep analysis and marketing plans)
+ */
+export const PREMIUM_MODEL_BY_TIER = {
   pro: 'gpt-4o'
 } as const;
 
@@ -66,8 +73,8 @@ export function getPlanConfig(plan: PlanType): PlanConfig {
     case 'pro':
       return {
         model: MODEL_BY_TIER.pro,
-        credits: 300,
-        features: ['advanced', 'creative', 'competitors', 'reports'],
+        credits: 200,
+        features: ['advanced', 'creative', 'competitors', 'reports', 'premium_analysis', 'premium_plans'],
         displayName: 'Pro',
         price: 99,
         tier: 'pro',

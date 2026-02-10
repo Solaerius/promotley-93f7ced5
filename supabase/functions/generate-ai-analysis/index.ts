@@ -137,8 +137,8 @@ serve(async (req) => {
         break;
       case 'pro':
         tier = 'pro';
-        aiModel = 'gpt-4o';
-        estimatedCost = 1;
+        aiModel = 'gpt-4o'; // Pro deep analysis uses premium model (gpt-4o)
+        estimatedCost = 5;   // Premium cost for deep analysis
         break;
     }
 
