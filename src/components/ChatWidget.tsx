@@ -254,16 +254,26 @@ const ChatWidget = () => {
   const sendAutoReply = async () => {
     if (!sessionId || autoReplyHasBeenSent) return;
 
-    setTimeout(async () => {
-      await supabase.from("live_chat_messages").insert({
-        session_id: sessionId,
-        sender_type: "admin",
-        message: "Tack för ditt meddelande! Vi kan vara upptagna just nu, så svarstiden kan variera beroende på hur många som chattar. Vi återkommer så snart vi kan!",
-      });
+    const autoMessage: Message = {
+      id: `auto-${Date.now()}`,
+      session_id: sessionId,
+      message: "Tack för ditt meddelande! Vi kan vara upptagna just nu, så svarstiden kan variera beroende på hur många som chattar. Vi återkommer så snart vi kan!",
+      sender_type: "admin",
+      created_at: new Date().toISOString(),
+      read: false,
+      sender_id: null,
+    };
 
-      setAutoReplyHasBeenSent(true);
-      localStorage.setItem("live_chat_auto_reply_sent", "true");
-    }, 2000);
+    setMessages((prev) => [...prev, autoMessage]);
+    setAutoReplyHasBeenSent(true);
+    localStorage.setItem("live_chat_auto_reply_sent", "true");
+
+    // Also insert to DB so admin can see it
+    await supabase.from("live_chat_messages").insert({
+      session_id: sessionId,
+      sender_type: "admin",
+      message: autoMessage.message,
+    });
   };
 
   const handleStartNewChat = () => {
@@ -425,10 +435,7 @@ const ChatWidget = () => {
       setMessages((prev) => prev.map(m => m.id === tempId ? data : m));
       lastMessageTimestampRef.current = data.created_at;
       
-      // Send auto-reply if this is the first message
-      if (messages.length === 0) {
-        sendAutoReply();
-      }
+      // (auto-reply now sent on chat open, not here)
       
       // Send notification to admin (silent)
       try {
@@ -456,6 +463,11 @@ const ChatWidget = () => {
       const newSessionId = crypto.randomUUID();
       localStorage.setItem("live_chat_session_id", newSessionId);
       setSessionId(newSessionId);
+    }
+    
+    // Send auto-reply welcome message when chat opens
+    if (!autoReplyHasBeenSent && !isChatClosed) {
+      setTimeout(() => sendAutoReply(), 500);
     }
   };
 
