@@ -54,7 +54,7 @@ serve(async (req) => {
             avatar_url: "https://promotley.lovable.app/favicon.png",
             embeds: [{
               title: "💳 Ny Swish-betalning väntar på verifiering!",
-              description: `[Öppna Admin-panel för att verifiera](https://promotley.se/admin/swish-orders)`,
+              description: `[Öppna Admin-panel för att verifiera](https://promotley.se/admin/swish)`,
               color: 0x22c55e, // Green color
               fields: [
                 { 
