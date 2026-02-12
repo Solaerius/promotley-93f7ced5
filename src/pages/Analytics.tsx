@@ -23,7 +23,7 @@ import {
   MessageCircle,
   Instagram,
   Music2,
-  Facebook,
+  
   Sparkles,
   AlertCircle,
 } from "lucide-react";
@@ -83,9 +83,6 @@ const Analytics = () => {
     if (tiktokData.stats.avgEngagementRate) {
       connectedStats.avgEngagement = parseFloat(tiktokData.stats.avgEngagementRate);
     }
-  }
-  if (isConnected('meta_fb') && metaData.facebook) {
-    connectedStats.totalFollowers += metaData.facebook.followers_count || 0;
   }
 
   // Only show stats that have values
@@ -289,8 +286,8 @@ const Analytics = () => {
             <CardTitle>Plattformsoversikt</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue={isConnected('meta_ig') ? 'instagram' : isConnected('tiktok') ? 'tiktok' : isConnected('meta_fb') ? 'facebook' : 'instagram'} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+            <Tabs defaultValue={isConnected('meta_ig') ? 'instagram' : 'tiktok'} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="instagram" className={!isConnected('meta_ig') ? 'opacity-50' : ''}>
                   <Instagram className="w-4 h-4 mr-2" />
                   Instagram
@@ -298,10 +295,6 @@ const Analytics = () => {
                 <TabsTrigger value="tiktok" className={!isConnected('tiktok') ? 'opacity-50' : ''}>
                   <Music2 className="w-4 h-4 mr-2" />
                   TikTok
-                </TabsTrigger>
-                <TabsTrigger value="facebook" className={!isConnected('meta_fb') ? 'opacity-50' : ''}>
-                  <Facebook className="w-4 h-4 mr-2" />
-                  Facebook
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="instagram" className="space-y-4 pt-4">
@@ -350,22 +343,6 @@ const Analytics = () => {
                   </div>
                 ) : (
                   <p className="text-muted-foreground">Anslut TikTok för att se statistik</p>
-                )}
-              </TabsContent>
-              <TabsContent value="facebook" className="space-y-4 pt-4">
-                {isConnected('meta_fb') && metaData.facebook ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Följare</p>
-                      <p className="text-2xl font-bold">{metaData.facebook.followers_count?.toLocaleString()}</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Sidnamn</p>
-                      <p className="text-xl font-bold">{metaData.facebook.name}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">Anslut Facebook för att se statistik</p>
                 )}
               </TabsContent>
             </Tabs>

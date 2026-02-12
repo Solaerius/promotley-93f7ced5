@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Facebook, CheckCircle2, Link as LinkIcon, Music, RefreshCw, Instagram } from "lucide-react";
+import { CheckCircle2, Link as LinkIcon, Music, RefreshCw, Instagram } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Connection {
@@ -60,52 +60,6 @@ export const ConnectionManager = () => {
       setConnections(data || []);
     } catch (error) {
       console.error('Error loading connections:', error);
-    }
-  };
-
-  const connectFacebook = async () => {
-    setConnectingProvider('meta_fb');
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Inte inloggad",
-          description: "Du måste vara inloggad för att ansluta konton",
-          variant: "destructive",
-        });
-        setConnectingProvider(null);
-        return;
-      }
-
-      // Call edge function to initiate OAuth
-      const { data, error } = await supabase.functions.invoke('init-meta-oauth', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: { provider: 'meta_fb' },
-      });
-
-      if (error || !data?.url) {
-        console.error('Error initiating Facebook OAuth:', error);
-        toast({
-          title: "Säkerhetsfel",
-          description: "Kunde inte initiera säker anslutning.",
-          variant: "destructive",
-        });
-        setConnectingProvider(null);
-        return;
-      }
-
-      // Redirect to OAuth URL
-      window.location.href = data.url;
-    } catch (error) {
-      console.error('Error connecting Facebook:', error);
-      toast({
-        title: "Fel vid anslutning",
-        description: "Kunde inte ansluta till Facebook",
-        variant: "destructive",
-      });
-      setConnectingProvider(null);
     }
   };
 
@@ -338,51 +292,6 @@ export const ConnectionManager = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Facebook */}
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center">
-              <Facebook className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="font-medium">Facebook</p>
-              {isConnected('meta_fb') ? (
-                <p className="text-sm text-accent flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Connected as {getConnection('meta_fb')?.username || 'Okänd'}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Connect to unlock personalized insights
-                </p>
-              )}
-            </div>
-          </div>
-          
-          {isConnected('meta_fb') ? (
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-accent" />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => disconnectProvider('meta_fb')}
-              >
-                Koppla från
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="gradient"
-              size="sm"
-              onClick={connectFacebook}
-              disabled={connectingProvider !== null}
-              aria-label="Connect Facebook account"
-            >
-              {connectingProvider === 'meta_fb' ? "Kopplar..." : "Anslut konto"}
-            </Button>
-          )}
-        </div>
-
         {/* Instagram */}
         <div className="flex items-center justify-between p-4 border rounded-lg">
           <div className="flex items-center gap-3">

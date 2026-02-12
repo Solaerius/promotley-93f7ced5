@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sun, Moon, Monitor, Instagram, Music2, Facebook, Link as LinkIcon, XCircle, Loader2 } from "lucide-react";
+import { Sun, Moon, Monitor, Instagram, Music2, Link as LinkIcon, XCircle, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useConnections } from "@/hooks/useConnections";
 import { useToast } from "@/hooks/use-toast";
@@ -12,27 +12,6 @@ const AppSettingsContent = () => {
   const { toast } = useToast();
   const { connections, loadConnections, isConnected, getConnection } = useConnections();
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
-
-  const connectFacebook = async () => {
-    setConnectingProvider('facebook');
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({ title: "Inte inloggad", variant: "destructive" });
-        setConnectingProvider(null);
-        return;
-      }
-      const { data, error } = await supabase.functions.invoke('init-meta-oauth', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { provider: 'meta_fb' },
-      });
-      if (error || !data?.url) throw error;
-      window.location.href = data.url;
-    } catch (error) {
-      toast({ title: "Anslutning misslyckades", variant: "destructive" });
-      setConnectingProvider(null);
-    }
-  };
 
   const connectInstagram = async () => {
     setConnectingProvider('instagram');
@@ -72,7 +51,7 @@ const AppSettingsContent = () => {
     }
   };
 
-  const disconnectProvider = async (provider: 'tiktok' | 'meta_fb' | 'meta_ig') => {
+  const disconnectProvider = async (provider: 'tiktok' | 'meta_ig') => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -103,13 +82,6 @@ const AppSettingsContent = () => {
       icon: Music2,
       color: "from-black to-gray-800",
       connect: connectTikTok,
-    },
-    {
-      name: "Facebook",
-      provider: 'meta_fb' as const,
-      icon: Facebook,
-      color: "from-blue-600 to-blue-500",
-      connect: connectFacebook,
     },
   ];
 

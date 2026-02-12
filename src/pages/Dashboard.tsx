@@ -59,8 +59,7 @@ const Dashboard = () => {
   // Calculate total metrics
   const totalFollowers = 
     (isConnected('meta_ig') && metaData.instagram?.followers_count || 0) +
-    (isConnected('tiktok') && tiktokData.user?.follower_count || 0) +
-    (isConnected('meta_fb') && metaData.facebook?.followers_count || 0);
+    (isConnected('tiktok') && tiktokData.user?.follower_count || 0);
 
   const upcomingPosts = posts?.filter(p => new Date(p.date) >= new Date()).length || 0;
 

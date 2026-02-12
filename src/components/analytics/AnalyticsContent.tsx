@@ -19,7 +19,7 @@ import {
   MessageCircle,
   Instagram,
   Music2,
-  Facebook,
+  
 } from "lucide-react";
 import { useMetaData } from "@/hooks/useMetaData";
 import { useTikTokData } from "@/hooks/useTikTokData";
@@ -52,9 +52,6 @@ const AnalyticsContent = () => {
     connectedStats.totalViews += tiktokData.stats.totalViews || 0;
     connectedStats.totalLikes += tiktokData.stats.totalLikes || 0;
     connectedStats.totalComments += tiktokData.stats.totalComments || 0;
-  }
-  if (isConnected('meta_fb') && metaData.facebook) {
-    connectedStats.totalFollowers += metaData.facebook.followers_count || 0;
   }
 
   const stats = [];
@@ -173,8 +170,8 @@ const AnalyticsContent = () => {
           <CardTitle className="dashboard-heading-dark">Plattformsöversikt</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={isConnected('meta_ig') ? 'instagram' : isConnected('tiktok') ? 'tiktok' : 'facebook'} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-1">
+          <Tabs defaultValue={isConnected('meta_ig') ? 'instagram' : 'tiktok'} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full p-1">
               <TabsTrigger value="instagram" className={`rounded-full text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white ${!isConnected('meta_ig') ? 'opacity-50' : ''}`}>
                 <Instagram className="w-4 h-4 mr-2" />
                 Instagram
@@ -182,10 +179,6 @@ const AnalyticsContent = () => {
               <TabsTrigger value="tiktok" className={`rounded-full text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white ${!isConnected('tiktok') ? 'opacity-50' : ''}`}>
                 <Music2 className="w-4 h-4 mr-2" />
                 TikTok
-              </TabsTrigger>
-              <TabsTrigger value="facebook" className={`rounded-full text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white ${!isConnected('meta_fb') ? 'opacity-50' : ''}`}>
-                <Facebook className="w-4 h-4 mr-2" />
-                Facebook
               </TabsTrigger>
             </TabsList>
 
@@ -222,22 +215,6 @@ const AnalyticsContent = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="facebook" className="pt-4">
-              {isConnected('meta_fb') && metaData.facebook ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <p className="text-sm dashboard-subheading-dark mb-1">Följare</p>
-                    <p className="text-2xl font-bold dashboard-heading-dark">{metaData.facebook.followers_count?.toLocaleString()}</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <p className="text-sm dashboard-subheading-dark mb-1">Sidnamn</p>
-                    <p className="text-xl font-bold dashboard-heading-dark">{metaData.facebook.name}</p>
-                  </div>
-                </div>
-              ) : (
-                <p className="dashboard-subheading-dark">Anslut Facebook för att se statistik</p>
-              )}
-            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

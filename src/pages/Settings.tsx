@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Trash2, Link as LinkIcon, Instagram, Music2, Facebook, Sun, Moon, Monitor, XCircle, Zap, User, Building } from "lucide-react";
+import { Download, Trash2, Link as LinkIcon, Instagram, Music2, Sun, Moon, Monitor, XCircle, Zap, User, Building } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
@@ -110,52 +110,6 @@ const Settings = () => {
     });
   };
 
-  const connectFacebook = async () => {
-    setConnectingProvider('facebook');
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Inte inloggad",
-          description: "Du måste vara inloggad för att ansluta konton",
-          variant: "destructive",
-        });
-        setConnectingProvider(null);
-        return;
-      }
-
-      // Call edge function to initiate OAuth
-      const { data, error } = await supabase.functions.invoke('init-meta-oauth', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: { provider: 'meta_fb' },
-      });
-
-      if (error || !data?.url) {
-        console.error('Error initiating Facebook OAuth:', error);
-        toast({
-          title: "Anslutning misslyckades",
-          description: "Kunde inte ansluta till Facebook",
-          variant: "destructive",
-        });
-        setConnectingProvider(null);
-        return;
-      }
-
-      // Redirect to OAuth URL
-      window.location.href = data.url;
-    } catch (error) {
-      console.error('Error connecting Facebook:', error);
-      toast({
-        title: "Anslutning misslyckades",
-        description: "Kunde inte ansluta till Facebook",
-        variant: "destructive",
-      });
-      setConnectingProvider(null);
-    }
-  };
-
   const connectInstagram = async () => {
     setConnectingProvider('instagram');
     try {
@@ -233,7 +187,7 @@ const Settings = () => {
     }
   };
 
-  const disconnectProvider = async (provider: 'tiktok' | 'meta_fb' | 'meta_ig') => {
+  const disconnectProvider = async (provider: 'tiktok' | 'meta_ig') => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -664,12 +618,11 @@ const Settings = () => {
               {[
                 { name: "Instagram", provider: "meta_ig" as const, icon: Instagram, color: "from-purple-600 via-pink-500 to-orange-400", connect: connectInstagram },
                 { name: "TikTok", provider: "tiktok" as const, icon: Music2, color: "from-cyan-500 to-pink-500", connect: connectTikTok },
-                { name: "Facebook", provider: "meta_fb" as const, icon: Facebook, color: "from-blue-600 to-blue-400", connect: connectFacebook },
               ].map((platform) => {
                 const Icon = platform.icon;
                 const connected = isConnected(platform.provider);
                 const connection = getConnection(platform.provider);
-                const providerName = platform.provider === 'meta_fb' ? 'facebook' : platform.provider === 'meta_ig' ? 'instagram' : platform.provider;
+                const providerName = platform.provider === 'meta_ig' ? 'instagram' : platform.provider;
                 const isConnecting = connectingProvider === providerName;
                 
                 return (
