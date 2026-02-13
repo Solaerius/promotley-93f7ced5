@@ -348,9 +348,15 @@
 
 /* Force dark mode styling for specific dashboard headings */
 .dashboard-heading-dark {
+  color: hsl(344 45% 10%) !important;
+}
+.dark .dashboard-heading-dark {
   color: hsl(30 20% 95%) !important;
 }
 .dashboard-subheading-dark {
+  color: hsl(344 20% 40%) !important;
+}
+.dark .dashboard-subheading-dark {
   color: hsl(30 12% 75%) !important;
 }
 

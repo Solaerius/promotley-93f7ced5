@@ -24,6 +24,7 @@ import ChatSidebar from "@/components/ai/ChatSidebar";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { trackEvent } from "@/lib/trackEvent";
 
 const AIChatContent = () => {
   const { toast } = useToast();
@@ -155,6 +156,7 @@ const AIChatContent = () => {
 
   const handleNewChat = async () => {
     await createConversation();
+    trackEvent("chat_new_thread");
     if (isMobile) setShowMobileSidebar(false);
   };
 
