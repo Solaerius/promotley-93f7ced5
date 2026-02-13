@@ -13,6 +13,7 @@ import { ConnectionManager } from "@/components/ConnectionManager";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Check, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/trackEvent";
 import logo from "@/assets/logo.png";
 
 const STEPS = [
@@ -132,6 +133,7 @@ const Onboarding = () => {
 
       // Send welcome email + in-app notification (only first time)
       if (!wasAlreadyComplete) {
+        trackEvent("onboarding_complete");
         supabase.functions.invoke("send-onboarding-complete").catch((err) => {
           console.error("Failed to send onboarding complete notification:", err);
         });

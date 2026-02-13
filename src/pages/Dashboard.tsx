@@ -149,10 +149,7 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + index * 0.05, duration: 0.4 }}
-                className="backdrop-blur-xl rounded-2xl p-5 border border-white/20 transition-all duration-300 hover:border-white/40 hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%)',
-                }}
+                className="liquid-glass-light p-5 transition-all duration-300 hover:scale-[1.02]"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20"
@@ -186,10 +183,7 @@ const Dashboard = () => {
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl transition-all cursor-pointer backdrop-blur-xl border border-white/20 hover:border-white/40"
-                  style={{
-                    background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%)',
-                  }}
+                  className="flex items-center gap-4 p-4 rounded-2xl transition-all cursor-pointer liquid-glass-light hover:scale-[1.02]"
                 >
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/20"
                     style={{
@@ -214,10 +208,7 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.4 }}
-          className="rounded-2xl p-6 backdrop-blur-xl border border-white/20"
-          style={{
-            background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%)',
-          }}
+          className="liquid-glass-light p-6"
         >
           <h3 className="text-lg font-semibold mb-4 dashboard-heading-dark">Tillväxt</h3>
           <ResponsiveContainer width="100%" height={180}>
@@ -228,9 +219,9 @@ const Dashboard = () => {
                   <stop offset="95%" stopColor="hsl(331, 70%, 45%)" stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis dataKey="week" stroke="rgba(255,255,255,0.5)" fontSize={12} />
-              <YAxis stroke="rgba(255,255,255,0.5)" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+              <XAxis dataKey="week" className="fill-muted-foreground" fontSize={12} tick={{ fill: 'currentColor' }} stroke="currentColor" />
+              <YAxis className="fill-muted-foreground" fontSize={12} tick={{ fill: 'currentColor' }} stroke="currentColor" />
               <RechartsTooltip
                 contentStyle={{
                   backgroundColor: "rgba(0,0,0,0.8)",
@@ -257,10 +248,7 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.4 }}
-          className="rounded-2xl p-6 backdrop-blur-xl border border-white/20"
-          style={{
-            background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%)',
-          }}
+          className="liquid-glass-light p-6"
         >
           <ConnectionManager />
         </motion.div>

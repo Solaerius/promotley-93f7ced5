@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSalesRadar } from '@/hooks/useSalesRadar';
 import { useAIProfile } from '@/hooks/useAIProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { trackEvent } from '@/lib/trackEvent';
 
 const SalesRadarContent = () => {
   const { latestResult, history, loading, generating, generateRadar } = useSalesRadar();
@@ -31,6 +32,11 @@ const SalesRadarContent = () => {
   const [hasAccess, setHasAccess] = useState(true);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Track sales radar view once on mount
+  useEffect(() => {
+    trackEvent("sales_opportunities_viewed");
+  }, []);
 
   const currentResult = selectedId
     ? history.find(r => r.id === selectedId) || latestResult
