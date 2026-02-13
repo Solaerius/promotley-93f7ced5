@@ -14,3 +14,20 @@ Ny funktion "Säljradar" som kombinerar AI-genererade leads med trendbevakning. 
 
 ## Perplexity-integration
 Backenden har kommenterad kod redo för Perplexity API. När API-nyckeln konfigureras kan realtidstrender aktiveras.
+
+# 3.5 Demosida -- KLAR
+
+## Sammanfattning
+Publik demosida på `/demo` som visar en fullt interaktiv mock-dashboard för ett fejkat UF-företag (GreenBite UF).
+
+## Implementerat
+1. `src/data/demoData.ts` - Fake data: företagsprofil, sociala stats, chart-data, kalender, säljradar-resultat, AI-analys, chattmeddelanden
+2. `src/pages/Demo.tsx` - Interaktiv demosida med 5 flikar (Dashboard, Statistik, AI & Verktyg, Säljradar, Kalender)
+3. Rutt `/demo` tillagd i App.tsx (publik, inget auth krävs)
+
+## Funktioner
+- Första klick visar sparad data, efterföljande klick visar "demo-begränsning" med CTA
+- AI-chatt visar meddelande om att konto krävs
+- Kalender och verktyg låsta med CTA
+- Sticky demo-banner med "Skapa konto"-knapp
+- Bottom CTA-sektion

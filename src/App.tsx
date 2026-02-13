@@ -32,6 +32,7 @@ import JoinOrganization from "./pages/JoinOrganization";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
+import Demo from "./pages/Demo";
 
 const queryClient = new QueryClient();
 
@@ -156,6 +157,7 @@ const App = () => (
               } 
             />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/demo" element={<Demo />} />
             <Route 
               path="/swish-checkout" 
               element={
