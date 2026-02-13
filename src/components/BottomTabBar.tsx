@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { 
   LayoutDashboard, 
   BarChart3, 
-  Calendar, 
   Sparkles,
   User
 } from "lucide-react";
@@ -13,7 +12,6 @@ const tabs = [
   { name: "Home", href: "/dashboard", icon: LayoutDashboard },
   { name: "Statistik", href: "/analytics", icon: BarChart3 },
   { name: "AI", href: "/ai", icon: Sparkles },
-  { name: "Kalender", href: "/calendar", icon: Calendar },
   { name: "Konto", href: "/account", icon: User },
 ];
 

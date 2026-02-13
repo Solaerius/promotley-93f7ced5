@@ -28,14 +28,14 @@ const AIPage = () => {
             <TabsList className="inline-flex h-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1">
               <TabsTrigger 
                 value="chat" 
-                className="flex items-center gap-2 rounded-full px-4 text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+                className="flex items-center gap-2 rounded-full px-4 dashboard-subheading-dark data-[state=active]:bg-white/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
               >
                 <MessageSquare className="w-4 h-4" />
                 Chat
               </TabsTrigger>
               <TabsTrigger 
                 value="verktyg" 
-                className="flex items-center gap-2 rounded-full px-4 text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+                className="flex items-center gap-2 rounded-full px-4 dashboard-subheading-dark data-[state=active]:bg-white/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
               >
                 <Wand2 className="w-4 h-4" />
                 Verktyg

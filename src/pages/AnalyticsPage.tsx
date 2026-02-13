@@ -27,14 +27,14 @@ const AnalyticsPage = () => {
           <TabsList className="inline-flex h-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1">
             <TabsTrigger 
               value="statistik" 
-              className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium dashboard-subheading-dark data-[state=active]:bg-white/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
             >
               <BarChart3 className="w-4 h-4" />
               Statistik
             </TabsTrigger>
             <TabsTrigger 
               value="ai-analys" 
-              className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white/70 data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all"
+              className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium dashboard-subheading-dark data-[state=active]:bg-white/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
             >
               <Sparkles className="w-4 h-4" />
               AI-Analys

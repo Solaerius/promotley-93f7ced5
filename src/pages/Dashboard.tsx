@@ -125,7 +125,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 max-w-4xl mx-auto">
+      <div className="space-y-8 max-w-6xl mx-auto">
         {/* Hero Banner with glass effect */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -160,11 +160,11 @@ const Dashboard = () => {
                       background: 'linear-gradient(135deg, hsl(9 90% 55% / 0.3) 0%, hsl(331 70% 45% / 0.2) 100%)',
                     }}
                   >
-                    <Icon className="w-5 h-5 text-white" />
+                    <Icon className="w-5 h-5 dashboard-heading-dark" />
                   </div>
                   <div>
-                    <p className="text-xs text-white/60">{stat.title}</p>
-                    <p className="text-xl font-bold text-white">{stat.value}</p>
+                    <p className="text-xs dashboard-subheading-dark">{stat.title}</p>
+                    <p className="text-xl font-bold dashboard-heading-dark">{stat.value}</p>
                   </div>
                 </div>
               </motion.div>
@@ -196,13 +196,13 @@ const Dashboard = () => {
                       background: 'linear-gradient(135deg, hsl(9 90% 55% / 0.3) 0%, hsl(331 70% 45% / 0.2) 100%)',
                     }}
                   >
-                    <Icon className="w-5 h-5 text-white" />
+                    <Icon className="w-5 h-5 dashboard-heading-dark" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white">{link.title}</p>
-                    <p className="text-sm text-white/60">{link.description}</p>
+                    <p className="font-medium dashboard-heading-dark">{link.title}</p>
+                    <p className="text-sm dashboard-subheading-dark">{link.description}</p>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-white/60" />
+                  <ArrowRight className="w-4 h-4 dashboard-subheading-dark" />
                 </motion.div>
               </Link>
             );
@@ -219,7 +219,7 @@ const Dashboard = () => {
             background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%)',
           }}
         >
-          <h3 className="text-lg font-semibold mb-4 text-white">Tillväxt</h3>
+          <h3 className="text-lg font-semibold mb-4 dashboard-heading-dark">Tillväxt</h3>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={progressData}>
               <defs>
@@ -278,10 +278,10 @@ const Dashboard = () => {
           >
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-center sm:text-left">
-                <h3 className="text-lg font-bold mb-1 text-white">
+                <h3 className="text-lg font-bold mb-1 dashboard-heading-dark">
                   Uppgradera till Pro
                 </h3>
-                <p className="text-white/70 text-sm">
+                <p className="dashboard-subheading-dark text-sm">
                   Fler krediter och avancerad analys
                 </p>
               </div>
