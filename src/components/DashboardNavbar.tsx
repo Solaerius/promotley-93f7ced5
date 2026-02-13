@@ -9,7 +9,9 @@ import {
   Bell,
   Settings,
   ArrowLeft,
-  Move
+  Move,
+  Home,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -257,8 +259,15 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                     Inställningar
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/" className="cursor-pointer text-sm">
+                    <Home className="mr-2 h-3.5 w-3.5" />
+                    Till startsidan
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive text-sm">
+                  <LogOut className="mr-2 h-3.5 w-3.5" />
                   Logga ut
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -426,8 +435,15 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                       Inställningar
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/" className="cursor-pointer text-sm">
+                      <Home className="mr-2 h-3.5 w-3.5" />
+                      Till startsidan
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive text-sm">
+                    <LogOut className="mr-2 h-3.5 w-3.5" />
                     Logga ut
                   </DropdownMenuItem>
                 </DropdownMenuContent>

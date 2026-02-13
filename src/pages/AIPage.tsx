@@ -11,7 +11,14 @@ import AIAnalysisContent from "@/components/analytics/AIAnalysisContent";
 import SalesRadarContent from "@/components/ai/SalesRadarContent";
 
 const AIPage = () => {
-  const [activeTab, setActiveTab] = useState("chat");
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('promotely_ai_tab') || 'verktyg';
+  });
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    localStorage.setItem('promotely_ai_tab', tab);
+  };
 
   return (
     <DashboardLayout>
@@ -25,7 +32,7 @@ const AIPage = () => {
             </p>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="inline-flex h-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1">
               <TabsTrigger 
                 value="chat" 
@@ -61,7 +68,7 @@ const AIPage = () => {
 
         {/* Content */}
         <div className="flex-1 min-h-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, x: 10 }}

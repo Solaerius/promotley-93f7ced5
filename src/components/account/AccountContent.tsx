@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Trash2, User, Building, Zap, Save, CreditCard, XCircle, ArrowDown, Plus } from "lucide-react";
+import { Trash2, User, Building, Zap, Save, CreditCard, XCircle, ArrowDown, Plus, Home, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useAIProfile } from "@/hooks/useAIProfile";
@@ -533,9 +533,30 @@ const AccountContent = () => {
         </div>
       </motion.section>
 
-      {/* Danger Zone */}
+      {/* Navigation */}
       <motion.section 
         custom={4} 
+        variants={sectionVariants} 
+        initial="hidden" 
+        animate="visible"
+        className="space-y-3"
+      >
+        <h2 className="text-xl font-semibold mb-4">Navigering</h2>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" className="gap-2" onClick={() => navigate('/')}>
+            <Home className="w-4 h-4" />
+            Till startsidan
+          </Button>
+          <Button variant="outline" className="gap-2 text-destructive hover:text-destructive" onClick={async () => { await signOut(); navigate('/auth'); }}>
+            <LogOut className="w-4 h-4" />
+            Logga ut
+          </Button>
+        </div>
+      </motion.section>
+
+      {/* Danger Zone */}
+      <motion.section 
+        custom={5} 
         variants={sectionVariants} 
         initial="hidden" 
         animate="visible"
