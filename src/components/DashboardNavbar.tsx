@@ -1,5 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
+import { sv } from "date-fns/locale";
 import { 
   LayoutDashboard, 
   BarChart3, 
@@ -58,7 +60,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { activeOrganization } = useOrganization();
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { position, cyclePosition, getPositionLabel } = useNavbarPosition();
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
 
@@ -205,8 +207,16 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent side={position === 'left' ? 'right' : 'left'} className="w-72">
-                <div className="px-3 py-2 border-b">
+                <div className="px-3 py-2 border-b flex items-center justify-between">
                   <h3 className="font-semibold text-sm">Notiser</h3>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={(e) => { e.preventDefault(); markAllAsRead(); }}
+                      className="text-[10px] text-primary hover:underline"
+                    >
+                      Markera alla som lästa
+                    </button>
+                  )}
                 </div>
                 <ScrollArea className="h-[250px]">
                   {notifications.length === 0 ? (
@@ -218,15 +228,18 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                       <DropdownMenuItem
                         key={notification.id}
                         className="flex flex-col items-start p-3 cursor-pointer"
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => !notification.read && markAsRead(notification.id)}
                       >
                         <div className="flex items-start justify-between w-full">
                           <div className="flex-1">
                             <p className="font-medium text-xs">{notification.title}</p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">{notification.message}</p>
+                            <p className="text-[9px] text-muted-foreground/60 mt-1">
+                              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: sv })}
+                            </p>
                           </div>
                           {!notification.read && (
-                            <div className="h-2 w-2 bg-primary rounded-full ml-2" />
+                            <div className="h-2 w-2 bg-primary rounded-full ml-2 mt-1 shrink-0" />
                           )}
                         </div>
                       </DropdownMenuItem>
@@ -381,8 +394,16 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
-                  <div className="px-3 py-2 border-b">
+                  <div className="px-3 py-2 border-b flex items-center justify-between">
                     <h3 className="font-semibold text-sm">Notiser</h3>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={(e) => { e.preventDefault(); markAllAsRead(); }}
+                        className="text-[10px] text-primary hover:underline"
+                      >
+                        Markera alla som lästa
+                      </button>
+                    )}
                   </div>
                   <ScrollArea className="h-[250px]">
                     {notifications.length === 0 ? (
@@ -394,15 +415,18 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                         <DropdownMenuItem
                           key={notification.id}
                           className="flex flex-col items-start p-3 cursor-pointer"
-                          onClick={() => markAsRead(notification.id)}
+                          onClick={() => !notification.read && markAsRead(notification.id)}
                         >
                           <div className="flex items-start justify-between w-full">
                             <div className="flex-1">
                               <p className="font-medium text-xs">{notification.title}</p>
                               <p className="text-[10px] text-muted-foreground mt-0.5">{notification.message}</p>
+                              <p className="text-[9px] text-muted-foreground/60 mt-1">
+                                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: sv })}
+                              </p>
                             </div>
                             {!notification.read && (
-                              <div className="h-2 w-2 bg-primary rounded-full ml-2" />
+                              <div className="h-2 w-2 bg-primary rounded-full ml-2 mt-1 shrink-0" />
                             )}
                           </div>
                         </DropdownMenuItem>

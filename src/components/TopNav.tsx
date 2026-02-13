@@ -1,4 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import { sv } from "date-fns/locale";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +30,7 @@ export function TopNav({ showBackButton, title }: TopNavProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { activeOrganization } = useOrganization();
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -97,8 +99,16 @@ export function TopNav({ showBackButton, title }: TopNavProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
-              <div className="px-4 py-2 border-b">
+              <div className="px-4 py-2 border-b flex items-center justify-between">
                 <h3 className="font-semibold">Notiser</h3>
+                {unreadCount > 0 && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); markAllAsRead(); }}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Markera alla som lästa
+                  </button>
+                )}
               </div>
               <ScrollArea className="h-[300px]">
                 {notifications.length === 0 ? (
@@ -110,12 +120,15 @@ export function TopNav({ showBackButton, title }: TopNavProps) {
                     <DropdownMenuItem
                       key={notification.id}
                       className="flex flex-col items-start p-4 cursor-pointer"
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => !notification.read && markAsRead(notification.id)}
                     >
                       <div className="flex items-start justify-between w-full">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{notification.title}</p>
                           <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
+                          <p className="text-[10px] text-muted-foreground/60 mt-1">
+                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: sv })}
+                          </p>
                         </div>
                         {!notification.read && (
                           <div className="h-2 w-2 bg-primary rounded-full ml-2 mt-1" />
