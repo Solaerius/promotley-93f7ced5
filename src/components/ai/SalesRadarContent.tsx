@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSalesRadar } from '@/hooks/useSalesRadar';
+import { useSalesRadarWatches } from '@/hooks/useSalesRadarWatches';
 import { useAIProfile } from '@/hooks/useAIProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Radar,
   Users,
@@ -22,12 +24,17 @@ import {
   History,
   Zap,
   ArrowRight,
+  Eye,
+  EyeOff,
+  MapPin,
+  Coins,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { trackEvent } from '@/lib/trackEvent';
 
 const SalesRadarContent = () => {
   const { latestResult, history, loading, generating, generateRadar } = useSalesRadar();
+  const { isWatched, addWatch, removeWatch, watches } = useSalesRadarWatches();
   const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
   const [hasAccess, setHasAccess] = useState(true);
   const [accessError, setAccessError] = useState<string | null>(null);
@@ -253,6 +260,12 @@ const SalesRadarContent = () => {
                               </Badge>
                             </div>
                             <p className="text-sm dashboard-subheading-dark mb-2">{lead.beskrivning}</p>
+                            {lead.plats && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                                <MapPin className="w-3 h-3" />
+                                {lead.plats}
+                              </div>
+                            )}
                             <div className="flex items-center gap-1 text-xs text-primary font-medium">
                               <ArrowRight className="w-3 h-3" />
                               {lead.action}
@@ -262,6 +275,33 @@ const SalesRadarContent = () => {
                                 Potential: {lead.potential}
                               </p>
                             )}
+                            <div className="mt-2 flex justify-end">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant={isWatched(currentResult.id, 'lead', index) ? 'secondary' : 'outline'}
+                                      size="sm"
+                                      className="h-7 text-xs gap-1"
+                                      onClick={() => {
+                                        if (isWatched(currentResult.id, 'lead', index)) {
+                                          const w = watches.find(w => w.result_id === currentResult.id && w.item_type === 'lead' && w.item_index === index);
+                                          if (w) removeWatch(w.id);
+                                        } else {
+                                          addWatch(currentResult.id, 'lead', index, lead.titel);
+                                        }
+                                      }}
+                                    >
+                                      {isWatched(currentResult.id, 'lead', index) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                      {isWatched(currentResult.id, 'lead', index) ? 'Bevakas' : 'Bevaka'}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {isWatched(currentResult.id, 'lead', index) ? 'Klicka för att ta bort bevakning' : 'Bevaka denna möjlighet (1 kredit)'}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -309,6 +349,33 @@ const SalesRadarContent = () => {
                             <p className="text-[10px] dashboard-subheading-dark mt-1">
                               {getAktualitetLabel(trend.aktualitet)}
                             </p>
+                            <div className="mt-2 flex justify-end">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant={isWatched(currentResult.id, 'trend', index) ? 'secondary' : 'outline'}
+                                      size="sm"
+                                      className="h-7 text-xs gap-1"
+                                      onClick={() => {
+                                        if (isWatched(currentResult.id, 'trend', index)) {
+                                          const w = watches.find(w => w.result_id === currentResult.id && w.item_type === 'trend' && w.item_index === index);
+                                          if (w) removeWatch(w.id);
+                                        } else {
+                                          addWatch(currentResult.id, 'trend', index, trend.titel);
+                                        }
+                                      }}
+                                    >
+                                      {isWatched(currentResult.id, 'trend', index) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                      {isWatched(currentResult.id, 'trend', index) ? 'Bevakas' : 'Bevaka'}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {isWatched(currentResult.id, 'trend', index) ? 'Klicka för att ta bort bevakning' : 'Bevaka denna trend (1 kredit)'}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                           </div>
                         </div>
                       </CardContent>

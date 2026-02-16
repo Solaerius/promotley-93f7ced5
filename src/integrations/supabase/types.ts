@@ -976,6 +976,50 @@ export type Database = {
           },
         ]
       }
+      sales_radar_watches: {
+        Row: {
+          created_at: string
+          id: string
+          item_index: number
+          item_title: string
+          item_type: string
+          notified: boolean
+          notify_date: string | null
+          result_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_index: number
+          item_title: string
+          item_type: string
+          notified?: boolean
+          notify_date?: string | null
+          result_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_index?: number
+          item_title?: string
+          item_type?: string
+          notified?: boolean
+          notify_date?: string | null
+          result_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_radar_watches_result_id_fkey"
+            columns: ["result_id"]
+            isOneToOne: false
+            referencedRelation: "sales_radar_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_events: {
         Row: {
           created_at: string

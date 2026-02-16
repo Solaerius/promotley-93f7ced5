@@ -155,14 +155,21 @@ serve(async (req) => {
     //   }
     // }
 
+    const userCity = aiProfile?.stad || '';
+    const userLan = aiProfile?.lan || '';
+    const userPostnummer = aiProfile?.postnummer || '';
+    const hasLocation = !!(userCity || userLan);
+
     const systemPrompt = `Du är Promotelys Säljradar-AI. Du hjälper svenska UF-företag och startups hitta konkreta affärsmöjligheter.
 
 Du analyserar företagets profil, bransch och sociala medier-data för att generera:
 1. LEADS - Potentiella kunder, samarbetspartners och målgrupper att rikta sig mot
 2. TRENDER - Aktuella trender i branschen som kan utnyttjas
+${hasLocation ? `3. LOKALA MÖJLIGHETER - Platsbaserade events, mässor, marknader och lokala samarbeten i eller nära användarens stad/region` : ''}
 
 Ton: konkret, handlingsbar, motiverande. Fokusera på möjligheter som kan realiseras inom 1-4 veckor.
 Skriv alltid på svenska.
+${hasLocation ? `\nVIKTIGT: Inkludera minst 2 leads som är specifikt kopplade till användarens stad eller region. Nämn lokala event, marknader, mässor, samarbeten med lokala företag, eller platsbaserade möjligheter.` : ''}
 
 Svara i exakt detta JSON-format:
 {
@@ -173,7 +180,8 @@ Svara i exakt detta JSON-format:
       "beskrivning": "Konkret beskrivning av möjligheten",
       "action": "Exakt vad företaget ska göra",
       "prioritet": "hög" | "medel" | "låg",
-      "potential": "Uppskattad potentiell påverkan"
+      "potential": "Uppskattad potentiell påverkan",
+      "plats": "Stad eller region om relevant, annars null"
     }
   ],
   "trends": [
