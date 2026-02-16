@@ -115,7 +115,7 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
       </div>
 
       {/* Email Verification Banner */}
-      <div className="relative z-10">
+      <div className={cn("relative z-10", position === 'top' && "mt-[72px]")}>
         <EmailVerificationBanner />
       </div>
 
