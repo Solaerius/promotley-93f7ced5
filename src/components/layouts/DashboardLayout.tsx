@@ -133,11 +133,11 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
             "flex-1 relative z-10",
             // Base padding
             "p-4 md:p-6 lg:p-8",
-            // Padding based on navbar position - more generous spacing
-            position === 'left' && "pl-20 md:pl-24 lg:pl-28",
-            position === 'right' && "pr-20 md:pr-24 lg:pr-28",
-            position === 'top' && "pt-20 md:pt-24 pb-8",
-            position === 'bottom' && "pt-6 pb-28 md:pb-24"
+            // Padding based on navbar position - ensures content isn't hidden behind the bar
+            position === 'left' && "pl-[72px] md:pl-24 lg:pl-28",
+            position === 'right' && "pr-[72px] md:pr-24 lg:pr-28",
+            position === 'top' && "pt-[72px] md:pt-24",
+            position === 'bottom' && "pb-[72px] md:pb-24"
           )}
           variants={pageVariants}
           initial="initial"

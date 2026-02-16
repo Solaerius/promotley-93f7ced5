@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send, Wifi, WifiOff, RefreshCw, Bot, User } from "lucide-react";
+import { useNavbarPosition } from "@/hooks/useNavbarPosition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +19,7 @@ interface Message {
 }
 
 const ChatWidget = () => {
+  const { position: navbarPosition } = useNavbarPosition();
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -525,7 +527,11 @@ const ChatWidget = () => {
       {!isOpen && (
         <button
           onClick={handleOpen}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-primary text-primary-foreground shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-110 flex items-center justify-center group"
+          className={`fixed z-50 w-14 h-14 rounded-full bg-gradient-primary text-primary-foreground shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-110 flex items-center justify-center group ${
+            navbarPosition === 'bottom' ? 'bottom-20 right-6' :
+            navbarPosition === 'right' ? 'bottom-6 right-20' :
+            'bottom-6 right-6'
+          }`}
           aria-label="Öppna chat"
         >
           <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
