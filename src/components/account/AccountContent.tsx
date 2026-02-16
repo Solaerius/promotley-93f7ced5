@@ -226,7 +226,7 @@ const AccountContent = () => {
   });
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto">
       {/* Credits & Plan */}
       <motion.section 
         custom={0} 

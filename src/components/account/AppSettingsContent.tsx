@@ -96,7 +96,7 @@ const AppSettingsContent = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-4xl mx-auto">
       {/* Theme */}
       <Card className="p-6">
         <h2 className="text-xl font-bold mb-4">Utseende</h2>

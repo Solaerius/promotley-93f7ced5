@@ -82,7 +82,7 @@ const OrganizationContent = () => {
   const isAdmin = membership.role === "admin" || isFounder;
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <Tabs defaultValue="general">
         <div className="flex justify-center mb-6">
           <TabsList className="inline-flex h-10 items-center justify-center rounded-full bg-muted/50 p-1">
