@@ -2,22 +2,22 @@ import { Link } from "react-router-dom";
 
 export function DashboardFooter() {
   return (
-    <footer className="border-t border-white/10 py-8 md:py-10 px-4 mt-12">
-      <div className="container mx-auto text-white/70 font-poppins max-w-4xl">
+    <footer className="border-t border-border dark:border-white/10 py-8 md:py-10 px-4 mt-12">
+      <div className="container mx-auto text-muted-foreground dark:text-white/70 font-poppins max-w-4xl">
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 mb-6">
           {/* Company Info */}
           <div className="text-center sm:text-left">
-            <h3 className="font-bold text-white mb-2">Promotley UF</h3>
+            <h3 className="font-bold dashboard-heading-dark mb-2">Promotley UF</h3>
             <p className="text-xs md:text-sm">AI-driven marknadsföring för UF-företag</p>
             <p className="text-xs md:text-sm mt-1.5">En del av Ung Företagsamhet Sverige</p>
           </div>
 
           {/* Contact */}
           <div className="text-center sm:text-left">
-            <h3 className="font-bold text-white mb-2">Kontakt</h3>
+            <h3 className="font-bold dashboard-heading-dark mb-2">Kontakt</h3>
             <div className="space-y-1 text-xs md:text-sm">
               <div>
-                <a href="mailto:support@promotley.se" className="hover:text-white transition-colors">
+                <a href="mailto:support@promotley.se" className="hover:text-foreground dark:hover:text-white transition-colors">
                   support@promotley.se
                 </a>
               </div>
@@ -26,15 +26,15 @@ export function DashboardFooter() {
 
           {/* Links */}
           <div className="text-center sm:text-left md:text-right sm:col-span-2 md:col-span-1">
-            <h3 className="font-bold text-white mb-2">Länkar</h3>
+            <h3 className="font-bold dashboard-heading-dark mb-2">Länkar</h3>
             <div className="space-y-1 text-xs md:text-sm">
               <div>
-                <Link to="/privacy-policy" className="hover:text-white transition-colors">
+                <Link to="/privacy-policy" className="hover:text-foreground dark:hover:text-white transition-colors">
                   Integritetspolicy
                 </Link>
               </div>
               <div>
-                <Link to="/terms-of-service" className="hover:text-white transition-colors">
+                <Link to="/terms-of-service" className="hover:text-foreground dark:hover:text-white transition-colors">
                   Användarvillkor
                 </Link>
               </div>
@@ -43,7 +43,7 @@ export function DashboardFooter() {
                   href="https://www.instagram.com/promotley.se" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="hover:text-white transition-all duration-300 hover:scale-110"
+                  className="hover:text-foreground dark:hover:text-white transition-all duration-300 hover:scale-110"
                   aria-label="Instagram"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -54,7 +54,7 @@ export function DashboardFooter() {
                   href="https://www.tiktok.com/@promotley.se" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="hover:text-white transition-all duration-300 hover:scale-110"
+                  className="hover:text-foreground dark:hover:text-white transition-all duration-300 hover:scale-110"
                   aria-label="TikTok"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
