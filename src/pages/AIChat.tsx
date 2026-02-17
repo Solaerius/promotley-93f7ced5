@@ -227,10 +227,10 @@ const AIChat = () => {
     <DashboardLayout>
       <div className="h-[calc(100vh-8rem)] min-h-[680px] md:min-h-[780px] flex flex-col animate-fade-in max-w-screen-xl mx-auto">
         {/* Header with Credits integrated */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">AI-Assistent</h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">AI-Assistent</h1>
+            <p className="text-xs text-muted-foreground mt-1">
               Chatta med Promotleys AI för personliga råd
             </p>
           </div>
@@ -259,22 +259,22 @@ const AIChat = () => {
         )}
 
         {/* Quick Commands */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
           {quickCommands.map((cmd, index) => {
             const Icon = cmd.icon;
             return (
               <Button
                 key={index}
                 variant="outline"
-                className="h-auto p-4 justify-start hover:shadow-soft transition-all duration-300 group"
+                className="h-auto p-3 justify-start hover:shadow-soft transition-all duration-300 group"
                 onClick={() => handleQuickCommand(cmd.text)}
                 disabled={loading || isAIBlocked}
                 aria-label={cmd.text}
               >
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cmd.color} flex items-center justify-center mr-3 group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-5 h-5 text-white" />
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${cmd.color} flex items-center justify-center mr-2 group-hover:scale-110 transition-transform`}>
+                  <Icon className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-sm font-medium text-left">{cmd.text}</span>
+                <span className="text-xs font-medium text-left">{cmd.text}</span>
               </Button>
             );
           })}

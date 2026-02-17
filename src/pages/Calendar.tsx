@@ -170,11 +170,11 @@ const Calendar = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-4 animate-fade-in">
         {/* Header - Force dark mode colors */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
-            <h1 className="text-4xl font-bold dashboard-heading-dark mb-2">Innehållskalender</h1>
+            <h1 className="text-2xl font-bold dashboard-heading-dark mb-1">Innehållskalender</h1>
             <p className="dashboard-subheading-dark">
               Planera dina inlägg och håll koll på din content-strategi
             </p>
@@ -301,16 +301,16 @@ const Calendar = () => {
           </CardHeader>
           <CardContent>
             {/* Week days header */}
-            <div className="grid grid-cols-7 gap-2 mb-2">
+            <div className="grid grid-cols-7 gap-1 mb-1">
               {weekDays.map((day) => (
-                <div key={day} className="text-center font-semibold text-sm text-muted-foreground p-2">
+                <div key={day} className="text-center font-semibold text-xs text-muted-foreground p-1">
                   {day}
                 </div>
               ))}
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1">
               {getDaysInMonth().map((day, index) => {
                 const dayPosts = day ? getPostsForDate(day) : [];
                 const isToday = day === new Date().getDate() && 
@@ -320,7 +320,7 @@ const Calendar = () => {
                 return (
                   <div
                     key={index}
-                    className={`min-h-[120px] p-2 rounded-lg border transition-colors ${
+                    className={`min-h-[80px] p-1.5 rounded-lg border transition-colors ${
                       day
                         ? isToday
                           ? "bg-primary/10 border-primary"

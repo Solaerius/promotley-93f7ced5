@@ -49,21 +49,23 @@
     --gradient-warm: linear-gradient(135deg, hsl(9 84% 52% / 0.12) 0%, hsl(331 65% 35% / 0.08) 100%);
     --gradient-text: linear-gradient(135deg, hsl(9 90% 58%) 0%, hsl(331 75% 50%) 50%, hsl(344 60% 40%) 100%);
     
-    /* Shadows */
-    --shadow-xs: 0 1px 3px hsl(344 45% 10% / 0.06);
-    --shadow-sm: 0 2px 6px hsl(344 45% 10% / 0.1);
-    --shadow-md: 0 6px 16px hsl(344 45% 10% / 0.14);
-    --shadow-lg: 0 10px 30px hsl(344 45% 10% / 0.18);
-    --shadow-xl: 0 20px 50px hsl(344 45% 10% / 0.22);
-    --shadow-elegant: 0 8px 32px -8px hsl(9 84% 52% / 0.35), 0 4px 16px -4px hsl(344 45% 10% / 0.15);
-    --shadow-glow: 0 0 30px hsl(9 84% 52% / 0.4);
-    --shadow-soft: 0 6px 20px hsl(344 45% 10% / 0.12);
-    --shadow-card: 0 4px 12px hsl(344 45% 10% / 0.14), 0 2px 4px hsl(344 45% 10% / 0.08);
-    --shadow-card-hover: 0 10px 30px hsl(344 45% 10% / 0.2), 0 6px 12px hsl(344 45% 10% / 0.1);
-    --shadow-input: 0 2px 8px hsl(344 45% 10% / 0.12), inset 0 1px 2px hsl(344 45% 10% / 0.04);
-    --shadow-input-focus: 0 4px 14px hsl(9 84% 52% / 0.18), inset 0 1px 2px hsl(344 45% 10% / 0.04);
-    --outline-subtle: hsl(344 20% 70%);
+    /* Shadows (+30% deeper) */
+    --shadow-xs: 0 1px 3px hsl(344 45% 10% / 0.08);
+    --shadow-sm: 0 2px 6px hsl(344 45% 10% / 0.13);
+    --shadow-md: 0 6px 16px hsl(344 45% 10% / 0.18);
+    --shadow-lg: 0 10px 30px hsl(344 45% 10% / 0.24);
+    --shadow-xl: 0 20px 50px hsl(344 45% 10% / 0.29);
+    --shadow-elegant: 0 8px 32px -8px hsl(9 84% 52% / 0.45), 0 4px 16px -4px hsl(344 45% 10% / 0.2);
+    --shadow-glow: 0 0 30px hsl(9 84% 52% / 0.5);
+    --shadow-soft: 0 6px 20px hsl(344 45% 10% / 0.16);
+    --shadow-card: 0 4px 12px hsl(344 45% 10% / 0.18), 0 2px 4px hsl(344 45% 10% / 0.1);
+    --shadow-card-hover: 0 10px 30px hsl(344 45% 10% / 0.26), 0 6px 12px hsl(344 45% 10% / 0.13);
+    --shadow-input: 0 2px 8px hsl(344 45% 10% / 0.16), inset 0 1px 2px hsl(344 45% 10% / 0.05);
+    --shadow-input-focus: 0 4px 14px hsl(9 84% 52% / 0.24), inset 0 1px 2px hsl(344 45% 10% / 0.05);
+    --outline-subtle: hsl(30 25% 72%);
     --outline-subtle-focus: hsl(9 84% 52%);
+    --outline-input: hsl(30 30% 62%);
+    --outline-input-focus: hsl(9 84% 52%);
   }
 
   .dark {
@@ -96,20 +98,22 @@
     --gradient-diagonal: linear-gradient(135deg, hsl(344 40% 10%) 0%, hsl(331 55% 25%) 40%, hsl(9 75% 45%) 100%);
     --gradient-warm: linear-gradient(135deg, hsl(9 85% 55% / 0.15) 0%, hsl(331 60% 42% / 0.1) 100%);
     --gradient-text: linear-gradient(135deg, hsl(9 90% 60%) 0%, hsl(331 70% 52%) 50%, hsl(344 55% 42%) 100%);
-    --shadow-xs: 0 1px 3px hsl(0 0% 0% / 0.25);
-    --shadow-sm: 0 2px 6px hsl(0 0% 0% / 0.3);
-    --shadow-md: 0 6px 16px hsl(0 0% 0% / 0.35);
-    --shadow-lg: 0 10px 30px hsl(0 0% 0% / 0.4);
-    --shadow-xl: 0 20px 50px hsl(0 0% 0% / 0.45);
-    --shadow-elegant: 0 8px 32px -8px hsl(9 85% 55% / 0.3), 0 4px 16px -4px hsl(0 0% 0% / 0.35);
-    --shadow-glow: 0 0 30px hsl(9 85% 55% / 0.3);
-    --shadow-soft: 0 6px 20px hsl(0 0% 0% / 0.25);
-    --shadow-card: 0 4px 12px hsl(0 0% 0% / 0.3), 0 2px 4px hsl(0 0% 0% / 0.15);
-    --shadow-card-hover: 0 10px 30px hsl(0 0% 0% / 0.4), 0 6px 12px hsl(0 0% 0% / 0.2);
-    --shadow-input: 0 2px 8px hsl(0 0% 0% / 0.25), inset 0 1px 2px hsl(0 0% 0% / 0.1);
-    --shadow-input-focus: 0 4px 14px hsl(9 85% 55% / 0.25), inset 0 1px 2px hsl(0 0% 0% / 0.1);
-    --outline-subtle: hsl(344 20% 35%);
+    --shadow-xs: 0 1px 3px hsl(0 0% 0% / 0.33);
+    --shadow-sm: 0 2px 6px hsl(0 0% 0% / 0.39);
+    --shadow-md: 0 6px 16px hsl(0 0% 0% / 0.46);
+    --shadow-lg: 0 10px 30px hsl(0 0% 0% / 0.52);
+    --shadow-xl: 0 20px 50px hsl(0 0% 0% / 0.59);
+    --shadow-elegant: 0 8px 32px -8px hsl(9 85% 55% / 0.39), 0 4px 16px -4px hsl(0 0% 0% / 0.46);
+    --shadow-glow: 0 0 30px hsl(9 85% 55% / 0.39);
+    --shadow-soft: 0 6px 20px hsl(0 0% 0% / 0.33);
+    --shadow-card: 0 4px 12px hsl(0 0% 0% / 0.39), 0 2px 4px hsl(0 0% 0% / 0.2);
+    --shadow-card-hover: 0 10px 30px hsl(0 0% 0% / 0.52), 0 6px 12px hsl(0 0% 0% / 0.26);
+    --shadow-input: 0 2px 8px hsl(0 0% 0% / 0.33), inset 0 1px 2px hsl(0 0% 0% / 0.13);
+    --shadow-input-focus: 0 4px 14px hsl(9 85% 55% / 0.33), inset 0 1px 2px hsl(0 0% 0% / 0.13);
+    --outline-subtle: hsl(344 20% 28%);
     --outline-subtle-focus: hsl(9 85% 55%);
+    --outline-input: hsl(30 15% 30%);
+    --outline-input-focus: hsl(9 85% 55%);
   }
 
   html {

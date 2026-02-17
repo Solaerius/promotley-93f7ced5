@@ -2,8 +2,13 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Link as LinkIcon, Music, RefreshCw, Instagram } from "lucide-react";
+import { CheckCircle2, Link as LinkIcon, RefreshCw, Instagram } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import TikTokIcon from "@/components/icons/TikTokIcon";
+import LinkedInIcon from "@/components/icons/LinkedInIcon";
+import TwitterIcon from "@/components/icons/TwitterIcon";
+import FacebookIcon from "@/components/icons/FacebookIcon";
+import YouTubeIcon from "@/components/icons/YouTubeIcon";
 
 interface Connection {
   id: string;
@@ -19,28 +24,15 @@ export const ConnectionManager = () => {
 
   useEffect(() => {
     loadConnections();
-    
-    // Check for successful connection from OAuth redirect
     const params = new URLSearchParams(window.location.search);
     const connected = params.get('connected');
     if (connected) {
-      toast({
-        title: "✓ Ansluten!",
-        description: `${connected} har kopplats till ditt konto`,
-      });
-      
-      // Show additional info for TikTok about limited scopes
+      toast({ title: "✓ Ansluten!", description: `${connected} har kopplats till ditt konto` });
       if (connected.toLowerCase() === 'tiktok') {
         setTimeout(() => {
-          toast({
-            title: "ℹ️ Begränsad åtkomst",
-            description: "För full statistikåtkomst krävs TikTok API-behörigheterna video.query och video.data. Ansök via TikTok Developer Portal.",
-            duration: 8000,
-          });
+          toast({ title: "ℹ️ Begränsad åtkomst", description: "För full statistikåtkomst krävs TikTok API-behörigheterna video.query och video.data.", duration: 8000 });
         }, 2000);
       }
-      
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
       loadConnections();
     }
@@ -50,12 +42,7 @@ export const ConnectionManager = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-
-      const { data, error } = await supabase
-        .from('connections')
-        .select('*')
-        .eq('user_id', session.user.id);
-
+      const { data, error } = await supabase.from('connections').select('*').eq('user_id', session.user.id);
       if (error) throw error;
       setConnections(data || []);
     } catch (error) {
@@ -67,148 +54,43 @@ export const ConnectionManager = () => {
     setConnectingProvider('meta_ig');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Inte inloggad",
-          description: "Du måste vara inloggad för att ansluta konton",
-          variant: "destructive",
-        });
-        setConnectingProvider(null);
-        return;
-      }
-
-      // Call edge function to initiate OAuth
-      const { data, error } = await supabase.functions.invoke('init-meta-oauth', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: { provider: 'meta_ig' },
-      });
-
-      if (error || !data?.url) {
-        console.error('Error initiating Instagram OAuth:', error);
-        toast({
-          title: "Säkerhetsfel",
-          description: "Kunde inte initiera säker anslutning.",
-          variant: "destructive",
-        });
-        setConnectingProvider(null);
-        return;
-      }
-
-      // Redirect to OAuth URL
+      if (!session) { toast({ title: "Inte inloggad", description: "Du måste vara inloggad", variant: "destructive" }); setConnectingProvider(null); return; }
+      const { data, error } = await supabase.functions.invoke('init-meta-oauth', { headers: { Authorization: `Bearer ${session.access_token}` }, body: { provider: 'meta_ig' } });
+      if (error || !data?.url) { toast({ title: "Säkerhetsfel", description: "Kunde inte initiera säker anslutning.", variant: "destructive" }); setConnectingProvider(null); return; }
       window.location.href = data.url;
-    } catch (error) {
-      console.error('Error connecting Instagram:', error);
-      toast({
-        title: "Fel vid anslutning",
-        description: "Kunde inte ansluta till Instagram",
-        variant: "destructive",
-      });
-      setConnectingProvider(null);
-    }
+    } catch { toast({ title: "Fel vid anslutning", description: "Kunde inte ansluta till Instagram", variant: "destructive" }); setConnectingProvider(null); }
   };
 
   const connectTikTok = async () => {
     setConnectingProvider('tiktok');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Inte inloggad",
-          description: "Du måste vara inloggad för att ansluta konton",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check if already connected
-      if (isConnected('tiktok')) {
-        toast({
-          title: "⚠️ Redan ansluten",
-          description: "TikTok är redan anslutet. Koppla från och anslut igen för att uppdatera behörigheter.",
-          variant: "destructive",
-        });
-        setConnectingProvider(null);
-        return;
-      }
-
-      // Call edge function to initiate TikTok OAuth
-      const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error || !data?.url) {
-        throw new Error('Could not initialize TikTok OAuth');
-      }
-
-      // Redirect to TikTok OAuth
+      if (!session) { toast({ title: "Inte inloggad", description: "Du måste vara inloggad", variant: "destructive" }); return; }
+      if (isConnected('tiktok')) { toast({ title: "⚠️ Redan ansluten", description: "TikTok är redan anslutet.", variant: "destructive" }); setConnectingProvider(null); return; }
+      const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      if (error || !data?.url) throw new Error('Could not initialize TikTok OAuth');
       window.location.href = data.url;
-    } catch (error) {
-      console.error('Error connecting TikTok:', error);
-      toast({
-        title: "Fel vid anslutning",
-        description: "Kunde inte ansluta till TikTok",
-        variant: "destructive",
-      });
-      setConnectingProvider(null);
-    }
+    } catch { toast({ title: "Fel vid anslutning", description: "Kunde inte ansluta till TikTok", variant: "destructive" }); setConnectingProvider(null); }
   };
 
   const disconnectProvider = async (provider: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-
-      console.log('Disconnecting provider:', provider, 'for user:', session.user.id);
-
       if (provider === 'meta_ig' || provider === 'meta_fb') {
-        // Use server-side disconnect to also revoke Meta permissions
-        const { error } = await supabase.functions.invoke('disconnect-meta', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-          body: { provider },
-        });
+        const { error } = await supabase.functions.invoke('disconnect-meta', { headers: { Authorization: `Bearer ${session.access_token}` }, body: { provider } });
         if (error) throw error;
       } else {
-        // Delete connection first with verification
-        const { data: deletedConnection, error: connectionError } = await supabase
-          .from('connections')
-          .delete()
-          .eq('user_id', session.user.id)
-          .eq('provider', provider as any)
-          .select();
-
+        const { data: deletedConnection, error: connectionError } = await supabase.from('connections').delete().eq('user_id', session.user.id).eq('provider', provider as any).select();
         if (connectionError) throw connectionError;
-
-        if (!deletedConnection || deletedConnection.length === 0) {
-          throw new Error('No connection was deleted - connection may not exist');
-        }
-
-        // Then delete associated tokens
-        const { error: tokenError } = await supabase
-          .from('tokens')
-          .delete()
-          .eq('user_id', session.user.id)
-          .eq('provider', provider as any);
-
+        if (!deletedConnection || deletedConnection.length === 0) throw new Error('No connection was deleted');
+        const { error: tokenError } = await supabase.from('tokens').delete().eq('user_id', session.user.id).eq('provider', provider as any);
         if (tokenError) throw tokenError;
       }
-
-      toast({
-        title: "✓ Frånkopplad",
-        description: `${provider === 'meta_ig' ? 'Instagram' : provider === 'tiktok' ? 'TikTok' : provider} har kopplats från ditt konto`,
-      });
-
+      toast({ title: "✓ Frånkopplad", description: `${provider === 'meta_ig' ? 'Instagram' : provider === 'tiktok' ? 'TikTok' : provider} har kopplats från` });
       await loadConnections();
     } catch (error) {
-      console.error('Error disconnecting:', error);
-      toast({
-        title: "❌ Fel vid frånkoppling",
-        description: error instanceof Error ? error.message : "Kunde inte koppla från kontot",
-        variant: "destructive",
-      });
+      toast({ title: "❌ Fel vid frånkoppling", description: error instanceof Error ? error.message : "Kunde inte koppla från kontot", variant: "destructive" });
     }
   };
 
@@ -216,65 +98,24 @@ export const ConnectionManager = () => {
     setConnectingProvider('tiktok');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Inte inloggad",
-          description: "Du måste vara inloggad för att ansluta konton",
-          variant: "destructive",
-        });
-        setConnectingProvider(null);
-        return;
-      }
-
-      // First delete old tokens to ensure fresh OAuth with new scopes
-      const { error: deleteError } = await supabase
-        .from('tokens')
-        .delete()
-        .eq('user_id', session.user.id)
-        .eq('provider', 'tiktok');
-
-      if (deleteError) {
-        console.error('Failed to delete old TikTok tokens:', deleteError);
-        // Continue anyway - the token will be updated via upsert
-      }
-
-      toast({
-        title: "🔄 Återansluter...",
-        description: "Godkänn behörigheterna på TikTok för att ge tillgång till statistik och videor",
-        duration: 3000,
-      });
-
-      // Call edge function to initiate TikTok OAuth with updated scopes
-      const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error || !data?.url) {
-        throw new Error('Could not initialize TikTok OAuth');
-      }
-
-      // Redirect to TikTok OAuth
+      if (!session) { toast({ title: "Inte inloggad", variant: "destructive" }); setConnectingProvider(null); return; }
+      await supabase.from('tokens').delete().eq('user_id', session.user.id).eq('provider', 'tiktok');
+      toast({ title: "🔄 Återansluter...", description: "Godkänn behörigheterna på TikTok", duration: 3000 });
+      const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      if (error || !data?.url) throw new Error('Could not initialize TikTok OAuth');
       window.location.href = data.url;
-    } catch (error) {
-      console.error('Error reconnecting TikTok:', error);
-      toast({
-        title: "Fel vid anslutning",
-        description: "Kunde inte starta TikTok reconnect",
-        variant: "destructive",
-      });
-      setConnectingProvider(null);
-    }
+    } catch { toast({ title: "Fel vid anslutning", description: "Kunde inte starta TikTok reconnect", variant: "destructive" }); setConnectingProvider(null); }
   };
 
-  const isConnected = (provider: string) => {
-    return connections.some(c => c.provider === provider);
-  };
+  const isConnected = (provider: string) => connections.some(c => c.provider === provider);
+  const getConnection = (provider: string) => connections.find(c => c.provider === provider);
 
-  const getConnection = (provider: string) => {
-    return connections.find(c => c.provider === provider);
-  };
+  const comingSoonPlatforms = [
+    { name: "LinkedIn", icon: LinkedInIcon, gradient: "from-blue-700 to-blue-500" },
+    { name: "X (Twitter)", icon: TwitterIcon, gradient: "from-gray-900 to-gray-700" },
+    { name: "Facebook", icon: FacebookIcon, gradient: "from-blue-600 to-blue-400" },
+    { name: "YouTube", icon: YouTubeIcon, gradient: "from-red-600 to-red-500" },
+  ];
 
   return (
     <Card>
@@ -303,36 +144,19 @@ export const ConnectionManager = () => {
                 </p>
               ) : (
                 <>
-                  <p className="text-sm text-muted-foreground">
-                    Kräver Instagram Business/Creator-konto
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Måste vara kopplat till en Facebook-sida
-                  </p>
+                  <p className="text-sm text-muted-foreground">Kräver Instagram Business/Creator-konto</p>
+                  <p className="text-xs text-muted-foreground">Måste vara kopplat till en Facebook-sida</p>
                 </>
               )}
             </div>
           </div>
-          
           {isConnected('meta_ig') ? (
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-accent" />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => disconnectProvider('meta_ig')}
-              >
-                Koppla från
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => disconnectProvider('meta_ig')}>Koppla från</Button>
             </div>
           ) : (
-            <Button
-              variant="gradient"
-              size="sm"
-              onClick={connectInstagram}
-              disabled={connectingProvider !== null}
-              aria-label="Connect Instagram account"
-            >
+            <Button variant="gradient" size="sm" onClick={connectInstagram} disabled={connectingProvider !== null}>
               {connectingProvider === 'meta_ig' ? "Kopplar..." : "Anslut konto"}
             </Button>
           )}
@@ -342,7 +166,7 @@ export const ConnectionManager = () => {
         <div className="flex items-center justify-between p-4 border rounded-lg">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-black via-gray-800 to-cyan-500 flex items-center justify-center">
-              <Music className="w-5 h-5 text-white" />
+              <TikTokIcon className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="font-medium">TikTok</p>
@@ -352,52 +176,48 @@ export const ConnectionManager = () => {
                   Connected as {getConnection('tiktok')?.username || 'Okänd'}
                 </p>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Connect to unlock personalized insights
-                </p>
+                <p className="text-sm text-muted-foreground">Koppla ditt konto för personliga insikter</p>
               )}
             </div>
           </div>
-          
           {isConnected('tiktok') ? (
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-accent" />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={reconnectTikTok}
-                disabled={connectingProvider !== null}
-              >
+              <Button variant="outline" size="sm" onClick={reconnectTikTok} disabled={connectingProvider !== null}>
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {connectingProvider === 'tiktok' ? 'Kopplar...' : 'Återanslut'}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => disconnectProvider('tiktok')}
-                disabled={connectingProvider !== null}
-              >
+              <Button variant="outline" size="sm" onClick={() => disconnectProvider('tiktok')} disabled={connectingProvider !== null}>
                 Koppla från
               </Button>
             </div>
           ) : (
-            <Button
-              variant="gradient"
-              size="sm"
-              onClick={connectTikTok}
-              disabled={connectingProvider !== null}
-              aria-label="Connect TikTok account"
-            >
+            <Button variant="gradient" size="sm" onClick={connectTikTok} disabled={connectingProvider !== null}>
               {connectingProvider === 'tiktok' ? "Kopplar..." : "Anslut konto"}
             </Button>
           )}
         </div>
 
-        {/* More platforms */}
-        <div className="p-4 border border-dashed rounded-lg text-center text-muted-foreground">
-          <p className="text-sm">Fler plattformar kommer snart...</p>
-          <p className="text-xs mt-1">LinkedIn, Twitter</p>
-        </div>
+        {/* Coming Soon Platforms */}
+        {comingSoonPlatforms.map((platform) => {
+          const Icon = platform.icon;
+          return (
+            <div key={platform.name} className="flex items-center justify-between p-4 border rounded-lg opacity-70">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${platform.gradient} flex items-center justify-center`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium">{platform.name}</p>
+                  <p className="text-sm text-muted-foreground">Koppla ditt konto för personliga insikter</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" disabled>
+                Kommer snart
+              </Button>
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );

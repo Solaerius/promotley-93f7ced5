@@ -908,6 +908,71 @@ export type Database = {
         }
         Relationships: []
       }
+      promotion_links: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          credits_amount: number
+          current_uses: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          credits_amount: number
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          credits_amount?: number
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+        }
+        Relationships: []
+      }
+      promotion_redemptions: {
+        Row: {
+          id: string
+          promotion_id: string
+          redeemed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          promotion_id: string
+          redeemed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          promotion_id?: string
+          redeemed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_redemptions_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotion_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limits: {
         Row: {
           endpoint: string
@@ -1307,6 +1372,8 @@ export type Database = {
           deleted_at: string | null
           deletion_scheduled_at: string | null
           email: string
+          email_newsletter: boolean | null
+          email_offers: boolean | null
           id: string
           industry: string | null
           keywords: string[] | null
@@ -1328,6 +1395,8 @@ export type Database = {
           deleted_at?: string | null
           deletion_scheduled_at?: string | null
           email: string
+          email_newsletter?: boolean | null
+          email_offers?: boolean | null
           id: string
           industry?: string | null
           keywords?: string[] | null
@@ -1349,6 +1418,8 @@ export type Database = {
           deleted_at?: string | null
           deletion_scheduled_at?: string | null
           email?: string
+          email_newsletter?: boolean | null
+          email_offers?: boolean | null
           id?: string
           industry?: string | null
           keywords?: string[] | null
