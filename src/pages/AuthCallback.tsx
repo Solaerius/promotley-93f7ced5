@@ -65,6 +65,40 @@ export default function AuthCallback() {
               description: "Ditt konto är nu aktiverat.",
             });
             
+            // Check for invite_code in user metadata and auto-join org
+            const inviteCode = session.user.user_metadata?.invite_code;
+            if (inviteCode) {
+              try {
+                const { data: org } = await supabase
+                  .from('organizations')
+                  .select('id')
+                  .eq('invite_code', inviteCode)
+                  .eq('invite_link_enabled', true)
+                  .maybeSingle();
+                
+                if (org) {
+                  // Check if already a member
+                  const { data: existing } = await supabase
+                    .from('organization_members')
+                    .select('id')
+                    .eq('organization_id', org.id)
+                    .eq('user_id', session.user.id)
+                    .maybeSingle();
+                  
+                  if (!existing) {
+                    await supabase.from('organization_members').insert({
+                      organization_id: org.id,
+                      user_id: session.user.id,
+                      role: 'member',
+                    });
+                    await supabase.from('users').update({ active_organization_id: org.id }).eq('id', session.user.id);
+                  }
+                }
+              } catch (err) {
+                console.warn("Auto-join org failed:", err);
+              }
+            }
+            
             // Redirect after showing success
             setTimeout(() => {
               navigate("/dashboard", { replace: true });

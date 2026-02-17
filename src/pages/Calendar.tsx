@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Plus, Sparkles, Instagram, Music2, Facebook, Trash2, Edit, Loader2, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Calendar as CalendarIcon, Plus, Sparkles, Trash2, Edit, Loader2, AlertCircle } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useCalendar } from "@/hooks/useCalendar";
 import { useAIProfile } from "@/hooks/useAIProfile";
+import { useAIAssistant } from "@/hooks/useAIAssistant";
 import CalendarSkeleton from "@/components/CalendarSkeleton";
 import CalendarErrorState from "@/components/CalendarErrorState";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -62,6 +64,9 @@ const Calendar = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingPost, setEditingPost] = useState<any | null>(null);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const { sendMessage, implementPlan } = useAIAssistant(null);
   const [formData, setFormData] = useState({
     date: "",
     platform: "inlagg",
@@ -132,11 +137,47 @@ const Calendar = () => {
     setIsDialogOpen(true);
   };
 
-  const handleGenerateContentPlan = () => {
-    toast({
-      title: "AI-innehållsplan genereras",
-      description: "Vänligen vänta medan vi skapar en innehållsplan för dig...",
-    });
+  const handleGenerateContentPlan = async () => {
+    if (isGeneratingPlan) return;
+    setIsGeneratingPlan(true);
+    setGenerationProgress(10);
+    
+    try {
+      // Simulate progress while waiting
+      const progressInterval = setInterval(() => {
+        setGenerationProgress(prev => Math.min(prev + 8, 85));
+      }, 800);
+
+      const planMessage = "Skapa en marknadsföringsplan för kommande 4 veckor som maximerar räckvidd och engagemang. Utgå från min kalender och företagsprofil. Svara ENBART med en plan i JSON-format.";
+      await sendMessage(planMessage, {
+        action: 'create_marketing_plan',
+        timeframe: { preset: 'next_4_weeks' },
+        targets: ['reach', 'engagement'],
+        requestId: crypto.randomUUID(),
+      });
+
+      clearInterval(progressInterval);
+      setGenerationProgress(100);
+
+      toast({
+        title: "✅ Plan skapad!",
+        description: "Din AI-marknadsföringsplan har genererats. Kolla AI-chatten för detaljer.",
+      });
+    } catch (err: any) {
+      console.error("AI plan generation failed:", err);
+      toast({
+        title: "Fel",
+        description: err?.message?.includes('NO_ACTIVE_PLAN')
+          ? "Du behöver ett aktivt paket för att använda AI."
+          : "Kunde inte generera plan. Försök igen.",
+        variant: "destructive",
+      });
+    } finally {
+      setTimeout(() => {
+        setIsGeneratingPlan(false);
+        setGenerationProgress(0);
+      }, 1500);
+    }
   };
 
   const getPostsForDate = (day: number) => {
@@ -203,10 +244,10 @@ const Calendar = () => {
               <Button 
                 variant="gradient" 
                 onClick={handleGenerateContentPlan}
-                disabled={!isAIProfileComplete}
+                disabled={!isAIProfileComplete || isGeneratingPlan}
               >
-                <Sparkles className="w-4 h-4 mr-2" />
-                {isAIProfileComplete ? "Skapa plan med AI" : "Fyll i AI-profil"}
+                {isGeneratingPlan ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                {isGeneratingPlan ? "Genererar..." : isAIProfileComplete ? "Skapa plan med AI" : "Fyll i AI-profil"}
               </Button>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
@@ -276,6 +317,20 @@ const Calendar = () => {
             </div>
           </div>
         </div>
+
+        {/* AI Generation Progress */}
+        {isGeneratingPlan && (
+          <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-border/50">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">Skapar din marknadsföringsplan...</span>
+              <span className="text-muted-foreground">{Math.round(generationProgress)}%</span>
+            </div>
+            <Progress value={generationProgress} className="h-2" />
+            <p className="text-xs text-muted-foreground">
+              Du kan fortsätta kolla runt i Promotely medan vi skapar din personliga plan.
+            </p>
+          </div>
+        )}
 
         {/* Calendar Controls - Glass card */}
         <Card className="liquid-glass-light border-white/20">

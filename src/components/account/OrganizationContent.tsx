@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Settings, Users, Link as LinkIcon, Copy, Mail, Loader2, Shield, Crown, UserMinus, Save } from "lucide-react";
+import { Settings, Users, Link as LinkIcon, Copy, Mail, Loader2, Shield, Crown, UserMinus, Save, Share2 } from "lucide-react";
 import { ProfileImageUpload } from "@/components/ProfileImageUpload";
 import { motion } from "framer-motion";
 
@@ -57,6 +57,25 @@ const OrganizationContent = () => {
   const handleCopyInviteLink = () => {
     if (activeOrganization?.invite_code) {
       const link = `${window.location.origin}/join/${activeOrganization.invite_code}`;
+      navigator.clipboard.writeText(link);
+      toast.success("Inbjudningslänk kopierad!");
+    }
+  };
+
+  const handleShareInviteLink = async () => {
+    if (!activeOrganization?.invite_code) return;
+    const link = `${window.location.origin}/join/${activeOrganization.invite_code}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Gå med i ${activeOrganization.name} på Promotley`,
+          text: `Använd den här länken för att gå med i ${activeOrganization.name}`,
+          url: link,
+        });
+      } catch (err) {
+        // User cancelled share
+      }
+    } else {
       navigator.clipboard.writeText(link);
       toast.success("Inbjudningslänk kopierad!");
     }
@@ -185,10 +204,16 @@ const OrganizationContent = () => {
                         {window.location.origin}/join/{activeOrganization.invite_code}
                       </p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={handleCopyInviteLink}>
-                      <Copy className="h-4 w-4 mr-1" />
-                      Kopiera
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={handleCopyInviteLink}>
+                        <Copy className="h-4 w-4 mr-1" />
+                        Kopiera
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={handleShareInviteLink}>
+                        <Share2 className="h-4 w-4 mr-1" />
+                        Dela
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

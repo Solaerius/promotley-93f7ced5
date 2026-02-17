@@ -10,7 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { authSchema } from "@/lib/validations";
 import logo from "@/assets/logo.png";
-import { Eye, EyeOff, ArrowLeft, Ban, Apple } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Ban } from "lucide-react";
+import AppleIcon from "@/components/icons/AppleIcon";
 import { lovable } from "@/integrations/lovable/index";
 import PasswordRequirements from "@/components/PasswordRequirements";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -39,6 +40,8 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [emailNewsletter, setEmailNewsletter] = useState(true);
+  const [emailOffers, setEmailOffers] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -187,7 +190,7 @@ const Auth = () => {
       // Perform authentication
       const result = isLogin
         ? await signIn(email, password)
-        : await signUp(email, password, isCreatingCompany ? companyName : undefined, !isCreatingCompany && inviteCode ? inviteCode : undefined);
+        : await signUp(email, password, isCreatingCompany ? companyName : undefined, !isCreatingCompany && inviteCode ? inviteCode : undefined, { newsletter: emailNewsletter, offers: emailOffers });
 
       if (result.error) {
         // Handle specific error messages
@@ -564,25 +567,47 @@ const Auth = () => {
           )}
 
           {!isLogin && (
-            <div className="flex items-start space-x-2">
-              <Checkbox 
-                id="terms" 
-                checked={acceptedTerms}
-                onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
-              />
-              <label
-                htmlFor="terms"
-                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Jag accepterar{" "}
-                <Link to="/terms-of-service" className="text-primary hover:underline">
-                  användarvillkoren
-                </Link>{" "}
-                och{" "}
-                <Link to="/privacy-policy" className="text-primary hover:underline">
-                  integritetspolicyn
-                </Link>
-              </label>
+            <div className="space-y-3">
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="terms" 
+                  checked={acceptedTerms}
+                  onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
+                />
+                <label
+                  htmlFor="terms"
+                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Jag accepterar{" "}
+                  <Link to="/terms-of-service" className="text-primary hover:underline">
+                    användarvillkoren
+                  </Link>{" "}
+                  och{" "}
+                  <Link to="/privacy-policy" className="text-primary hover:underline">
+                    integritetspolicyn
+                  </Link>
+                </label>
+              </div>
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="newsletter" 
+                  checked={emailNewsletter}
+                  onCheckedChange={(checked) => setEmailNewsletter(checked as boolean)}
+                />
+                <label htmlFor="newsletter" className="text-sm leading-none">
+                  Nyhetsbrev och tips
+                </label>
+              </div>
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="offers" 
+                  checked={emailOffers}
+                  onCheckedChange={(checked) => setEmailOffers(checked as boolean)}
+                />
+                <label htmlFor="offers" className="text-sm leading-none">
+                  Erbjudanden och kampanjer
+                </label>
+              </div>
             </div>
           )}
 
@@ -646,7 +671,7 @@ const Auth = () => {
             size="lg"
             onClick={handleAppleLogin}
           >
-            <Apple className="mr-2 h-5 w-5" />
+            <AppleIcon className="mr-2 h-5 w-5" />
             Fortsätt med Apple
           </Button>
         </div>

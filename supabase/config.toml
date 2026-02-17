@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.disconnect-meta]
 verify_jwt = false
+
+[functions.redeem-promotion]
+verify_jwt = true
