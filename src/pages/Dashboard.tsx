@@ -52,51 +52,14 @@ const timeRangeLabels: Record<TimeRange, string> = {
   'all': 'All tid',
 };
 
-// Generate example data based on time range
-const generateExampleData = (range: TimeRange) => {
-  const points: { week: string; value: number }[] = [];
-  const now = new Date();
-  
-  const configs: Record<TimeRange, { count: number; labelFn: (i: number) => string; baseFn: (i: number, count: number) => number }> = {
-    '1m': {
-      count: 4,
-      labelFn: (i) => `V${Math.max(1, getWeekNumberStatic(now) - 3 + i)}`,
-      baseFn: (i, count) => 120 + Math.round(i * 180 + Math.random() * 50),
-    },
-    '6m': {
-      count: 6,
-      labelFn: (i) => {
-        const d = new Date(now);
-        d.setMonth(d.getMonth() - 5 + i);
-        return d.toLocaleString('sv-SE', { month: 'short' });
-      },
-      baseFn: (i) => 80 + Math.round(i * 250 + Math.random() * 80),
-    },
-    '1y': {
-      count: 12,
-      labelFn: (i) => {
-        const d = new Date(now);
-        d.setMonth(d.getMonth() - 11 + i);
-        return d.toLocaleString('sv-SE', { month: 'short' });
-      },
-      baseFn: (i) => 50 + Math.round(i * 150 + Math.random() * 60),
-    },
-    'all': {
-      count: 8,
-      labelFn: (i) => {
-        const d = new Date(now);
-        d.setMonth(d.getMonth() - 21 + i * 3);
-        return d.toLocaleString('sv-SE', { month: 'short', year: '2-digit' });
-      },
-      baseFn: (i) => 30 + Math.round(i * 200 + Math.random() * 100),
-    },
-  };
-
-  const cfg = configs[range];
-  for (let i = 0; i < cfg.count; i++) {
-    points.push({ week: cfg.labelFn(i), value: cfg.baseFn(i, cfg.count) });
-  }
-  return points;
+// Platform color config – brand-accurate colors for all platforms
+const platformColors: Record<string, { stroke: string; label: string }> = {
+  tiktok:   { stroke: 'hsl(172, 80%, 45%)',  label: 'TikTok' },      // Teal/cyan
+  meta_ig:  { stroke: 'hsl(330, 70%, 55%)',  label: 'Instagram' },   // Magenta/pink
+  meta_fb:  { stroke: 'hsl(220, 70%, 55%)',  label: 'Facebook' },    // Blue
+  linkedin: { stroke: 'hsl(210, 80%, 45%)',  label: 'LinkedIn' },    // Dark blue
+  twitter:  { stroke: 'hsl(200, 85%, 50%)',  label: 'X' },           // Sky blue
+  youtube:  { stroke: 'hsl(0, 80%, 50%)',    label: 'YouTube' },     // Red
 };
 
 const getWeekNumberStatic = (date: Date) => {
@@ -104,6 +67,31 @@ const getWeekNumberStatic = (date: Date) => {
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+};
+
+const getTimeLabels = (range: TimeRange): string[] => {
+  const now = new Date();
+  const counts: Record<TimeRange, number> = { '1m': 4, '6m': 6, '1y': 12, 'all': 8 };
+  const count = counts[range];
+  return Array.from({ length: count }, (_, i) => {
+    if (range === '1m') return `V${Math.max(1, getWeekNumberStatic(now) - count + 1 + i)}`;
+    const d = new Date(now);
+    const monthsBack = range === 'all' ? (count - 1 - i) * 3 : count - 1 - i;
+    d.setMonth(d.getMonth() - monthsBack);
+    return range === 'all'
+      ? d.toLocaleString('sv-SE', { month: 'short', year: '2-digit' })
+      : d.toLocaleString('sv-SE', { month: 'short' });
+  });
+};
+
+// Generate example data with two fake platforms
+const generateExampleData = (range: TimeRange) => {
+  const labels = getTimeLabels(range);
+  return labels.map((label, i) => ({
+    week: label,
+    tiktok: 80 + Math.round(i * 160 + Math.sin(i) * 40),
+    meta_ig: 120 + Math.round(i * 130 + Math.cos(i) * 35),
+  }));
 };
 
 const Dashboard = () => {
@@ -117,20 +105,29 @@ const Dashboard = () => {
 
   const exampleData = generateExampleData(timeRange);
 
-  // Build chart data from real analytics
+  // Determine which platforms are connected
+  const connectedPlatforms = connections.map(c => c.provider);
+  const activePlatforms = connectedPlatforms.length > 0 ? connectedPlatforms : ['tiktok', 'meta_ig'];
+
+  // Build chart data from real analytics (one key per platform)
   const buildChartData = (data: any[]) => {
     if (!data || data.length === 0) return exampleData;
-    const total = data.reduce((sum, d) => sum + (d.followers || 0), 0);
-    const cfg = { '1m': 4, '6m': 6, '1y': 12, 'all': 8 };
-    const count = cfg[timeRange];
-    const now = new Date();
-    return Array.from({ length: count }, (_, i) => {
-      const label = timeRange === '1m'
-        ? `V${Math.max(1, getWeekNumberStatic(now) - count + 1 + i)}`
-        : (() => { const d = new Date(now); d.setMonth(d.getMonth() - count + 1 + i); return d.toLocaleString('sv-SE', { month: 'short' }); })();
-      return { week: label, value: Math.round(total * (0.5 + (i / count) * 0.5)) };
+    const labels = getTimeLabels(timeRange);
+    const byPlatform: Record<string, number> = {};
+    data.forEach(d => { byPlatform[d.platform] = d.followers || 0; });
+
+    return labels.map((label, i) => {
+      const point: Record<string, any> = { week: label };
+      Object.keys(byPlatform).forEach(platform => {
+        point[platform] = Math.round(byPlatform[platform] * (0.5 + (i / labels.length) * 0.5));
+      });
+      return point;
     });
   };
+
+  const chartData = connections.length > 0 && analyticsData.length > 0
+    ? buildChartData(analyticsData)
+    : exampleData;
 
   // Calculate total metrics
   const totalFollowers = 
@@ -316,35 +313,65 @@ const Dashboard = () => {
               Koppla dina sociala medier för att se riktig tillväxtdata
             </p>
           )}
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={connections.length > 0 && analyticsData.length > 0 ? buildChartData(analyticsData) : exampleData}>
+          {/* Platform legend */}
+          <div className="flex flex-wrap gap-3 mb-3">
+            {activePlatforms.map(p => {
+              const color = platformColors[p];
+              if (!color) return null;
+              return (
+                <div key={p} className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color.stroke }} />
+                  <span className="text-xs text-muted-foreground">{color.label}</span>
+                </div>
+              );
+            })}
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={chartData}>
               <defs>
-                <linearGradient id="progressGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(9, 90%, 55%)" stopOpacity={connections.length > 0 ? 0.4 : 0.2}/>
-                  <stop offset="95%" stopColor="hsl(331, 70%, 45%)" stopOpacity={0.1}/>
-                </linearGradient>
+                {activePlatforms.map(p => {
+                  const color = platformColors[p];
+                  if (!color) return null;
+                  return (
+                    <linearGradient key={p} id={`gradient-${p}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={color.stroke} stopOpacity={connections.length > 0 ? 0.3 : 0.15} />
+                      <stop offset="95%" stopColor={color.stroke} stopOpacity={0.02} />
+                    </linearGradient>
+                  );
+                })}
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
               <XAxis dataKey="week" className="fill-muted-foreground" fontSize={12} tick={{ fill: 'currentColor' }} stroke="currentColor" />
               <YAxis className="fill-muted-foreground" fontSize={12} tick={{ fill: 'currentColor' }} stroke="currentColor" />
               <RechartsTooltip
                 contentStyle={{
-                  backgroundColor: "rgba(0,0,0,0.8)",
-                  border: "1px solid rgba(255,255,255,0.2)",
+                  backgroundColor: "rgba(0,0,0,0.85)",
+                  border: "1px solid rgba(255,255,255,0.15)",
                   borderRadius: "12px",
                   backdropFilter: "blur(12px)",
+                  padding: "8px 12px",
                 }}
-                labelStyle={{ color: "white" }}
-                itemStyle={{ color: "white" }}
+                labelStyle={{ color: "white", fontWeight: 600, marginBottom: 4 }}
+                formatter={(value: number, name: string) => {
+                  const color = platformColors[name];
+                  return [formatNumber(value), color?.label || name];
+                }}
               />
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke="hsl(9, 90%, 55%)"
-                strokeWidth={2}
-                fill="url(#progressGradient)"
-                strokeDasharray={connections.length === 0 ? "5 5" : undefined}
-              />
+              {activePlatforms.map(p => {
+                const color = platformColors[p];
+                if (!color) return null;
+                return (
+                  <Area
+                    key={p}
+                    type="monotone"
+                    dataKey={p}
+                    stroke={color.stroke}
+                    strokeWidth={2}
+                    fill={`url(#gradient-${p})`}
+                    strokeDasharray={connections.length === 0 ? "5 5" : undefined}
+                  />
+                );
+              })}
             </AreaChart>
           </ResponsiveContainer>
         </motion.div>
