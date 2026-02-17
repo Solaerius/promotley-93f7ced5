@@ -91,22 +91,22 @@ const AnalyticsContent = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Stats Cards */}
       {stats.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <Card key={index} className="liquid-glass-light hover:shadow-elegant transition-all duration-300">
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-white" />
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-primary flex items-center justify-center">
+                      <Icon className="w-4 h-4 text-white" />
                     </div>
                   </div>
-                  <p className="text-sm dashboard-subheading-dark mb-1">{stat.title}</p>
-                  <p className="text-2xl md:text-3xl font-bold dashboard-heading-dark">{stat.value}</p>
+                  <p className="text-xs dashboard-subheading-dark mb-1">{stat.title}</p>
+                  <p className="text-lg md:text-xl font-bold dashboard-heading-dark">{stat.value}</p>
                 </CardContent>
               </Card>
             );
@@ -115,34 +115,28 @@ const AnalyticsContent = () => {
       )}
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="liquid-glass-light">
           <CardHeader>
             <CardTitle className="dashboard-heading-dark">Historik</CardTitle>
           </CardHeader>
           <CardContent>
             {analyticsData.some(a => a.history && Array.isArray(a.history) && a.history.length > 0) ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={getHistoryData(analyticsData[0]?.platform || '')}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
                   <Legend />
                   <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} name="Värde" />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[300px] flex items-center justify-center">
+              <div className="h-[200px] flex items-center justify-center">
                 <div className="text-center">
-                  <Eye className="w-12 h-12 mx-auto mb-2 text-white/40" />
-                  <p className="dashboard-subheading-dark">Ingen historikdata ännu</p>
+                  <Eye className="w-8 h-8 mx-auto mb-2 text-white/40" />
+                  <p className="text-sm dashboard-subheading-dark">Ingen historikdata ännu</p>
                 </div>
               </div>
             )}
@@ -154,10 +148,10 @@ const AnalyticsContent = () => {
             <CardTitle className="dashboard-heading-dark">Engagemangsöversikt</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] flex items-center justify-center">
+            <div className="h-[200px] flex items-center justify-center">
               <div className="text-center">
-                <Heart className="w-12 h-12 mx-auto mb-2 text-white/40" />
-                <p className="dashboard-subheading-dark">Ingen historikdata ännu</p>
+                <Heart className="w-8 h-8 mx-auto mb-2 text-white/40" />
+                <p className="text-sm dashboard-subheading-dark">Ingen historikdata ännu</p>
               </div>
             </div>
           </CardContent>

@@ -23,7 +23,6 @@ import {
   MessageCircle,
   Instagram,
   Music2,
-  
   Sparkles,
   AlertCircle,
 } from "lucide-react";
@@ -128,12 +127,12 @@ const Analytics = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-4 animate-fade-in">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Statistik</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-bold text-foreground mb-1">Statistik</h1>
+            <p className="text-sm text-muted-foreground">
               Översikt av dina sociala medier-prestationer
             </p>
           </div>
@@ -142,36 +141,34 @@ const Analytics = () => {
         {/* No connections state */}
         {!hasConnections && (
           <Card className="border-2 border-dashed">
-            <CardContent className="p-12 text-center">
-              <Users className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">Inga konton kopplade</h3>
-              <p className="text-muted-foreground mb-6">
+            <CardContent className="p-8 text-center">
+              <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">Inga konton kopplade</h3>
+              <p className="text-sm text-muted-foreground mb-4">
                 Koppla dina sociala medier-konton för att se statistik och insikter
               </p>
               <Link to="/settings">
-                <Button>
-                  Gå till inställningar
-                </Button>
+                <Button>Gå till inställningar</Button>
               </Link>
             </CardContent>
           </Card>
         )}
 
-        {/* Stats Cards - Only show if we have connections */}
+        {/* Stats Cards */}
         {hasConnections && stats.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <Card key={index} className="hover:shadow-elegant transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center">
-                        <Icon className="w-6 h-6 text-white" />
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-primary flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-white" />
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-                    <p className="text-3xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground mb-1">{stat.title}</p>
+                    <p className="text-xl font-bold text-foreground">{stat.value}</p>
                   </CardContent>
                 </Card>
               );
@@ -220,59 +217,43 @@ const Analytics = () => {
 
         {/* Charts - Only show if we have history data */}
         {hasConnections && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Views/History Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
                 <CardTitle>Historik</CardTitle>
               </CardHeader>
               <CardContent>
                 {analyticsData.some(a => a.history && Array.isArray(a.history) && a.history.length > 0) ? (
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={getHistoryData(analyticsData[0]?.platform || '')}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
                       <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                      />
+                      <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
                       <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2}
-                        name="Värde"
-                      />
+                      <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} name="Värde" />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  <div className="h-[200px] flex items-center justify-center text-muted-foreground">
                     <div className="text-center">
-                      <Eye className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p>Ingen historikdata ännu</p>
-                      <p className="text-sm">Data samlas in när dina konton är kopplade</p>
+                      <Eye className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Ingen historikdata ännu</p>
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Engagement placeholder */}
             <Card>
               <CardHeader>
                 <CardTitle>Engagemangsöversikt</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[200px] flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
-                    <Heart className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Ingen historikdata ännu</p>
-                    <p className="text-sm">Engagemangshistorik visas när data samlas in</p>
+                    <Heart className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Ingen historikdata ännu</p>
                   </div>
                 </div>
               </CardContent>

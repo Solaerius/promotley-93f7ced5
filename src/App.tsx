@@ -25,6 +25,7 @@ import AdminNotificationSettings from "./pages/AdminNotificationSettings";
 import AdminUserManagement from "./pages/AdminUserManagement";
 import AdminBanManagement from "./pages/AdminBanManagement";
 import AdminSwishOrders from "./pages/AdminSwishOrders";
+import AdminPromotions from "./pages/AdminPromotions";
 import OrganizationOnboarding from "./pages/OrganizationOnboarding";
 import OrganizationSettings from "./pages/OrganizationSettings";
 import CreateOrganization from "./pages/CreateOrganization";
@@ -33,6 +34,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import Demo from "./pages/Demo";
+import RedeemPromotion from "./pages/RedeemPromotion";
+import Unsubscribe from "./pages/Unsubscribe";
 
 const queryClient = new QueryClient();
 
@@ -156,8 +159,18 @@ const App = () => (
                 </AdminRoute>
               } 
             />
+            <Route 
+              path="/admin/promotions" 
+              element={
+                <AdminRoute>
+                  <AdminPromotions />
+                </AdminRoute>
+              } 
+            />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/promo/:code" element={<RedeemPromotion />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route 
               path="/swish-checkout" 
               element={

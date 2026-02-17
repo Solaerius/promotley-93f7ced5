@@ -17,8 +17,8 @@ const AccountPage = () => {
     <DashboardLayout>
       <div className="w-full max-w-6xl mx-auto">
         {/* Header - Force dark mode colors */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold dashboard-heading-dark mb-2">
+        <div className="text-center mb-4">
+          <h1 className="text-xl md:text-2xl font-bold dashboard-heading-dark mb-1">
             Konto & Inställningar
           </h1>
           <p className="dashboard-subheading-dark text-sm">
@@ -28,7 +28,7 @@ const AccountPage = () => {
 
         {/* Tabs - Glass styling */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-4">
             <TabsList className="inline-flex h-11 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 backdrop-blur-sm border border-black/10 dark:border-white/20 p-1 gap-1">
               <TabsTrigger 
                 value="konto" 
