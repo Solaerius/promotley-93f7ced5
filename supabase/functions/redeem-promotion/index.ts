@@ -28,83 +28,36 @@ Deno.serve(async (req) => {
     }
 
     const { code } = await req.json();
-    if (!code) {
+    if (!code || typeof code !== "string" || code.trim().length === 0 || code.trim().length > 50) {
       return new Response(JSON.stringify({ error: "Ingen kod angiven" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Use service role for DB operations
+    // Use service role to call the atomic RPC function
     const serviceSupabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Find promotion
-    const { data: promo, error: promoError } = await serviceSupabase
-      .from("promotion_links")
-      .select("*")
-      .eq("code", code.toUpperCase().trim())
-      .single();
-
-    if (promoError || !promo) {
-      return new Response(JSON.stringify({ error: "Ogiltig kod" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    if (!promo.is_active) {
-      return new Response(JSON.stringify({ error: "Denna kod är inte längre aktiv" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    if (promo.max_uses && promo.current_uses >= promo.max_uses) {
-      return new Response(JSON.stringify({ error: "Koden har redan använts maximalt antal gånger" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
-      return new Response(JSON.stringify({ error: "Koden har gått ut" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // Check if already redeemed
-    const { data: existing } = await serviceSupabase
-      .from("promotion_redemptions")
-      .select("id")
-      .eq("promotion_id", promo.id)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (existing) {
-      return new Response(JSON.stringify({ error: "Du har redan använt denna kod" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // Redeem: add credits
-    const { error: creditError } = await serviceSupabase.rpc("", {}).catch(() => null) as any;
-    
-    // Update user credits
-    const { data: userData } = await serviceSupabase
-      .from("users")
-      .select("credits_left")
-      .eq("id", user.id)
-      .single();
-
-    await serviceSupabase
-      .from("users")
-      .update({ credits_left: (userData?.credits_left || 0) + promo.credits_amount })
-      .eq("id", user.id);
-
-    // Record redemption
-    await serviceSupabase.from("promotion_redemptions").insert({
-      promotion_id: promo.id,
-      user_id: user.id,
+    const { data, error } = await serviceSupabase.rpc("redeem_promotion", {
+      _user_id: user.id,
+      _code: code.trim(),
     });
 
-    // Increment uses
-    await serviceSupabase
-      .from("promotion_links")
-      .update({ current_uses: promo.current_uses + 1 })
-      .eq("id", promo.id);
+    if (error) {
+      console.error("RPC error:", error);
+      return new Response(JSON.stringify({ error: "Internt fel" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (data?.error) {
+      return new Response(JSON.stringify({ error: data.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     return new Response(
-      JSON.stringify({ success: true, credits_given: promo.credits_amount }),
+      JSON.stringify({ success: true, credits_given: data.credits_given }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    console.error("Redeem promotion error:", err);
     return new Response(
       JSON.stringify({ error: "Internt fel" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
