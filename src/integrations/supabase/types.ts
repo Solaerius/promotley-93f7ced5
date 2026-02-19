@@ -1486,10 +1486,9 @@ export type Database = {
         }
         Returns: string
       }
-      redeem_promotion: {
-        Args: { _code: string; _user_id: string }
-        Returns: Json
-      }
+      redeem_promotion:
+        | { Args: { _code: string }; Returns: Json }
+        | { Args: { _code: string; _user_id: string }; Returns: Json }
       soft_delete_user_account: {
         Args: { _user_id: string }
         Returns: undefined
