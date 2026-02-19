@@ -1,26 +1,63 @@
 
-# Omfattande uppdateringsplan - Status
 
-## ✅ Genomförda ändringar
+# Kampanjkod-integration -- alla platser
 
-1. **Layoutkomprimering Konto (40%)** - Alla spacing, paddings, ikonstorlekar minskade
-2. **Statistik-rutor komprimering (30%)** - Stats-kort, charts (200→160px), ikoner minskade
-3. **AI-analys komprimering (30%)** - Samma mönster som statistik
-4. **Kalender komprimering (5%)** - min-h 80→76px
-5. **Instagram till "Kommer snart"** - Flyttad till comingSoonPlatforms
-6. **Input-outlines i AI-profilen** - Standard border border-border
-7. **Ta bort Län-fältet** - Borttaget från AccountContent och Onboarding
-8. **Namnbyten** - "Tonalitet" → "Vilken ton ska Promotely AI ha?", "Nyckelord" → "Era grundprinciper"
-9. **Ta bort dubblerat Företagsnamn** - Borttaget från AI-profil, synkas automatiskt
-10. **AI-blockering i AIToolsContent** - Varningsbanner + disabled state
-11. **Auth: Registrering** - "Skapa företag" → "Registrera nytt företag", inbjudningskod-fält
-12. **useAuth: invite_code** - Parameter tillagd, retry-logik för company_name
-13. **CreditsDisplay** - Gratis plan visar "uppgradera för mer" istället för förnyelsedatum
-14. **Kalender: Händelsetyper** - Nya typer (Inlägg, UF-marknad, Event, Deadline, Övrigt) med färgkodning
-15. **Kalender: Knappbyte** - "Lägg till" → "Lägg till händelse", variant="secondary"
-16. **DB-migration** - event_type kolumn tillagd i calendar_posts
+## Sammanfattning
+Kampanjkoder integreras pa fyra nya platser utover den befintliga `/promo/:code`-sidan, sa att anvandare kan losa in koder var de an befinner sig i plattformen.
 
-## ⏳ Kvarvarande (nästa iteration)
+---
 
-- **Kalender: AI-plan med loading bar** - Progress-bar, localStorage, bakgrundsprocessing, notiser
-- **AuthCallback: invite_code auto-join** - Kontrollera metadata och anslut automatiskt
+## 1. Vid registrering (Auth-sidan)
+
+- Lagg till ett valfritt falt "Har du en kampanjkod?" langst ner i registreringsformulaet (visas ej vid inloggning)
+- Koden sparas i `user_metadata` under registreringen (precis som invite-koden redan gor)
+- Efter e-postverifiering och forsta inloggning, i `AuthCallback.tsx`, kollar systemet om det finns en kampanjkod i metadata och anropar `redeem-promotion` automatiskt
+- Vid lyckad inlosen visas en toast: "Du fick X gratiskrediter!"
+- Om koden ar ogiltig visas inget felmeddelande (tyst misslyckande -- anvandaren har redan kommit in)
+
+## 2. Kontosidan (Plan och Krediter)
+
+- Lagg till en "Los in kampanjkod"-knapp under CreditsDisplay i `AccountContent.tsx`
+- Klick expanderar ett inline-falt med Input + knapp
+- Anropar `redeem-promotion` edge function och visar toast med resultat
+- Vid lyckad inlosen upppdateras kreditvisningen via `refetchCredits()`
+
+## 3. Dashboard (valkomstbanner)
+
+- Visa en liten banner/kort pa dashboarden BARA for anvandare med `free_trial`-plan och farre an 5 krediter
+- Texten: "Har du en kampanjkod? Los in den har for gratiskrediter"
+- Klick oppnar en liten dialog med kodfalt
+- Nar koden ar inlost forsvinner bannern
+
+## 4. Prissidan
+
+- Lagg till ett "Har du en kampanjkod?"-falt nedanfor planerna, ovanfor FAQ
+- Inloggade anvandare kan ange koden direkt
+- Ej inloggade anvandare redirectas till `/auth?redirect=/pricing&promo=KODEN` sa att koden kan losas in efter registrering
+
+---
+
+## Teknisk plan
+
+### Ny delad komponent: `PromoCodeInput.tsx`
+En aterbar komponent som hanterar all kampanjkods-logik:
+- Input-falt + knapp
+- Anropar `supabase.functions.invoke("redeem-promotion", { body: { code } })`
+- Visar laddningstillstand, framgang (med konfetti-ikon) och felmeddelanden
+- `onSuccess`-callback for att utlosa `refetchCredits()` eller navigation
+- Prop `variant`: `inline` (expanderbar) eller `card` (fristande kort)
+
+### Andringar per fil
+
+| Fil | Andring |
+|-----|---------|
+| `src/components/PromoCodeInput.tsx` | **NY** -- delad komponent |
+| `src/pages/Auth.tsx` | Lagg till valfritt kampanjkodsfalt i registreringsformulaeret, spara i user_metadata |
+| `src/pages/AuthCallback.tsx` | Kolla metadata for kampanjkod efter forsta inloggning, los in automatiskt |
+| `src/components/account/AccountContent.tsx` | Lagg till PromoCodeInput under Plan och Krediter-sektionen |
+| `src/pages/Dashboard.tsx` | Visa villkorad kampanjkods-banner for free_trial-anvandare |
+| `src/pages/Pricing.tsx` | Lagg till PromoCodeInput-kort under planerna |
+
+### Ingen databasandring kravs
+Den befintliga `redeem_promotion` RPC-funktionen och `promotion_links`/`promotion_redemptions`-tabellerna hanterar redan all logik.
+
