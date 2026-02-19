@@ -33,18 +33,24 @@ Deno.serve(async (req) => {
       bodyLength: body.length
     });
 
-    // Verify webhook signature if present
-    if (signature) {
-      const hmac = createHmac('sha256', TIKTOK_CLIENT_SECRET);
-      const expectedSignature = hmac.update(body).digest('hex');
-      
-      if (signature !== expectedSignature) {
-        console.error('Invalid webhook signature');
-        return new Response(
-          JSON.stringify({ error: 'Invalid signature' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    // Verify webhook signature (mandatory)
+    if (!signature) {
+      console.error('Missing TikTok signature');
+      return new Response(
+        JSON.stringify({ error: 'Missing signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const hmac = createHmac('sha256', TIKTOK_CLIENT_SECRET);
+    const expectedSignature = hmac.update(body).digest('hex');
+    
+    if (signature !== expectedSignature) {
+      console.error('Invalid webhook signature');
+      return new Response(
+        JSON.stringify({ error: 'Invalid signature' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Parse the webhook data

@@ -32,14 +32,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Ingen kod angiven" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Use service role to call the atomic RPC function
-    const serviceSupabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    const { data, error } = await serviceSupabase.rpc("redeem_promotion", {
-      _user_id: user.id,
+    // Call RPC as the authenticated user (function uses auth.uid() internally)
+    const { data, error } = await supabase.rpc("redeem_promotion", {
       _code: code.trim(),
     });
 
