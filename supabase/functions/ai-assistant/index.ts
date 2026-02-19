@@ -168,6 +168,18 @@ serve(async (req) => {
 
     console.log('✅ User authenticated:', user.id);
 
+    // Rate limiting
+    const { data: rateLimitOk } = await supabaseClient.rpc('check_rate_limit', {
+      _user_id: user.id,
+      _endpoint: 'ai-assistant'
+    });
+    if (rateLimitOk === false) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Vänta en stund.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
+
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/').filter(Boolean);
     const action = pathParts[pathParts.length - 1];

@@ -50,6 +50,18 @@ serve(async (req) => {
 
     console.log('Generating sales radar for user:', user.id);
 
+    // Rate limiting
+    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+      _user_id: user.id,
+      _endpoint: 'sales-radar'
+    });
+    if (rateLimitOk === false) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Vänta en stund.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
+
     // Fetch user plan and credits
     const { data: userData, error: userError } = await supabase
       .from('users')

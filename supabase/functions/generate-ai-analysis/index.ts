@@ -85,6 +85,18 @@ serve(async (req) => {
 
     console.log('Generating AI analysis for user:', user.id);
 
+    // Rate limiting
+    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+      _user_id: user.id,
+      _endpoint: 'generate-ai-analysis'
+    });
+    if (rateLimitOk === false) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Vänta en stund.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
+
     // Parse request body for requestId and any override attempts
     const body = await req.json().catch(() => ({}));
     const requestId = body.requestId || crypto.randomUUID();

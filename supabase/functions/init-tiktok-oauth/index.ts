@@ -56,6 +56,18 @@ serve(async (req) => {
       );
     }
 
+    // Rate limiting
+    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+      _user_id: user.id,
+      _endpoint: 'init-tiktok-oauth'
+    });
+    if (rateLimitOk === false) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded' }),
+        { status: 429, headers: { ...corsHeaders, ...securityHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
+
     console.log('Initializing TikTok OAuth for user:', user.id);
 
     // Generate CSRF state token

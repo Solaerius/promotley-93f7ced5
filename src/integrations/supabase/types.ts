@@ -1486,6 +1486,10 @@ export type Database = {
         }
         Returns: string
       }
+      redeem_promotion: {
+        Args: { _code: string; _user_id: string }
+        Returns: Json
+      }
       soft_delete_user_account: {
         Args: { _user_id: string }
         Returns: undefined

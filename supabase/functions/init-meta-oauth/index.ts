@@ -52,6 +52,18 @@ serve(async (req) => {
       );
     }
 
+    // Rate limiting
+    const { data: rateLimitOk } = await supabaseClient.rpc('check_rate_limit', {
+      _user_id: user.id,
+      _endpoint: 'init-meta-oauth'
+    });
+    if (rateLimitOk === false) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded' }),
+        { status: 429, headers: { ...corsHeaders, ...securityHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
+
     // Get provider from request body
     const { provider } = await req.json();
     
