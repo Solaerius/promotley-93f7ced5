@@ -1457,6 +1457,14 @@ export type Database = {
         Args: { _logo_url?: string; _name: string; _user_id?: string }
         Returns: string
       }
+      get_org_member_profiles: {
+        Args: { _org_id: string }
+        Returns: {
+          avatar_url: string
+          email: string
+          id: string
+        }[]
+      }
       get_org_role: {
         Args: { _org_id: string; _user_id: string }
         Returns: string

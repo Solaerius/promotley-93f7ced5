@@ -138,30 +138,26 @@ export const useOrganization = () => {
     if (!activeOrganization?.id || !session) return;
 
     try {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select(`
-          id,
-          organization_id,
-          user_id,
-          role,
-          permissions,
-          credit_limit,
-          credits_used,
-          joined_at,
-          users (
-            id,
-            email,
-            avatar_url
-          )
-        `)
-        .eq("organization_id", activeOrganization.id)
-        .order("joined_at", { ascending: true });
+      // Fetch members and profiles separately to avoid exposing all user columns
+      const [membersResult, profilesResult] = await Promise.all([
+        supabase
+          .from("organization_members")
+          .select("id, organization_id, user_id, role, permissions, credit_limit, credits_used, joined_at")
+          .eq("organization_id", activeOrganization.id)
+          .order("joined_at", { ascending: true }),
+        supabase.rpc("get_org_member_profiles", { _org_id: activeOrganization.id })
+      ]);
 
-      if (error) throw error;
+      if (membersResult.error) throw membersResult.error;
+
+      // Build a lookup map from profiles
+      const profileMap = new Map<string, { email: string; avatar_url: string | null }>();
+      (profilesResult.data || []).forEach((p: any) => {
+        profileMap.set(p.id, { email: p.email, avatar_url: p.avatar_url });
+      });
 
       // Map joined data to our interface
-      const membersWithEmail = (data || []).map((m: any) => ({
+      const membersWithEmail = (membersResult.data || []).map((m: any) => ({
         id: m.id,
         organization_id: m.organization_id,
         user_id: m.user_id,
@@ -170,8 +166,8 @@ export const useOrganization = () => {
         credit_limit: m.credit_limit,
         credits_used: m.credits_used,
         joined_at: m.joined_at,
-        user_email: m.users?.email ?? "Okänd användare",
-        user_avatar: m.users?.avatar_url ?? null
+        user_email: profileMap.get(m.user_id)?.email ?? "Okänd användare",
+        user_avatar: profileMap.get(m.user_id)?.avatar_url ?? null
       }));
 
       setMembers(membersWithEmail as OrganizationMember[]);
