@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { HeroBanner } from "@/components/ui/HeroBanner";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
@@ -22,6 +22,7 @@ import { useConnections } from "@/hooks/useConnections";
 import { useUserCredits } from "@/hooks/useUserCredits";
 import { useCalendar } from "@/hooks/useCalendar";
 import ChatWidget from "@/components/ChatWidget";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import {
   AreaChart,
@@ -75,7 +76,10 @@ const getTimeLabels = (range: TimeRange): string[] => {
   const counts: Record<TimeRange, number> = { '1m': 4, '6m': 6, '1y': 12, 'all': 8 };
   const count = counts[range];
   return Array.from({ length: count }, (_, i) => {
-    if (range === '1m') return `V${Math.max(1, getWeekNumberStatic(now) - count + 1 + i)}`;
+    if (range === '1m') {
+      const weekNum = Math.max(1, getWeekNumberStatic(now) - count + 1 + i);
+      return `Vecka ${weekNum}`;
+    }
     const d = new Date(now);
     const monthsBack = range === 'all' ? (count - 1 - i) * 3 : count - 1 - i;
     d.setMonth(d.getMonth() - monthsBack);
@@ -97,6 +101,7 @@ const generateExampleData = (range: TimeRange) => {
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
+  const [weeklyMetrics, setWeeklyMetrics] = useState<any[]>([]);
   const { isConnected, connections } = useConnections();
   const tiktokData = useTikTokData();
   const metaData = useMetaData();
@@ -106,28 +111,82 @@ const Dashboard = () => {
 
   const exampleData = generateExampleData(timeRange);
 
+  // Fetch real weekly follower metrics from the metrics table
+  useEffect(() => {
+    const fetchWeeklyMetrics = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || connections.length === 0) return;
+
+      // Get metrics from last 4 weeks
+      const fourWeeksAgo = new Date();
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+
+      const { data: metrics } = await supabase
+        .from('metrics')
+        .select('*')
+        .eq('metric_type', 'followers')
+        .gte('captured_at', fourWeeksAgo.toISOString())
+        .order('captured_at', { ascending: true });
+
+      if (metrics && metrics.length > 0) {
+        setWeeklyMetrics(metrics);
+      }
+    };
+    fetchWeeklyMetrics();
+  }, [connections]);
+
   // Determine which platforms are connected
   const connectedPlatforms = connections.map(c => c.provider);
   const activePlatforms = connectedPlatforms.length > 0 ? connectedPlatforms : ['tiktok', 'meta_ig'];
 
-  // Build chart data from real analytics (one key per platform)
-  const buildChartData = (data: any[]) => {
-    if (!data || data.length === 0) return exampleData;
-    const labels = getTimeLabels(timeRange);
-    const byPlatform: Record<string, number> = {};
-    data.forEach(d => { byPlatform[d.platform] = d.followers || 0; });
+  // Build chart data from real metrics (weekly follower snapshots)
+  const buildChartData = () => {
+    if (weeklyMetrics.length === 0) {
+      // Fall back to analytics-based estimation
+      if (!analyticsData || analyticsData.length === 0) return exampleData;
+      const labels = getTimeLabels(timeRange);
+      const byPlatform: Record<string, number> = {};
+      analyticsData.forEach(d => { byPlatform[d.platform] = d.followers || 0; });
 
-    return labels.map((label, i) => {
-      const point: Record<string, any> = { week: label };
-      Object.keys(byPlatform).forEach(platform => {
-        point[platform] = Math.round(byPlatform[platform] * (0.5 + (i / labels.length) * 0.5));
+      return labels.map((label, i) => {
+        const point: Record<string, any> = { week: label };
+        Object.keys(byPlatform).forEach(platform => {
+          point[platform] = Math.round(byPlatform[platform] * (0.5 + (i / labels.length) * 0.5));
+        });
+        return point;
+      });
+    }
+
+    // Group metrics by week number
+    const now = new Date();
+    const currentWeek = getWeekNumberStatic(now);
+    const weekBuckets: Record<number, Record<string, number>> = {};
+
+    for (let i = 0; i < 4; i++) {
+      const weekNum = Math.max(1, currentWeek - 3 + i);
+      weekBuckets[weekNum] = {};
+    }
+
+    weeklyMetrics.forEach(m => {
+      const capturedDate = new Date(m.captured_at);
+      const weekNum = getWeekNumberStatic(capturedDate);
+      if (weekBuckets[weekNum]) {
+        // Keep the latest value per platform per week
+        weekBuckets[weekNum][m.provider] = Number(m.value);
+      }
+    });
+
+    return Object.entries(weekBuckets).map(([weekNum, platforms]) => {
+      const point: Record<string, any> = { week: `Vecka ${weekNum}` };
+      connectedPlatforms.forEach(p => {
+        point[p] = platforms[p] || 0;
       });
       return point;
     });
   };
 
-  const chartData = connections.length > 0 && analyticsData.length > 0
-    ? buildChartData(analyticsData)
+  const chartData = connections.length > 0
+    ? buildChartData()
     : exampleData;
 
   // Calculate total metrics
@@ -284,7 +343,7 @@ const Dashboard = () => {
           transition={{ delay: 0.35, duration: 0.4 }}
           className="liquid-glass-light p-6"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold dashboard-heading-dark">Tillväxt</h3>
               {connections.length === 0 && (
@@ -309,11 +368,11 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
-          {connections.length === 0 && (
-            <p className="text-sm text-muted-foreground mb-3">
-              Koppla dina sociala medier för att se riktig tillväxtdata
-            </p>
-          )}
+          <p className="text-sm dashboard-subheading-dark mb-4">
+            {connections.length > 0
+              ? 'Visar hur dina följare har ökat de senaste 4 veckorna per plattform.'
+              : 'Koppla dina sociala medier för att se riktig tillväxtdata'}
+          </p>
           {/* Platform legend */}
           <div className="flex flex-wrap gap-3 mb-3">
             {activePlatforms.map(p => {
