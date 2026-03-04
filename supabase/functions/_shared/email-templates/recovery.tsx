@@ -19,6 +19,7 @@ import {
 
 interface RecoveryEmailProps {
   siteName: string
+  recipientName?: string | null
   confirmationUrl: string
 }
 
@@ -27,6 +28,7 @@ const SITE_URL = 'https://promotley.se'
 
 export const RecoveryEmail = ({
   siteName,
+  recipientName,
   confirmationUrl,
 }: RecoveryEmailProps) => (
   <Html lang="sv" dir="ltr">
@@ -41,10 +43,14 @@ export const RecoveryEmail = ({
                 <table cellPadding="0" cellSpacing="0">
                   <tr>
                     <td style={{ verticalAlign: 'middle' }}>
-                      <Img src={LOGO_URL} alt={siteName} width="40" height="40" style={{ display: 'block' }} />
+                      <Link href={SITE_URL}>
+                        <Img src={LOGO_URL} alt={siteName} width="40" height="40" style={{ display: 'block' }} />
+                      </Link>
                     </td>
                     <td style={{ verticalAlign: 'middle', paddingLeft: '12px' }}>
-                      <Text style={brandName}>Promotely UF</Text>
+                      <Link href={SITE_URL} style={{ textDecoration: 'none' }}>
+                        <Text style={brandName}>Promotley UF</Text>
+                      </Link>
                     </td>
                   </tr>
                 </table>
@@ -54,7 +60,7 @@ export const RecoveryEmail = ({
         </Section>
 
         <Section style={content}>
-          <Heading style={h1}>Hej!</Heading>
+          <Heading style={h1}>Hej{recipientName ? ` ${recipientName}` : ''}!</Heading>
           <Text style={text}>
             Det händer alla – glömda lösenord är inget att stressa över. Klicka på knappen nedan så fixar vi ett nytt åt dig direkt.
           </Text>
@@ -82,7 +88,7 @@ export const RecoveryEmail = ({
             <Link href={`${SITE_URL}/terms`} style={footerLink}>Villkor</Link>
           </Text>
           <Text style={footerAddress}>
-            © {new Date().getFullYear()} Promotely · Stockholm, Sverige
+            © {new Date().getFullYear()} Promotley · Stockholm, Sverige
           </Text>
           <Text style={footerDisclaimer}>
             Begärde du inte detta? Ignorera mejlet – ditt lösenord ändras inte.
@@ -105,7 +111,7 @@ const card = {
   boxShadow: '0 8px 40px rgba(53, 20, 29, 0.08), 0 1px 3px rgba(53, 20, 29, 0.04)', overflow: 'hidden' as const,
 }
 const headerBand = { backgroundColor: '#ffffff', borderBottom: '1px solid #F0E6E8' }
-const brandName = { fontSize: '18px', fontWeight: '700' as const, color: '#952A5E', margin: '0', lineHeight: '1' }
+const brandName = { fontSize: '18px', fontWeight: '700' as const, color: '#000000', margin: '0', lineHeight: '1' }
 const content = { padding: '36px 32px 28px' }
 const h1 = { fontSize: '22px', fontWeight: '700' as const, color: '#35141D', margin: '0 0 16px', lineHeight: '1.3' }
 const text = { fontSize: '15px', color: '#5C3D45', lineHeight: '1.7', margin: '0 0 18px' }

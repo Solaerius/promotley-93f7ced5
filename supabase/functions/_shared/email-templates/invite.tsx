@@ -20,19 +20,22 @@ import {
 interface InviteEmailProps {
   siteName: string
   siteUrl: string
+  recipientName?: string | null
   confirmationUrl: string
 }
 
 const LOGO_URL = 'https://fmvbzhlqzzwzciqgbzgp.supabase.co/storage/v1/object/public/email-assets/logo.png'
+const SITE_URL = 'https://promotley.se'
 
 export const InviteEmail = ({
   siteName,
   siteUrl,
+  recipientName,
   confirmationUrl,
 }: InviteEmailProps) => (
   <Html lang="sv" dir="ltr">
     <Head />
-    <Preview>Du har blivit inbjuden till Promotely!</Preview>
+    <Preview>Du har blivit inbjuden till Promotley!</Preview>
     <Body style={main}>
       <Container style={card}>
         <Section style={headerBand}>
@@ -42,10 +45,14 @@ export const InviteEmail = ({
                 <table cellPadding="0" cellSpacing="0">
                   <tr>
                     <td style={{ verticalAlign: 'middle' }}>
-                      <Img src={LOGO_URL} alt={siteName} width="40" height="40" style={{ display: 'block' }} />
+                      <Link href={SITE_URL}>
+                        <Img src={LOGO_URL} alt={siteName} width="40" height="40" style={{ display: 'block' }} />
+                      </Link>
                     </td>
                     <td style={{ verticalAlign: 'middle', paddingLeft: '12px' }}>
-                      <Text style={brandName}>Promotely UF</Text>
+                      <Link href={SITE_URL} style={{ textDecoration: 'none' }}>
+                        <Text style={brandName}>Promotley UF</Text>
+                      </Link>
                     </td>
                   </tr>
                 </table>
@@ -55,7 +62,7 @@ export const InviteEmail = ({
         </Section>
 
         <Section style={content}>
-          <Heading style={h1}>Hej!</Heading>
+          <Heading style={h1}>Hej{recipientName ? ` ${recipientName}` : ''}!</Heading>
           <Text style={text}>
             Du har blivit inbjuden att gå med i{' '}
             <Link href={siteUrl} style={link}><strong>{siteName}</strong></Link>
@@ -81,14 +88,14 @@ export const InviteEmail = ({
         <Section style={footer}>
           <Img src={LOGO_URL} alt={siteName} width="80" height="auto" style={footerLogo} />
           <Text style={footerLinks}>
-            <Link href={`${siteUrl}/help`} style={footerLink}>Hjälp</Link>
+            <Link href={`${SITE_URL}/help`} style={footerLink}>Hjälp</Link>
             {' · '}
-            <Link href={`${siteUrl}/privacy`} style={footerLink}>Integritetspolicy</Link>
+            <Link href={`${SITE_URL}/privacy`} style={footerLink}>Integritetspolicy</Link>
             {' · '}
-            <Link href={`${siteUrl}/terms`} style={footerLink}>Villkor</Link>
+            <Link href={`${SITE_URL}/terms`} style={footerLink}>Villkor</Link>
           </Text>
           <Text style={footerAddress}>
-            © {new Date().getFullYear()} Promotely · Stockholm, Sverige
+            © {new Date().getFullYear()} Promotley · Stockholm, Sverige
           </Text>
           <Text style={footerDisclaimer}>
             Inte förväntad inbjudan? Ignorera mejlet – inget konto skapas.
@@ -111,7 +118,7 @@ const card = {
   boxShadow: '0 8px 40px rgba(53, 20, 29, 0.08), 0 1px 3px rgba(53, 20, 29, 0.04)', overflow: 'hidden' as const,
 }
 const headerBand = { backgroundColor: '#ffffff', borderBottom: '1px solid #F0E6E8' }
-const brandName = { fontSize: '18px', fontWeight: '700' as const, color: '#952A5E', margin: '0', lineHeight: '1' }
+const brandName = { fontSize: '18px', fontWeight: '700' as const, color: '#000000', margin: '0', lineHeight: '1' }
 const content = { padding: '36px 32px 28px' }
 const h1 = { fontSize: '22px', fontWeight: '700' as const, color: '#35141D', margin: '0 0 16px', lineHeight: '1.3' }
 const text = { fontSize: '15px', color: '#5C3D45', lineHeight: '1.7', margin: '0 0 18px' }

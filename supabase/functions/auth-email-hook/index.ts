@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { sendLovableEmail, parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
 import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
 import { InviteEmail } from '../_shared/email-templates/invite.tsx'
 import { MagicLinkEmail } from '../_shared/email-templates/magic-link.tsx'
@@ -16,15 +17,14 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Bekräfta din e-post – Promotely',
-  invite: 'Du har blivit inbjuden till Promotely',
-  magiclink: 'Din inloggningslänk – Promotely',
-  recovery: 'Återställ ditt lösenord – Promotely',
-  email_change: 'Bekräfta din nya e-postadress – Promotely',
-  reauthentication: 'Din verifieringskod – Promotely',
+  signup: 'Bekräfta din e-post – Promotley',
+  invite: 'Du har blivit inbjuden till Promotley',
+  magiclink: 'Din inloggningslänk – Promotley',
+  recovery: 'Återställ ditt lösenord – Promotley',
+  email_change: 'Bekräfta din nya e-postadress – Promotley',
+  reauthentication: 'Din verifieringskod – Promotley',
 }
 
-// Template mapping
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   signup: SignupEmail,
   invite: InviteEmail,
@@ -34,17 +34,11 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   reauthentication: ReauthenticationEmail,
 }
 
-// Configuration
 const SITE_NAME = "promotley"
 const SENDER_DOMAIN = "support.promotley.se"
 const ROOT_DOMAIN = "promotley.se"
-const FROM_DOMAIN = "promotley.se" // Domain shown in From address (may be root or sender subdomain)
+const FROM_DOMAIN = "promotley.se"
 
-// Sample data for preview mode ONLY (not used in actual email sending).
-// URLs are baked in at scaffold time from the project's real data.
-// The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
-// can always find-and-replace it with the actual recipient when sending test emails,
-// even if the project's domain has changed since the template was scaffolded.
 const SAMPLE_PROJECT_URL = "https://promotley.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
@@ -52,33 +46,69 @@ const SAMPLE_DATA: Record<string, object> = {
     siteName: SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
+    recipientName: 'Anna',
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   magiclink: {
     siteName: SITE_NAME,
+    recipientName: 'Anna',
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   recovery: {
     siteName: SITE_NAME,
+    recipientName: 'Anna',
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   invite: {
     siteName: SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
+    recipientName: 'Anna',
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   email_change: {
     siteName: SITE_NAME,
     email: SAMPLE_EMAIL,
     newEmail: SAMPLE_EMAIL,
+    recipientName: 'Anna',
     confirmationUrl: SAMPLE_PROJECT_URL,
   },
   reauthentication: {
     token: '123456',
+    recipientName: 'Anna',
   },
 }
 
-// Preview endpoint handler - returns rendered HTML without sending email
+async function resolveRecipientName(email: string): Promise<string | null> {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!supabaseUrl || !serviceRoleKey) return null
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
+
+    // Try to get display name from auth user metadata (Google/Apple provide full_name/name)
+    const { data: authUsers } = await supabase.auth.admin.listUsers()
+    const authUser = authUsers?.users?.find((u: any) => u.email === email)
+    const metaName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.name
+    if (metaName) return metaName
+
+    // Fall back to company_name from users table
+    const { data: profile } = await supabase
+      .from('users')
+      .select('company_name')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (profile?.company_name) return profile.company_name
+
+    return null
+  } catch (err) {
+    console.error('Failed to resolve recipient name', err)
+    return null
+  }
+}
+
+// Preview endpoint handler
 async function handlePreview(req: Request): Promise<Response> {
   const previewCorsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -128,7 +158,7 @@ async function handlePreview(req: Request): Promise<Response> {
   })
 }
 
-// Webhook handler - verifies signature and sends email
+// Webhook handler
 async function handleWebhook(req: Request): Promise<Response> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
 
@@ -140,7 +170,6 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Verify signature + timestamp, then parse payload.
   let payload: any
   let run_id = ''
   try {
@@ -184,10 +213,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     console.error('Webhook payload missing run_id')
     return new Response(
       JSON.stringify({ error: 'Invalid webhook payload' }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 
@@ -195,15 +221,10 @@ async function handleWebhook(req: Request): Promise<Response> {
     console.error('Unsupported payload version', { version: payload.version, run_id })
     return new Response(
       JSON.stringify({ error: `Unsupported payload version: ${payload.version}` }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 
-  // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
-  // payload.type is the hook event type ("auth")
   const emailType = payload.data.action_type
   console.log('Received auth event', { emailType, email: payload.data.email, run_id })
 
@@ -216,26 +237,25 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Build template props from payload.data (HookData structure)
+  // Resolve user's display name
+  const recipientName = await resolveRecipientName(payload.data.email)
+
   const templateProps = {
     siteName: SITE_NAME,
     siteUrl: `https://${ROOT_DOMAIN}`,
     recipient: payload.data.email,
+    recipientName,
     confirmationUrl: payload.data.url,
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
   }
 
-  // Render React Email to HTML and plain text
   const html = await renderAsync(React.createElement(EmailTemplate, templateProps))
   const text = await renderAsync(React.createElement(EmailTemplate, templateProps), {
     plainText: true,
   })
 
-  // Send email via Lovable Email API
-  // The callback URL is provided in the payload by Lovable, ensuring correct routing
-  // for both production and local development
   const callbackUrl = payload.data.callback_url
   if (!callbackUrl) {
     console.error('No callback_url in payload', { run_id })
@@ -280,17 +300,14 @@ async function handleWebhook(req: Request): Promise<Response> {
 Deno.serve(async (req) => {
   const url = new URL(req.url)
 
-  // Handle CORS preflight for main endpoint
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
-  // Route to preview handler for /preview path
   if (url.pathname.endsWith('/preview')) {
     return handlePreview(req)
   }
 
-  // Main webhook handler
   try {
     return await handleWebhook(req)
   } catch (error) {

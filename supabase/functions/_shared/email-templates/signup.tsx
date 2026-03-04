@@ -21,20 +21,23 @@ interface SignupEmailProps {
   siteName: string
   siteUrl: string
   recipient: string
+  recipientName?: string | null
   confirmationUrl: string
 }
 
 const LOGO_URL = 'https://fmvbzhlqzzwzciqgbzgp.supabase.co/storage/v1/object/public/email-assets/logo.png'
+const SITE_URL = 'https://promotley.se'
 
 export const SignupEmail = ({
   siteName,
   siteUrl,
   recipient,
+  recipientName,
   confirmationUrl,
 }: SignupEmailProps) => (
   <Html lang="sv" dir="ltr">
     <Head />
-    <Preview>Bekräfta din e-post – välkommen till Promotely!</Preview>
+    <Preview>Bekräfta din e-post – välkommen till Promotley!</Preview>
     <Body style={main}>
       <Container style={card}>
         <Section style={headerBand}>
@@ -44,10 +47,14 @@ export const SignupEmail = ({
                 <table cellPadding="0" cellSpacing="0">
                   <tr>
                     <td style={{ verticalAlign: 'middle' }}>
-                      <Img src={LOGO_URL} alt={siteName} width="40" height="40" style={{ display: 'block' }} />
+                      <Link href={SITE_URL}>
+                        <Img src={LOGO_URL} alt={siteName} width="40" height="40" style={{ display: 'block' }} />
+                      </Link>
                     </td>
                     <td style={{ verticalAlign: 'middle', paddingLeft: '12px' }}>
-                      <Text style={brandName}>Promotely UF</Text>
+                      <Link href={SITE_URL} style={{ textDecoration: 'none' }}>
+                        <Text style={brandName}>Promotley UF</Text>
+                      </Link>
                     </td>
                   </tr>
                 </table>
@@ -57,7 +64,7 @@ export const SignupEmail = ({
         </Section>
 
         <Section style={content}>
-          <Heading style={h1}>Hej {recipient}!</Heading>
+          <Heading style={h1}>Hej {recipientName || recipient}!</Heading>
           <Text style={text}>
             Vi är glada att ha dig ombord! Du är bara ett steg ifrån att börja växa på sociala medier.
           </Text>
@@ -81,14 +88,14 @@ export const SignupEmail = ({
         <Section style={footer}>
           <Img src={LOGO_URL} alt={siteName} width="80" height="auto" style={footerLogo} />
           <Text style={footerLinks}>
-            <Link href={`${siteUrl}/help`} style={footerLink}>Hjälp</Link>
+            <Link href={`${SITE_URL}/help`} style={footerLink}>Hjälp</Link>
             {' · '}
-            <Link href={`${siteUrl}/privacy`} style={footerLink}>Integritetspolicy</Link>
+            <Link href={`${SITE_URL}/privacy`} style={footerLink}>Integritetspolicy</Link>
             {' · '}
-            <Link href={`${siteUrl}/terms`} style={footerLink}>Villkor</Link>
+            <Link href={`${SITE_URL}/terms`} style={footerLink}>Villkor</Link>
           </Text>
           <Text style={footerAddress}>
-            © {new Date().getFullYear()} Promotely · Stockholm, Sverige
+            © {new Date().getFullYear()} Promotley · Stockholm, Sverige
           </Text>
           <Text style={footerDisclaimer}>
             Om du inte skapade ett konto hos oss kan du lugnt ignorera det här mejlet.
@@ -121,7 +128,7 @@ const headerBand = {
 const brandName = {
   fontSize: '18px',
   fontWeight: '700' as const,
-  color: '#952A5E',
+  color: '#000000',
   margin: '0',
   lineHeight: '1',
 }
