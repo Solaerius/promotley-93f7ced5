@@ -91,11 +91,12 @@ export const EmailChangeEmail = ({
         <Section style={footer}>
           <Img src={LOGO_URL} alt={siteName} width="80" height="auto" style={footerLogo} />
           <Text style={footerLinks}>
-            <Link href={`${SITE_URL}/help`} style={footerLink}>Hjälp</Link>
+            <Link href={`${SITE_URL}/privacy-policy`} style={footerLink}>Integritetspolicy</Link>
             {' · '}
-            <Link href={`${SITE_URL}/privacy`} style={footerLink}>Integritetspolicy</Link>
-            {' · '}
-            <Link href={`${SITE_URL}/terms`} style={footerLink}>Villkor</Link>
+            <Link href={`${SITE_URL}/terms-of-service`} style={footerLink}>Villkor</Link>
+          </Text>
+          <Text style={footerContact}>
+            <Link href="mailto:support@promotley.se" style={footerLink}>support@promotley.se</Link>
           </Text>
           <Text style={footerAddress}>
             © {new Date().getFullYear()} Promotley · Stockholm, Sverige
@@ -140,4 +141,5 @@ const footerLogo = { margin: '0 auto 12px', display: 'block' as const, opacity: 
 const footerLinks = { fontSize: '13px', color: '#9B8A8E', margin: '0 0 8px', lineHeight: '1.5' }
 const footerLink = { color: '#952A5E', textDecoration: 'none' }
 const footerAddress = { fontSize: '11px', color: '#B8A5AA', margin: '0 0 8px' }
+const footerContact = { fontSize: '13px', color: '#9B8A8E', margin: '0 0 8px', lineHeight: '1.5' }
 const footerDisclaimer = { fontSize: '11px', color: '#C8BCC0', margin: '0', fontStyle: 'italic' as const }
