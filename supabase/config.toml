@@ -1,79 +1,56 @@
 project_id = "fmvbzhlqzzwzciqgbzgp"
 
 [functions]
-enabled = true
-
-[functions.generate-suggestion]
-verify_jwt = true
-
-[functions.analytics]
-verify_jwt = true
-
-[functions.calendar]
-verify_jwt = true
-
-[functions.ai-assistant]
-verify_jwt = false
-
-[functions.notifications]
-verify_jwt = true
-
-[functions.user-profile]
-verify_jwt = true
-
-[functions.oauth-callback]
-verify_jwt = false
-
-[functions.get-meta-app-id]
-verify_jwt = true
-
-[functions.cleanup-oauth-states]
-verify_jwt = false
-
-[functions.tiktok-webhook]
-verify_jwt = false
-
-[functions.refresh-tiktok-token]
-verify_jwt = true
-
-[functions.fetch-tiktok-data]
-verify_jwt = true
-
-[functions.fetch-meta-data]
-verify_jwt = true
-
-[functions.init-tiktok-oauth]
-verify_jwt = true
-
-[functions.send-chat-notification]
-verify_jwt = false
-
-[functions.generate-ai-analysis]
-verify_jwt = true
-
-[functions.init-meta-oauth]
-verify_jwt = true
-
-[functions.billing]
-verify_jwt = false
-
-[functions.send-verification]
-verify_jwt = false
-
-[functions.parse-knowledge-docs]
-verify_jwt = false
-
-[functions.send-org-invite]
-verify_jwt = true
-
-[functions.meta-deauthorize]
-verify_jwt = false
-
-[functions.meta-data-deletion]
-verify_jwt = false
-
-[functions.disconnect-meta]
-verify_jwt = false
-
-[functions.redeem-promotion]
-verify_jwt = true
+  enabled = true
+  [functions.ai-assistant]
+    verify_jwt = false
+  [functions.analytics]
+    verify_jwt = true
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.billing]
+    verify_jwt = false
+  [functions.calendar]
+    verify_jwt = true
+  [functions.cleanup-oauth-states]
+    verify_jwt = false
+  [functions.disconnect-meta]
+    verify_jwt = false
+  [functions.fetch-meta-data]
+    verify_jwt = true
+  [functions.fetch-tiktok-data]
+    verify_jwt = true
+  [functions.generate-ai-analysis]
+    verify_jwt = true
+  [functions.generate-suggestion]
+    verify_jwt = true
+  [functions.get-meta-app-id]
+    verify_jwt = true
+  [functions.init-meta-oauth]
+    verify_jwt = true
+  [functions.init-tiktok-oauth]
+    verify_jwt = true
+  [functions.meta-data-deletion]
+    verify_jwt = false
+  [functions.meta-deauthorize]
+    verify_jwt = false
+  [functions.notifications]
+    verify_jwt = true
+  [functions.oauth-callback]
+    verify_jwt = false
+  [functions.parse-knowledge-docs]
+    verify_jwt = false
+  [functions.redeem-promotion]
+    verify_jwt = true
+  [functions.refresh-tiktok-token]
+    verify_jwt = true
+  [functions.send-chat-notification]
+    verify_jwt = false
+  [functions.send-org-invite]
+    verify_jwt = true
+  [functions.send-verification]
+    verify_jwt = false
+  [functions.tiktok-webhook]
+    verify_jwt = false
+  [functions.user-profile]
+    verify_jwt = true
