@@ -8,6 +8,8 @@ project_id = "fmvbzhlqzzwzciqgbzgp"
     verify_jwt = true
   [functions.auth-email-hook]
     verify_jwt = false
+  [functions.dev-setup]
+    verify_jwt = false
   [functions.billing]
     verify_jwt = false
   [functions.calendar]

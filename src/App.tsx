@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -43,6 +44,10 @@ import ContentIdeas from "./pages/ai/ContentIdeas";
 import WeeklyPlanner from "./pages/ai/WeeklyPlanner";
 import CampaignStrategy from "./pages/ai/CampaignStrategy";
 import UFTips from "./pages/ai/UFTips";
+
+const DevAutoLogin = import.meta.env.DEV
+  ? lazy(() => import("./pages/DevAutoLogin"))
+  : null;
 
 const queryClient = new QueryClient();
 
@@ -233,6 +238,14 @@ const App = () => (
               } 
             />
             <Route path="/join/:code" element={<JoinOrganization />} />
+            {/* Dev auto-login route (only in development) */}
+            {import.meta.env.DEV && DevAutoLogin && (
+              <Route path="/dev/auto-login" element={
+                <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" /></div>}>
+                  <DevAutoLogin />
+                </Suspense>
+              } />
+            )}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
