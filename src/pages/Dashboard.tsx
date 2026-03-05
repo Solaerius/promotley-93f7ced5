@@ -273,7 +273,7 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Stats Row - Glass cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div data-tour="stats-row" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {statsCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -308,6 +308,7 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.4 }}
           className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+          data-tour="quick-links"
         >
           {quickLinks.map((link) => {
             const Icon = link.icon;
@@ -342,6 +343,7 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.4 }}
           className="liquid-glass-light p-6"
+          data-tour="growth-chart"
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
             <div className="flex items-center gap-2">

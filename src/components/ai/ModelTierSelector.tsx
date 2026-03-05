@@ -36,7 +36,7 @@ const ModelTierSelector = ({ value, onChange, compact = false }: ModelTierSelect
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
-                  <span>{tier.emoji}</span>
+                  <tier.icon className="w-3.5 h-3.5" />
                   {!compact && <span>{tier.label}</span>}
                   {compact && <span className="hidden sm:inline">{tier.label}</span>}
                 </button>

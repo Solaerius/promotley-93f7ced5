@@ -181,7 +181,7 @@ const Onboarding = () => {
       }
 
       toast({
-        title: "Välkommen! 🎉",
+        title: "Välkommen!",
         description: "Din profil är nu komplett. Välkommen till Promotely!",
       });
       navigate("/dashboard");
@@ -393,7 +393,7 @@ const Onboarding = () => {
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
                   <Sparkles className="w-4 h-4 text-primary shrink-0" />
                   <p className="text-sm text-muted-foreground">
-                    Desto mer information du fyller i, desto bättre kan AI:n hjälpa dig 🚀
+                    Desto mer information du fyller i, desto bättre kan AI:n hjälpa dig.
                   </p>
                 </div>
 

@@ -108,7 +108,7 @@ export default function AuthCallback() {
                 });
                 if (redeemData?.success) {
                   toast({
-                    title: "🎉 Kampanjkod inlöst!",
+                    title: "Kampanjkod inlöst!",
                     description: `Du fick ${redeemData.credits_given} gratiskrediter!`,
                   });
                 }

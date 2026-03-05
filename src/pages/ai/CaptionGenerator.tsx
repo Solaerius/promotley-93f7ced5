@@ -16,7 +16,7 @@ interface CaptionResult {
 
 const SYSTEM_PROMPT = `Du är en expert på sociala medier-captions. Svara ALLTID i JSON-format.
 Skapa 3 olika captions baserat på användarens input. Variera stil och längd.
-Format: {"captions": [{"text": "caption med emojis och radbrytningar", "tone": "tonens namn"}]}`;
+Format: {"captions": [{"text": "caption med radbrytningar", "tone": "tonens namn"}]}`;
 
 const CaptionGenerator = () => {
   const [platform, setPlatform] = useState('instagram');

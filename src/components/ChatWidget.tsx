@@ -624,7 +624,7 @@ const ChatWidget = () => {
                 <div className="mb-4 p-4 rounded-full bg-muted/50">
                   <MessageCircle className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Hej! 👋</h3>
+                <h3 className="text-lg font-semibold mb-2">Hej!</h3>
                 <p className="text-sm text-muted-foreground">
                   Skriv ett meddelande så återkommer vi så snart vi kan!
                 </p>

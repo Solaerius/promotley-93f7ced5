@@ -42,7 +42,7 @@ const AIPage = () => {
     <DashboardLayout>
       <div className="flex flex-col h-full min-h-0">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-20 backdrop-blur-xl pb-4 -mx-4 px-4 pt-2 border-b border-white/10 mb-4">
+        <div data-tour="ai-tabs" className="sticky top-0 z-20 backdrop-blur-xl pb-4 -mx-4 px-4 pt-2 border-b border-white/10 mb-4">
           <div className="mb-4">
             <h1 className="text-2xl md:text-3xl font-bold dashboard-heading-dark">AI-Assistent</h1>
             <p className="text-sm dashboard-subheading-dark">

@@ -62,7 +62,7 @@ const DevAutoLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-4">
         <div className="bg-destructive/10 text-destructive px-4 py-2 rounded-lg text-sm font-medium">
-          ⚠️ DEV ONLY — Auto Login
+          DEV ONLY — Auto Login
         </div>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
         <p className="text-muted-foreground">{status}</p>

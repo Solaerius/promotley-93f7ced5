@@ -80,7 +80,7 @@ export default function JoinOrganization() {
           <CardTitle className="text-xl">
             {status === "initializing" && "Laddar..."}
             {status === "loading" && "Ansluter till organisation..."}
-            {status === "success" && "Välkommen! 🎉"}
+            {status === "success" && "Välkommen!"}
             {status === "error" && "Något gick fel"}
             {status === "auth_required" && "Logga in för att fortsätta"}
           </CardTitle>

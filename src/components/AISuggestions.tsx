@@ -113,7 +113,7 @@ export const AISuggestions = () => {
 
       setSuggestion(response.data);
       toast({
-        title: "✨ Förslag genererat!",
+        title: "Förslag genererat!",
         description: "Ditt AI-genererade innehållsförslag är klart",
       });
     } catch (error) {
@@ -223,8 +223,8 @@ export const AISuggestions = () => {
                 <p className="text-sm font-semibold text-muted-foreground">Exempel på AI-genererat inlägg</p>
               </div>
               <div className="space-y-2 opacity-75">
-                <p className="text-sm font-medium">💡 Idé: Behind-the-scenes av er produktutveckling</p>
-                <p className="text-sm">📝 Caption: "Från idé till verklighet! 🚀 Här är hur vi skapar våra produkter..."</p>
+                <p className="text-sm font-medium">Idé: Behind-the-scenes av er produktutveckling</p>
+                <p className="text-sm">Caption: "Från idé till verklighet! Här är hur vi skapar våra produkter..."</p>
                 <div className="flex flex-wrap gap-1">
                   <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">#ufföretag</span>
                   <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">#bakomkulisserna</span>

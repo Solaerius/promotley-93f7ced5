@@ -107,7 +107,7 @@ const Demo = () => {
       <div className="sticky top-0 z-[60] bg-gradient-to-r from-primary/90 to-secondary/90 backdrop-blur-lg text-white py-2.5 px-4 text-center">
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <span className="text-sm font-medium">
-            🎯 Du tittar på en demo av {demoCompany.foretagsnamn}
+            Du tittar på en demo av {demoCompany.foretagsnamn}
           </span>
           <Link to="/auth?mode=register">
             <Button size="sm" variant="secondary" className="gap-1.5 text-xs">
@@ -293,7 +293,7 @@ const Demo = () => {
                   </h4>
                   <ul className="space-y-1">
                     {demoAIAnalysis.strengths.map((s, i) => (
-                      <li key={i} className="text-sm dashboard-subheading-dark">✅ {s}</li>
+                      <li key={i} className="text-sm dashboard-subheading-dark">{s}</li>
                     ))}
                   </ul>
                 </div>
@@ -303,7 +303,7 @@ const Demo = () => {
                   </h4>
                   <ul className="space-y-1">
                     {demoAIAnalysis.improvements.map((s, i) => (
-                      <li key={i} className="text-sm dashboard-subheading-dark">💡 {s}</li>
+                      <li key={i} className="text-sm dashboard-subheading-dark">{s}</li>
                     ))}
                   </ul>
                 </div>
@@ -313,7 +313,7 @@ const Demo = () => {
                   </h4>
                   <ul className="space-y-1">
                     {demoAIAnalysis.nextSteps.map((s, i) => (
-                      <li key={i} className="text-sm dashboard-subheading-dark">🚀 {s}</li>
+                      <li key={i} className="text-sm dashboard-subheading-dark">{s}</li>
                     ))}
                   </ul>
                 </div>
@@ -470,7 +470,7 @@ const Demo = () => {
                     </h4>
                     <ul className="space-y-1">
                       {demoAIAnalysis.strengths.map((s, i) => (
-                        <li key={i} className="text-sm dashboard-subheading-dark">✅ {s}</li>
+                        <li key={i} className="text-sm dashboard-subheading-dark">{s}</li>
                       ))}
                     </ul>
                   </div>
@@ -480,7 +480,7 @@ const Demo = () => {
                     </h4>
                     <ul className="space-y-1">
                       {demoAIAnalysis.improvements.map((s, i) => (
-                        <li key={i} className="text-sm dashboard-subheading-dark">💡 {s}</li>
+                        <li key={i} className="text-sm dashboard-subheading-dark">{s}</li>
                       ))}
                     </ul>
                   </div>
@@ -624,7 +624,7 @@ const Demo = () => {
           style={{ background: 'linear-gradient(135deg, hsl(9 90% 55% / 0.25) 0%, hsl(331 70% 45% / 0.25) 100%)' }}
         >
           <h3 className="text-2xl font-bold dashboard-heading-dark mb-2">
-            Redo att växa som {demoCompany.foretagsnamn}? 🚀
+            Redo att växa som {demoCompany.foretagsnamn}?
           </h3>
           <p className="dashboard-subheading-dark mb-5 max-w-md mx-auto">
             Skapa ditt konto gratis och få tillgång till AI-driven marknadsföring anpassad för ditt företag.

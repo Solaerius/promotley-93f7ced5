@@ -15,7 +15,7 @@ const AccountPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="w-full max-w-6xl mx-auto">
+      <div data-tour="account-section" className="w-full max-w-6xl mx-auto">
         {/* Header - Force dark mode colors */}
         <div className="text-center mb-4">
           <h1 className="text-xl md:text-2xl font-bold dashboard-heading-dark mb-1">

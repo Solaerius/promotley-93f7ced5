@@ -6,7 +6,6 @@ export interface ModelTierConfig {
   id: ModelTier;
   label: string;
   icon: typeof Zap;
-  emoji: string;
   description: string;
   creditMultiplier: number;
   defaultModel: string;
@@ -18,7 +17,6 @@ export const MODEL_TIERS: Record<ModelTier, ModelTierConfig> = {
     id: 'fast',
     label: 'Snabb',
     icon: Zap,
-    emoji: '⚡',
     description: 'Snabba svar, lägre kostnad – AI väljer optimal modell',
     creditMultiplier: 0.5,
     defaultModel: 'google/gemini-2.5-flash-lite',
@@ -28,7 +26,6 @@ export const MODEL_TIERS: Record<ModelTier, ModelTierConfig> = {
     id: 'standard',
     label: 'Standard',
     icon: Sparkles,
-    emoji: '✨',
     description: 'Balanserad kvalitet – AI väljer bästa modellen för din fråga',
     creditMultiplier: 1,
     defaultModel: 'google/gemini-3-flash-preview',
@@ -38,7 +35,6 @@ export const MODEL_TIERS: Record<ModelTier, ModelTierConfig> = {
     id: 'premium',
     label: 'Premium',
     icon: Brain,
-    emoji: '🧠',
     description: 'Bästa kvalitet – AI Council väljer toppmodell för komplexa uppgifter',
     creditMultiplier: 2,
     defaultModel: 'google/gemini-2.5-pro',

@@ -179,7 +179,7 @@ const Calendar = () => {
       setGenerationProgress(100);
 
       toast({
-        title: "✅ Plan skapad!",
+        title: "Plan skapad!",
         description: "Din AI-marknadsföringsplan har genererats. Kolla AI-chatten för detaljer.",
       });
     } catch (err: any) {
@@ -237,7 +237,7 @@ const Calendar = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 animate-fade-in">
+      <div data-tour="calendar-view" className="space-y-4 animate-fade-in">
         {/* Header - Force dark mode colors */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>

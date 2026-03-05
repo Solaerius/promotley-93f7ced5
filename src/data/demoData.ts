@@ -58,9 +58,9 @@ export const demoChartData = [
 ];
 
 export const demoCalendarPosts = [
-  { id: '1', title: 'Ny hoodie-drop 🔥', platform: 'instagram', date: new Date().toISOString().split('T')[0], description: 'Visa nya vinterkollektion' },
+  { id: '1', title: 'Ny hoodie-drop', platform: 'instagram', date: new Date().toISOString().split('T')[0], description: 'Visa nya vinterkollektion' },
   { id: '2', title: 'Behind the print-video', platform: 'tiktok', date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], description: 'Filma screentrycks-processen' },
-  { id: '3', title: 'Kundstyle-repost 🧊', platform: 'instagram', date: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0], description: 'Dela kundens outfit-bild' },
+  { id: '3', title: 'Kundstyle-repost', platform: 'instagram', date: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0], description: 'Dela kundens outfit-bild' },
 ];
 
 export const demoSalesRadar = {
@@ -157,8 +157,8 @@ export const demoAIAnalysis = {
 export const demoChatMessages = [
   {
     role: 'assistant' as const,
-    message: 'Hej! 👋 Jag är din AI-marknadsföringsassistent. Jag kan hjälpa dig med strategier, innehållsidéer och analyser för Nordic Hoodies UF. Vad vill du veta?',
+    message: 'Hej! Jag är din AI-marknadsföringsassistent. Jag kan hjälpa dig med strategier, innehållsidéer och analyser för Nordic Hoodies UF. Vad vill du veta?',
   },
 ];
 
-export const DEMO_LIMIT_MESSAGE = 'Detta är en demo – skapa ett konto för att låsa upp alla funktioner! 🚀';
+export const DEMO_LIMIT_MESSAGE = 'Detta är en demo – skapa ett konto för att låsa upp alla funktioner.';

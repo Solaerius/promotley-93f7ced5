@@ -4,7 +4,7 @@ import AnalyticsContent from "@/components/analytics/AnalyticsContent";
 const AnalyticsPage = () => {
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div data-tour="analytics-overview" className="space-y-6 animate-fade-in">
         {/* Header */}
         <div>
           <h1 className="text-3xl md:text-4xl font-bold dashboard-heading-dark mb-2">Statistik</h1>

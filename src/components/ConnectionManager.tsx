@@ -66,7 +66,7 @@ export const ConnectionManager = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { toast({ title: "Inte inloggad", description: "Du måste vara inloggad", variant: "destructive" }); return; }
-      if (isConnected('tiktok')) { toast({ title: "⚠️ Redan ansluten", description: "TikTok är redan anslutet.", variant: "destructive" }); setConnectingProvider(null); return; }
+      if (isConnected('tiktok')) { toast({ title: "Redan ansluten", description: "TikTok är redan anslutet.", variant: "destructive" }); setConnectingProvider(null); return; }
       const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', { headers: { Authorization: `Bearer ${session.access_token}` } });
       if (error || !data?.url) throw new Error('Could not initialize TikTok OAuth');
       window.location.href = data.url;
@@ -90,7 +90,7 @@ export const ConnectionManager = () => {
       toast({ title: "✓ Frånkopplad", description: `${provider === 'meta_ig' ? 'Instagram' : provider === 'tiktok' ? 'TikTok' : provider} har kopplats från` });
       await loadConnections();
     } catch (error) {
-      toast({ title: "❌ Fel vid frånkoppling", description: error instanceof Error ? error.message : "Kunde inte koppla från kontot", variant: "destructive" });
+      toast({ title: "Fel vid frånkoppling", description: error instanceof Error ? error.message : "Kunde inte koppla från kontot", variant: "destructive" });
     }
   };
 

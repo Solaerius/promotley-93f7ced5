@@ -154,7 +154,7 @@ const BillingSuccess = () => {
                 </div>
 
                 <h1 className="text-3xl md:text-4xl font-bold mb-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                  {creditsAdded} krediter har lagts till! 🎉
+                  {creditsAdded} krediter har lagts till!
                 </h1>
                 
                 <p className="text-lg text-muted-foreground mb-8 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 delay-100">
@@ -204,7 +204,7 @@ const BillingSuccess = () => {
                 </div>
 
                 <h1 className="text-3xl md:text-4xl font-bold mb-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
-                  Välkommen till {PLAN_LABELS[activatedPlan] || "Promotely Pro"}! 🎉
+                  Välkommen till {PLAN_LABELS[activatedPlan] || "Promotely Pro"}!
                 </h1>
                 
                 <p className="text-lg text-muted-foreground mb-8 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 delay-100">
