@@ -14,10 +14,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 344 45% 10%;
     
-    /* Primary: vibrant orange-red */
-    --primary: 9 84% 52%;
+    /* Primary: rich purple-magenta */
+    --primary: 331 65% 35%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 9 90% 58%;
+    --primary-glow: 331 70% 45%;
     
     /* Secondary: rich magenta-pink */
     --secondary: 331 65% 35%;
@@ -39,7 +39,7 @@
     
     --border: 30 15% 82%;
     --input: 30 15% 82%;
-    --ring: 9 84% 52%;
+    --ring: 331 65% 35%;
     --radius: 0.75rem;
     
     /* VIBRANT Gradients */
@@ -55,17 +55,17 @@
     --shadow-md: 0 6px 16px hsl(344 45% 10% / 0.18);
     --shadow-lg: 0 10px 30px hsl(344 45% 10% / 0.24);
     --shadow-xl: 0 20px 50px hsl(344 45% 10% / 0.29);
-    --shadow-elegant: 0 8px 32px -8px hsl(9 84% 52% / 0.45), 0 4px 16px -4px hsl(344 45% 10% / 0.2);
-    --shadow-glow: 0 0 30px hsl(9 84% 52% / 0.5);
+    --shadow-elegant: 0 8px 32px -8px hsl(331 65% 35% / 0.45), 0 4px 16px -4px hsl(344 45% 10% / 0.2);
+    --shadow-glow: 0 0 30px hsl(331 65% 35% / 0.5);
     --shadow-soft: 0 6px 20px hsl(344 45% 10% / 0.16);
     --shadow-card: 0 4px 12px hsl(344 45% 10% / 0.18), 0 2px 4px hsl(344 45% 10% / 0.1);
     --shadow-card-hover: 0 10px 30px hsl(344 45% 10% / 0.26), 0 6px 12px hsl(344 45% 10% / 0.13);
     --shadow-input: 0 2px 8px hsl(344 45% 10% / 0.16), inset 0 1px 2px hsl(344 45% 10% / 0.05);
-    --shadow-input-focus: 0 4px 14px hsl(9 84% 52% / 0.24), inset 0 1px 2px hsl(344 45% 10% / 0.05);
+    --shadow-input-focus: 0 4px 14px hsl(331 65% 35% / 0.24), inset 0 1px 2px hsl(344 45% 10% / 0.05);
     --outline-subtle: hsl(30 25% 72%);
-    --outline-subtle-focus: hsl(9 84% 52%);
+    --outline-subtle-focus: hsl(331 65% 35%);
     --outline-input: hsl(30 30% 62%);
-    --outline-input-focus: hsl(9 84% 52%);
+    --outline-input-focus: hsl(331 65% 35%);
   }
 
   .dark {
@@ -75,9 +75,9 @@
     --card-foreground: 30 20% 95%;
     --popover: 344 35% 9%;
     --popover-foreground: 30 20% 95%;
-    --primary: 9 85% 55%;
+    --primary: 331 60% 42%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 9 90% 60%;
+    --primary-glow: 331 65% 48%;
     --secondary: 331 60% 42%;
     --secondary-foreground: 0 0% 100%;
     --muted: 344 30% 12%;
@@ -92,7 +92,7 @@
     --warning-foreground: 0 0% 100%;
     --border: 344 25% 22%;
     --input: 344 25% 22%;
-    --ring: 9 85% 55%;
+    --ring: 331 60% 42%;
     --gradient-primary: linear-gradient(135deg, hsl(9 85% 55%) 0%, hsl(331 65% 45%) 50%, hsl(344 50% 35%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(331 60% 42%) 0%, hsl(344 40% 18%) 100%);
     --gradient-diagonal: linear-gradient(135deg, hsl(344 40% 10%) 0%, hsl(331 55% 25%) 40%, hsl(9 75% 45%) 100%);

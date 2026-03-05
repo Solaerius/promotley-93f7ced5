@@ -100,7 +100,7 @@ export const ConnectionManager = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { toast({ title: "Inte inloggad", variant: "destructive" }); setConnectingProvider(null); return; }
       await supabase.from('tokens').delete().eq('user_id', session.user.id).eq('provider', 'tiktok');
-      toast({ title: "🔄 Återansluter...", description: "Godkänn behörigheterna på TikTok", duration: 3000 });
+      toast({ title: "Återansluter...", description: "Godkänn behörigheterna på TikTok", duration: 3000 });
       const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', { headers: { Authorization: `Bearer ${session.access_token}` } });
       if (error || !data?.url) throw new Error('Could not initialize TikTok OAuth');
       window.location.href = data.url;

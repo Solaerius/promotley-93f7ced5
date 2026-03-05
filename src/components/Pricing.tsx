@@ -102,7 +102,7 @@ const Pricing = () => {
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="bg-gradient-primary text-white px-4 py-1.5 rounded-full text-xs font-semibold shadow-md whitespace-nowrap">
-                    Mest populär ⭐
+                    Mest populär
                   </span>
                 </div>
               )}

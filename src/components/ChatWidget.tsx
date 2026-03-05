@@ -30,6 +30,7 @@ const ChatWidget = () => {
   const [autoReplyHasBeenSent, setAutoReplyHasBeenSent] = useState(false);
   const [isChatClosed, setIsChatClosed] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
+  const [hasUnread, setHasUnread] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastMessageTimestampRef = useRef<string | null>(null);
@@ -211,8 +212,11 @@ const ChatWidget = () => {
     const channel = supabase
       .channel(`live_chat_${sessionId}`)
       .on('broadcast', { event: 'new_message' }, (payload) => {
-        console.log("✅ Broadcast: new_message received!", payload.payload);
+        console.log("Broadcast: new_message received!", payload.payload);
         const newMessage = payload.payload as Message;
+        if (newMessage.sender_type === 'admin' && !isOpen) {
+          setHasUnread(true);
+        }
         setMessages((prev) => {
           const filtered = prev.filter(m => 
             m.id !== newMessage.id && !m.id.startsWith('temp-')
@@ -461,6 +465,7 @@ const ChatWidget = () => {
   const handleOpen = () => {
     setIsOpen(true);
     setIsClosing(false);
+    setHasUnread(false);
     
     // Create session if needed
     if (!sessionId) {
@@ -537,7 +542,9 @@ const ChatWidget = () => {
           aria-label="Öppna chat"
         >
           <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-pulse" />
+          {hasUnread && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full border-2 border-secondary animate-pulse" />
+          )}
         </button>
       )}
 

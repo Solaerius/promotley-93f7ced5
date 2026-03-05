@@ -47,7 +47,7 @@ const PromoCodeInput = ({ variant = "inline", onSuccess, className = "" }: Promo
         setSuccess(credits);
         setCode("");
         toast({
-          title: "🎉 Kampanjkod inlöst!",
+          title: "Kampanjkod inlöst!",
           description: `Du fick ${credits} gratiskrediter!`,
         });
         onSuccess?.(credits);

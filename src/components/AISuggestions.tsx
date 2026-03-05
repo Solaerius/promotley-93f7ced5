@@ -239,7 +239,7 @@ export const AISuggestions = () => {
               <div className="rounded-lg border border-primary/20 bg-card p-4 space-y-3">
                 <div>
                   <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                    💡 Idé
+                    Idé
                   </h4>
                   <p className="text-foreground">{suggestion.idea}</p>
                 </div>
@@ -247,7 +247,7 @@ export const AISuggestions = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <h4 className="font-semibold text-sm text-muted-foreground">
-                      📝 Caption
+                      Caption
                     </h4>
                     <Button
                       size="sm"
@@ -270,7 +270,7 @@ export const AISuggestions = () => {
 
                 <div>
                   <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                    🏷️ Hashtags
+                    Hashtags
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {suggestion.hashtags.map((tag, idx) => (
@@ -286,7 +286,7 @@ export const AISuggestions = () => {
 
                 <div>
                   <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                    ⏰ Bästa posttid
+                    Bästa posttid
                   </h4>
                   <p className="text-foreground">{suggestion.best_time}</p>
                 </div>
