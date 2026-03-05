@@ -6,6 +6,8 @@ import CreditsDisplay from '@/components/CreditsDisplay';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { IncompleteProfileModal } from '@/components/IncompleteProfileModal';
+import ModelTierSelector from '@/components/ai/ModelTierSelector';
+import { type ModelTier } from '@/lib/modelTiers';
 
 interface AIToolPageLayoutProps {
   title: string;
@@ -13,9 +15,11 @@ interface AIToolPageLayoutProps {
   icon: LucideIcon;
   gradient: string;
   children: ReactNode;
+  modelTier?: ModelTier;
+  onModelTierChange?: (tier: ModelTier) => void;
 }
 
-const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children }: AIToolPageLayoutProps) => {
+const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children, modelTier, onModelTierChange }: AIToolPageLayoutProps) => {
   const navigate = useNavigate();
   const { isProfileComplete, missingFields, showModal, setShowModal } = useProfileCompleteness();
 
@@ -41,7 +45,10 @@ const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children }
             </div>
             <p className="text-sm dashboard-subheading-dark ml-[52px]">{description}</p>
           </div>
-          <div className="shrink-0 hidden sm:block">
+          <div className="shrink-0 hidden sm:flex items-center gap-3">
+            {modelTier && onModelTierChange && (
+              <ModelTierSelector value={modelTier} onChange={onModelTierChange} compact />
+            )}
             <CreditsDisplay variant="compact" />
           </div>
         </div>

@@ -20,6 +20,7 @@ interface MessageMeta {
   timeframe?: any;
   targets?: string[];
   requestId?: string;
+  model_tier?: string;
 }
 
 export const useAIAssistant = (conversationId: string | null) => {

@@ -6,9 +6,10 @@ import { useProfileCompleteness } from './useProfileCompleteness';
 
 interface UseAIToolRequestOptions {
   toolSystemPrompt: string;
+  modelTier?: string;
 }
 
-export const useAIToolRequest = <T = any>({ toolSystemPrompt }: UseAIToolRequestOptions) => {
+export const useAIToolRequest = <T = any>({ toolSystemPrompt, modelTier }: UseAIToolRequestOptions) => {
   const [result, setResult] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,7 @@ export const useAIToolRequest = <T = any>({ toolSystemPrompt }: UseAIToolRequest
           message: userMessage,
           history: [],
           calendarContextDigest: [],
-          meta: { toolSystemPrompt },
+          meta: { toolSystemPrompt, model_tier: modelTier || 'standard' },
         },
       });
 

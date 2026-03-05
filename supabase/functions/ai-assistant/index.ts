@@ -77,20 +77,23 @@ function sanitizeUserMessage(message: string): { sanitized: string; flagged: boo
   return { sanitized, flagged: false };
 }
 
+// Model tier configuration matching frontend
+const MODEL_TIER_CONFIG: Record<string, { model: string; multiplier: number }> = {
+  fast: { model: 'google/gemini-2.5-flash-lite', multiplier: 0.5 },
+  standard: { model: 'google/gemini-3-flash-preview', multiplier: 1 },
+  premium: { model: 'google/gemini-2.5-pro', multiplier: 2 },
+};
+
 // Credit cost estimation based on request type and complexity
-const estimateCreditCost = (action: string, message?: string): number => {
-  // Marketing plans are expensive (uses gpt-4o for Pro, multiple posts)
+const estimateCreditCost = (action: string, message?: string, modelTier: string = 'standard'): number => {
+  let baseCost = 1;
+
+  // Marketing plans are expensive
   if (action === 'create-marketing-plan') {
-    return 8; // Premium cost for marketing plans
-  }
-  
-  // Analysis requests
-  if (action === 'analyze') {
-    return 3;
-  }
-  
-  // Chat messages - estimate based on complexity
-  if (action === 'chat' && message) {
+    baseCost = 5;
+  } else if (action === 'analyze') {
+    baseCost = 3;
+  } else if (action === 'chat' && message) {
     const lowerMsg = message.toLowerCase();
     
     // Complex requests (strategies, plans, detailed analysis)
@@ -100,23 +103,20 @@ const estimateCreditCost = (action: string, message?: string): number => {
         lowerMsg.includes('marknadsföring') ||
         lowerMsg.includes('kampanj') ||
         lowerMsg.includes('innehållskalender')) {
-      return 3;
-    }
-    
-    // Medium complexity (analysis, recommendations)
-    if (lowerMsg.includes('analys') || 
+      baseCost = 3;
+    } else if (lowerMsg.includes('analys') || 
         lowerMsg.includes('tips') || 
         lowerMsg.includes('rekommend') ||
         lowerMsg.includes('förslag') ||
         lowerMsg.includes('förbättra')) {
-      return 2;
+      baseCost = 2;
+    } else {
+      baseCost = 1;
     }
-    
-    // Simple questions
-    return 1;
   }
   
-  return 1;
+  const tierConfig = MODEL_TIER_CONFIG[modelTier] || MODEL_TIER_CONFIG.standard;
+  return Math.max(1, Math.ceil(baseCost * tierConfig.multiplier));
 };
 
 serve(async (req) => {
@@ -186,17 +186,17 @@ serve(async (req) => {
 
     console.log('📍 Action:', action, 'Path:', url.pathname);
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     
-    if (!openaiApiKey) {
-      console.error('❌ OPENAI_API_KEY not found');
+    if (!lovableApiKey) {
+      console.error('❌ LOVABLE_API_KEY not found');
       return new Response(
         JSON.stringify({ error: 'AI not connected', placeholder: true }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('✅ OpenAI API key found');
+    console.log('✅ Lovable AI Gateway key found');
 
     // Helper function to get user stats with caching
     const getUserStats = async (userId: string, platform?: string) => {
@@ -298,7 +298,7 @@ serve(async (req) => {
     if (action === 'chat' && req.method === 'POST') {
       const body = await req.json();
       const { message: rawMessage, history, calendarContextDigest = [], meta } = body;
-
+      const modelTier = meta?.model_tier || 'standard';
       if (!rawMessage) {
         return new Response(
           JSON.stringify({ error: 'Message required' }),
@@ -342,7 +342,7 @@ serve(async (req) => {
         (message.toLowerCase().includes('skapa') || message.toLowerCase().includes('generera'));
 
       // Estimate credit cost for this request
-      const estimatedCost = isMarketingPlanRequest ? 5 : estimateCreditCost('chat', message);
+      const estimatedCost = isMarketingPlanRequest ? estimateCreditCost('create-marketing-plan', message, modelTier) : estimateCreditCost('chat', message, modelTier);
       console.log('💰 Estimated credit cost:', estimatedCost, isMarketingPlanRequest ? '(marketing plan)' : '');
       
       // Check user credits
@@ -434,14 +434,18 @@ Returnera ENDAST ett JSON-objekt (ingen annan text före eller efter) med följa
 
 Skapa minst 10-15 inlägg spridda jämnt över tidsperioden. Variera kanaler (instagram, tiktok, facebook). Alla datum måste vara mellan ${now.toISOString().split('T')[0]} och ${endDate.toISOString().split('T')[0]}. Gör innehållet relevant för UF-företag.`;
 
-        const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        const tierConfig = MODEL_TIER_CONFIG[modelTier] || MODEL_TIER_CONFIG.standard;
+        // Use premium model for marketing plans regardless of tier selection
+        const planModel = modelTier === 'fast' ? 'google/gemini-2.5-flash' : 'google/gemini-2.5-pro';
+        
+        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${openaiApiKey}`,
+            'Authorization': `Bearer ${lovableApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o',
+            model: planModel,
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: message }
@@ -616,20 +620,10 @@ ${items.map((k: any) => `### ${k.title}\nFULL INNEHÅLL:\n${k.content}`).join('\
 `).join('\n')}
 ` : '';
 
-      // Determine AI model based on user plan
-      // Model mapping: Starter → gpt-4o-mini, Growth → gpt-4.1-mini, Pro → gpt-4.1-mini (default), gpt-4o (premium)
-      let aiModel = 'gpt-4o-mini';
-      switch (userData?.plan) {
-        case 'growth':
-          aiModel = 'gpt-4.1-mini-2025-04-14';
-          break;
-        case 'pro':
-          aiModel = 'gpt-4.1-mini-2025-04-14'; // Pro uses gpt-4.1-mini for standard chat, gpt-4o reserved for premium features
-          break;
-        default:
-          aiModel = 'gpt-4o-mini';
-      }
-      console.log('🤖 Using AI model:', aiModel, 'for plan:', userData?.plan);
+      // Use model based on user-selected tier
+      const tierConfig = MODEL_TIER_CONFIG[modelTier] || MODEL_TIER_CONFIG.standard;
+      const aiModel = tierConfig.model;
+      console.log('🤖 Using AI model:', aiModel, 'tier:', modelTier);
 
       // Check if this is a tool-specific request with a custom system prompt
       const toolSystemPrompt = meta?.toolSystemPrompt;
@@ -637,11 +631,13 @@ ${items.map((k: any) => `### ${k.title}\nFULL INNEHÅLL:\n${k.content}`).join('\
       const messages = [
         {
           role: 'system',
-          content: toolSystemPrompt 
+           content: toolSystemPrompt 
             ? `${toolSystemPrompt}
 
 Användarens företagsprofil:
 ${profileInfo || 'Ingen profil angiven.'}
+
+${knowledgeContext}
 
 Svara ALLTID på svenska.`
             : `Du är Promotely AI – en expert på marknadsföring för UF-företag (Ung Företagsamhet) och svenska startups.
@@ -774,7 +770,7 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
         }
       ];
 
-      console.log('Calling OpenAI...');
+      console.log('Calling Lovable AI Gateway...');
 
       // Call OpenAI API with tool calling support
       // Use dynamic model based on user plan
@@ -790,10 +786,10 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
         requestBody.tool_choice = 'auto';
       }
 
-      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
+          'Authorization': `Bearer ${lovableApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
@@ -801,7 +797,19 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
 
       if (!aiResponse.ok) {
         const errorText = await aiResponse.text();
-        console.error('❌ OpenAI API error:', aiResponse.status, errorText);
+        console.error('❌ AI Gateway error:', aiResponse.status, errorText);
+        if (aiResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ error: 'Rate limit exceeded', message: 'För många förfrågningar. Vänta en stund och försök igen.' }),
+            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        if (aiResponse.status === 402) {
+          return new Response(
+            JSON.stringify({ error: 'Payment required', message: 'AI-tjänsten kräver mer krediter.' }),
+            { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         throw new Error(`AI API error: ${aiResponse.status} - ${errorText}`);
       }
 
@@ -996,14 +1004,14 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
             }
           ];
 
-          const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          const followUpResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${openaiApiKey}`,
+              'Authorization': `Bearer ${lovableApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'gpt-4o-mini',
+              model: tierConfig.model,
               messages: followUpMessages,
               temperature: 0.7,
               max_tokens: 1000,
@@ -1136,14 +1144,14 @@ Returnera ENDAST ett JSON-objekt (ingen annan text före eller efter) med följa
 
 Skapa minst 10-15 inlägg spridda jämnt över tidsperioden. Variera kanaler (instagram, tiktok, facebook). Alla datum måste vara mellan ${now.toISOString().split('T')[0]} och ${endDate.toISOString().split('T')[0]}. Gör innehållet relevant för UF-företag.`;
 
-      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
+          'Authorization': `Bearer ${lovableApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'google/gemini-2.5-pro',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: 'Skapa marknadsföringsplanen nu i JSON-format.' }

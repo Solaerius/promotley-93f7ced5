@@ -26,6 +26,8 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { trackEvent } from "@/lib/trackEvent";
+import { type ModelTier } from "@/lib/modelTiers";
+import ModelTierSelector from "@/components/ai/ModelTierSelector";
 
 interface AIChatContentProps {
   prefillMessage?: string | null;
@@ -50,6 +52,7 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
   const { credits } = useUserCredits();
   const { isProfileComplete, missingFields, showModal, setShowModal, requireComplete, loading: profileLoading } = useProfileCompleteness();
   const [inputMessage, setInputMessage] = useState("");
+  const [modelTier, setModelTier] = useState<ModelTier>('standard');
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -122,7 +125,7 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
     try {
       const convId = await ensureConversation();
       if (!convId) return;
-      await sendMessage(messageToSend);
+      await sendMessage(messageToSend, { model_tier: modelTier });
       // Refresh conversations to update title/order
       fetchConversations();
     } finally {
@@ -140,7 +143,7 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
     try {
       const convId = await ensureConversation();
       if (!convId) return;
-      await sendMessage(command);
+      await sendMessage(command, { model_tier: modelTier });
       fetchConversations();
     } finally {
       setIsSending(false);
@@ -412,6 +415,12 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
 
         {/* Input */}
         <motion.div className="mt-4 relative px-2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex items-center justify-between mb-2">
+            <ModelTierSelector value={modelTier} onChange={setModelTier} compact={isMobile} />
+            <div className="shrink-0">
+              <CreditsDisplay variant="compact" />
+            </div>
+          </div>
           <div className="flex gap-2 items-end liquid-glass-light rounded-2xl p-2 border border-white/20">
             <Textarea
               ref={textareaRef}
@@ -438,11 +447,6 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
                 {loading || isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             </motion.div>
-          </div>
-
-          {/* Credits Display */}
-          <div className="absolute -top-8 right-2">
-            <CreditsDisplay variant="compact" />
           </div>
         </motion.div>
       </div>
