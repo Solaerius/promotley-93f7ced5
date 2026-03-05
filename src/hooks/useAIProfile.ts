@@ -22,6 +22,7 @@ interface AIProfile {
   kanaler?: string[];
   allman_info?: string;
   onboarding_completed?: boolean;
+  tutorial_seen?: boolean;
   nyckelord?: string[];
   created_at?: string;
   updated_at?: string;

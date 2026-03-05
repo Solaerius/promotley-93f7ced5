@@ -1,0 +1,1 @@
+ALTER TABLE public.ai_profiles ADD COLUMN IF NOT EXISTS tutorial_seen boolean DEFAULT false;

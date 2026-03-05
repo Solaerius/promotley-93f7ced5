@@ -164,6 +164,7 @@ export type Database = {
           sprakpreferens: string | null
           stad: string | null
           tonalitet: string | null
+          tutorial_seen: boolean | null
           updated_at: string | null
           user_id: string
         }
@@ -189,6 +190,7 @@ export type Database = {
           sprakpreferens?: string | null
           stad?: string | null
           tonalitet?: string | null
+          tutorial_seen?: boolean | null
           updated_at?: string | null
           user_id: string
         }
@@ -214,6 +216,7 @@ export type Database = {
           sprakpreferens?: string | null
           stad?: string | null
           tonalitet?: string | null
+          tutorial_seen?: boolean | null
           updated_at?: string | null
           user_id?: string
         }

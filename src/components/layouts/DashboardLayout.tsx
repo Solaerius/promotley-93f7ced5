@@ -1,11 +1,13 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useNavbarPosition } from "@/hooks/useNavbarPosition";
+import { useAIProfile } from "@/hooks/useAIProfile";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { DashboardNavbar } from "@/components/DashboardNavbar";
 import { DashboardFooter } from "@/components/DashboardFooter";
+import OnboardingTutorial from "@/components/OnboardingTutorial";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -43,8 +45,18 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
   const { user } = useAuth();
   const { needsOnboarding, loading: orgLoading } = useOrganization();
   const { position } = useNavbarPosition();
+  const { profile, loading: profileLoading } = useAIProfile();
+  const [showTutorial, setShowTutorial] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Show tutorial if profile loaded and tutorial not yet seen
+  useEffect(() => {
+    if (!profileLoading && profile && profile.tutorial_seen === false) {
+      setShowTutorial(true);
+    }
+  }, [profileLoading, profile]);
+
   useEffect(() => {
     if (!orgLoading && needsOnboarding && !location.pathname.startsWith('/organization')) {
       navigate('/organization/onboarding');
@@ -53,6 +65,13 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Onboarding Tutorial */}
+      <AnimatePresence>
+        {showTutorial && (
+          <OnboardingTutorial onComplete={() => setShowTutorial(false)} />
+        )}
+      </AnimatePresence>
+
       {/* Gradient Background - Light mode: clean white / Dark mode: darker slate */}
       <div className="fixed inset-0 z-0 bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" />
       
