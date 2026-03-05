@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS metrics_unique_daily ON public.metrics (user_id, connection_id, metric_type, period);

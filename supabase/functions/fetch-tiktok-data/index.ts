@@ -497,6 +497,53 @@ Deno.serve(async (req) => {
       timestamp: new Date().toISOString(),
     };
 
+    // Save daily snapshot to metrics table for growth tracking
+    try {
+      // Get connection_id for this user's TikTok
+      const { data: connectionData } = await supabase
+        .from('connections')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('provider', 'tiktok')
+        .maybeSingle();
+
+      if (connectionData) {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const metricsToSave = [
+          { metric_type: 'followers', value: response.user.follower_count },
+          { metric_type: 'following', value: response.user.following_count },
+          { metric_type: 'likes', value: response.user.likes_count },
+          { metric_type: 'video_count', value: response.user.video_count },
+          { metric_type: 'video_views', value: totalViews },
+        ];
+
+        for (const metric of metricsToSave) {
+          // Upsert: only one entry per metric per day (use period as date key)
+          const { error: metricsError } = await supabase
+            .from('metrics')
+            .upsert(
+              {
+                user_id: user.id,
+                connection_id: connectionData.id,
+                provider: 'tiktok',
+                metric_type: metric.metric_type,
+                value: metric.value,
+                period: today,
+                captured_at: new Date().toISOString(),
+              },
+              { onConflict: 'user_id,connection_id,metric_type,period', ignoreDuplicates: false }
+            );
+
+          if (metricsError) {
+            console.warn(`⚠️ Failed to save ${metric.metric_type} snapshot:`, metricsError.message);
+          }
+        }
+        console.log('📊 Daily TikTok snapshots saved for', today);
+      }
+    } catch (snapshotError) {
+      console.warn('⚠️ Snapshot saving failed (non-critical):', snapshotError);
+    }
+
     // Telemetry logging
     console.log('✅ TikTok data fetch completed:', {
       display_name: response.user.display_name,

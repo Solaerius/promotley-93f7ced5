@@ -25,6 +25,7 @@ import { useMetaData } from "@/hooks/useMetaData";
 import { useTikTokData } from "@/hooks/useTikTokData";
 import { useConnections } from "@/hooks/useConnections";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { useTikTokGrowth } from "@/hooks/useTikTokGrowth";
 import { Link } from "react-router-dom";
 import TikTokProfileSection from "@/components/TikTokProfileSection";
 
@@ -33,6 +34,7 @@ const AnalyticsContent = () => {
   const metaData = useMetaData();
   const tiktokData = useTikTokData();
   const { data: analyticsData, loading: analyticsLoading } = useAnalytics();
+  const { data: growthData, hasData: hasGrowthData } = useTikTokGrowth();
 
   const hasConnections = connections.length > 0;
 
@@ -118,25 +120,25 @@ const AnalyticsContent = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="liquid-glass-light">
           <CardHeader>
-            <CardTitle className="dashboard-heading-dark">Historik</CardTitle>
+            <CardTitle className="dashboard-heading-dark">Följartillväxt</CardTitle>
           </CardHeader>
           <CardContent>
-            {analyticsData.some(a => a.history && Array.isArray(a.history) && a.history.length > 0) ? (
+            {hasGrowthData ? (
               <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={getHistoryData(analyticsData[0]?.platform || '')}>
+                <LineChart data={growthData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
                   <Legend />
-                  <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} name="Värde" />
+                  <Line type="monotone" dataKey="followers" stroke="hsl(var(--primary))" strokeWidth={2} name="Följare" dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-[160px] flex items-center justify-center">
                 <div className="text-center">
-                  <Eye className="w-8 h-8 mx-auto mb-2 text-white/40" />
-                  <p className="text-sm dashboard-subheading-dark">Ingen historikdata ännu</p>
+                  <Users className="w-8 h-8 mx-auto mb-2 text-white/40" />
+                  <p className="text-sm dashboard-subheading-dark">Följartillväxt visas efter ett par dagars data</p>
                 </div>
               </div>
             )}
@@ -145,15 +147,29 @@ const AnalyticsContent = () => {
 
         <Card className="liquid-glass-light">
           <CardHeader>
-            <CardTitle className="dashboard-heading-dark">Engagemangsöversikt</CardTitle>
+            <CardTitle className="dashboard-heading-dark">Engagemang</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[160px] flex items-center justify-center">
-              <div className="text-center">
-                <Heart className="w-8 h-8 mx-auto mb-2 text-white/40" />
-                <p className="text-sm dashboard-subheading-dark">Ingen historikdata ännu</p>
+            {hasGrowthData ? (
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={growthData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                  <Legend />
+                  <Line type="monotone" dataKey="likes" stroke="#f472b6" strokeWidth={2} name="Likes" dot={false} />
+                  <Line type="monotone" dataKey="views" stroke="#60a5fa" strokeWidth={2} name="Visningar" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[160px] flex items-center justify-center">
+                <div className="text-center">
+                  <Heart className="w-8 h-8 mx-auto mb-2 text-white/40" />
+                  <p className="text-sm dashboard-subheading-dark">Engagemang visas efter ett par dagars data</p>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
