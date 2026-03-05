@@ -9,7 +9,8 @@ export interface ModelTierConfig {
   emoji: string;
   description: string;
   creditMultiplier: number;
-  model: string;
+  defaultModel: string;
+  modelPool: string[];
 }
 
 export const MODEL_TIERS: Record<ModelTier, ModelTierConfig> = {
@@ -18,27 +19,30 @@ export const MODEL_TIERS: Record<ModelTier, ModelTierConfig> = {
     label: 'Snabb',
     icon: Zap,
     emoji: '⚡',
-    description: 'Snabba svar, lägre kostnad',
+    description: 'Snabba svar, lägre kostnad – AI väljer optimal modell',
     creditMultiplier: 0.5,
-    model: 'google/gemini-2.5-flash-lite',
+    defaultModel: 'google/gemini-2.5-flash-lite',
+    modelPool: ['google/gemini-2.5-flash-lite', 'openai/gpt-5-nano'],
   },
   standard: {
     id: 'standard',
     label: 'Standard',
     icon: Sparkles,
     emoji: '✨',
-    description: 'Balanserad kvalitet och kostnad',
+    description: 'Balanserad kvalitet – AI väljer bästa modellen för din fråga',
     creditMultiplier: 1,
-    model: 'google/gemini-3-flash-preview',
+    defaultModel: 'google/gemini-3-flash-preview',
+    modelPool: ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash', 'openai/gpt-5-mini'],
   },
   premium: {
     id: 'premium',
     label: 'Premium',
     icon: Brain,
     emoji: '🧠',
-    description: 'Bästa kvalitet, högre kostnad',
+    description: 'Bästa kvalitet – AI Council väljer toppmodell för komplexa uppgifter',
     creditMultiplier: 2,
-    model: 'google/gemini-2.5-pro',
+    defaultModel: 'google/gemini-2.5-pro',
+    modelPool: ['google/gemini-2.5-pro', 'google/gemini-3-pro-preview', 'openai/gpt-5', 'openai/gpt-5.2'],
   },
 };
 
