@@ -77,11 +77,100 @@ function sanitizeUserMessage(message: string): { sanitized: string; flagged: boo
   return { sanitized, flagged: false };
 }
 
-// Model tier configuration matching frontend
-const MODEL_TIER_CONFIG: Record<string, { model: string; multiplier: number }> = {
-  fast: { model: 'google/gemini-2.5-flash-lite', multiplier: 0.5 },
-  standard: { model: 'google/gemini-3-flash-preview', multiplier: 1 },
-  premium: { model: 'google/gemini-2.5-pro', multiplier: 2 },
+// Model tier configuration with model pools for AI Council routing
+const MODEL_TIER_CONFIG: Record<string, { defaultModel: string; modelPool: string[]; multiplier: number }> = {
+  fast: { 
+    defaultModel: 'google/gemini-2.5-flash-lite', 
+    modelPool: ['google/gemini-2.5-flash-lite', 'openai/gpt-5-nano'],
+    multiplier: 0.5 
+  },
+  standard: { 
+    defaultModel: 'google/gemini-3-flash-preview', 
+    modelPool: ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash', 'openai/gpt-5-mini'],
+    multiplier: 1 
+  },
+  premium: { 
+    defaultModel: 'google/gemini-2.5-pro', 
+    modelPool: ['google/gemini-2.5-pro', 'google/gemini-3-pro-preview', 'openai/gpt-5', 'openai/gpt-5.2'],
+    multiplier: 2 
+  },
+};
+
+// AI Council: Intelligent model routing using a fast classifier
+const routeRequest = async (
+  message: string, 
+  tier: string, 
+  apiKey: string,
+  context?: { hasProfile: boolean; taskType?: string }
+): Promise<string> => {
+  const tierConfig = MODEL_TIER_CONFIG[tier] || MODEL_TIER_CONFIG.standard;
+  const pool = tierConfig.modelPool;
+  
+  // If pool has only one model, skip routing
+  if (pool.length <= 1) {
+    console.log('🧭 Single model in pool, using:', pool[0]);
+    return pool[0];
+  }
+
+  try {
+    const routingPrompt = `You are a model routing classifier. Given a user message and available models, pick the BEST model.
+
+Available models for this tier: ${pool.join(', ')}
+
+Model strengths:
+- google/gemini-2.5-flash-lite: Fastest, good for simple Q&A, classification, short answers
+- openai/gpt-5-nano: Fast, good for simple tasks, slightly better reasoning than flash-lite
+- google/gemini-3-flash-preview: Balanced speed/quality, good for content generation, lists
+- google/gemini-2.5-flash: Good context handling, better for longer inputs, analysis
+- openai/gpt-5-mini: Strong reasoning at moderate cost, good for structured outputs
+- google/gemini-2.5-pro: Top-tier multimodal, complex reasoning, large context
+- google/gemini-3-pro-preview: Next-gen quality, creative writing, nuanced responses
+- openai/gpt-5: Excellent reasoning, accuracy-critical tasks
+- openai/gpt-5.2: Best complex problem-solving, deep strategy, competitive analysis
+
+User context:
+- Has business profile: ${context?.hasProfile ? 'yes' : 'no'}
+- Task hint: ${context?.taskType || 'general chat'}
+
+Respond with ONLY the model name, nothing else.`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [
+          { role: 'system', content: routingPrompt },
+          { role: 'user', content: message.slice(0, 500) }
+        ],
+        temperature: 0,
+        max_tokens: 50,
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn('⚠️ Router call failed, using default model');
+      return tierConfig.defaultModel;
+    }
+
+    const data = await response.json();
+    const recommended = data.choices?.[0]?.message?.content?.trim();
+    
+    // Validate that the recommended model is in the pool
+    if (recommended && pool.includes(recommended)) {
+      console.log(`🧭 AI Council routed to: ${recommended} (from pool: ${pool.join(', ')})`);
+      return recommended;
+    }
+    
+    console.warn('⚠️ Router suggested invalid model:', recommended, '- using default');
+    return tierConfig.defaultModel;
+  } catch (err) {
+    console.warn('⚠️ Router error, using default:', err);
+    return tierConfig.defaultModel;
+  }
 };
 
 // Credit cost estimation based on request type and complexity
@@ -620,10 +709,23 @@ ${items.map((k: any) => `### ${k.title}\nFULL INNEHÅLL:\n${k.content}`).join('\
 `).join('\n')}
 ` : '';
 
-      // Use model based on user-selected tier
+      // AI Council: Route to optimal model based on message complexity
       const tierConfig = MODEL_TIER_CONFIG[modelTier] || MODEL_TIER_CONFIG.standard;
-      const aiModel = tierConfig.model;
-      console.log('🤖 Using AI model:', aiModel, 'tier:', modelTier);
+      
+      // Detect task type hint for routing
+      const lowerMsg = message.toLowerCase();
+      let taskTypeHint = 'general chat';
+      if (toolSystemPrompt) taskTypeHint = 'tool-specific generation';
+      else if (lowerMsg.includes('strategi') || lowerMsg.includes('plan')) taskTypeHint = 'strategy';
+      else if (lowerMsg.includes('analys')) taskTypeHint = 'analysis';
+      else if (lowerMsg.includes('caption') || lowerMsg.includes('text') || lowerMsg.includes('skriv')) taskTypeHint = 'creative';
+      else if (lowerMsg.includes('hashtag') || lowerMsg.includes('idé')) taskTypeHint = 'creative';
+      
+      const aiModel = await routeRequest(message, modelTier, lovableApiKey, {
+        hasProfile: !!userContext.profile,
+        taskType: taskTypeHint,
+      });
+      console.log('🤖 AI Council selected model:', aiModel, 'tier:', modelTier, 'task:', taskTypeHint);
 
       // Check if this is a tool-specific request with a custom system prompt
       const toolSystemPrompt = meta?.toolSystemPrompt;
@@ -1011,7 +1113,7 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: tierConfig.model,
+              model: aiModel,
               messages: followUpMessages,
               temperature: 0.7,
               max_tokens: 1000,
