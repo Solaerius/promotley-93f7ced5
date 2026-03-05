@@ -61,7 +61,7 @@ export const useSalesRadar = () => {
     }
   };
 
-  const generateRadar = async () => {
+  const generateRadar = async (modelTier: string = 'standard') => {
     try {
       setGenerating(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -77,6 +77,7 @@ export const useSalesRadar = () => {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
+        body: { model_tier: modelTier },
       });
 
       if (error) {

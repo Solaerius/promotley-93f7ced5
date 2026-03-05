@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useAIAnalysis } from '@/hooks/useAIAnalysis';
 import { useAIProfile } from '@/hooks/useAIProfile';
+import ModelTierSelector from '@/components/ai/ModelTierSelector';
+import type { ModelTier } from '@/lib/modelTiers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +17,7 @@ const AIAnalysisContent = () => {
   const [hasAccess, setHasAccess] = useState(true);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
+  const [modelTier, setModelTier] = useState<ModelTier>('standard');
 
   // Use selected analysis or latest
   const currentAnalysis = selectedAnalysisId 
@@ -62,11 +65,12 @@ const AIAnalysisContent = () => {
       {/* Header with Generate + History */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3 flex-wrap">
+          <ModelTierSelector value={modelTier} onChange={setModelTier} compact />
           <Button
             variant="gradient"
             onClick={async () => {
               try {
-                await generateAnalysis();
+                await generateAnalysis(modelTier);
                 setSelectedAnalysisId(null);
                 setHasAccess(true);
                 setAccessError(null);

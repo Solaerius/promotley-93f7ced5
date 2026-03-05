@@ -69,7 +69,7 @@ export const useAIAnalysis = () => {
     }
   };
 
-  const generateAnalysis = async () => {
+  const generateAnalysis = async (modelTier: string = 'standard') => {
     try {
       setGenerating(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -87,6 +87,7 @@ export const useAIAnalysis = () => {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
+        body: { model_tier: modelTier },
       });
 
       if (error) {

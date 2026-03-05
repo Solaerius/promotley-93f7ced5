@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useSalesRadar } from '@/hooks/useSalesRadar';
 import { useSalesRadarWatches } from '@/hooks/useSalesRadarWatches';
 import { useAIProfile } from '@/hooks/useAIProfile';
+import ModelTierSelector from '@/components/ai/ModelTierSelector';
+import type { ModelTier } from '@/lib/modelTiers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +41,7 @@ const SalesRadarContent = () => {
   const [hasAccess, setHasAccess] = useState(true);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [modelTier, setModelTier] = useState<ModelTier>('standard');
 
   // Track sales radar view once on mount
   useEffect(() => {
@@ -111,11 +114,12 @@ const SalesRadarContent = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3 flex-wrap">
+          <ModelTierSelector value={modelTier} onChange={setModelTier} compact />
           <Button
             variant="gradient"
             onClick={async () => {
               try {
-                await generateRadar();
+                await generateRadar(modelTier);
                 setSelectedId(null);
                 setHasAccess(true);
                 setAccessError(null);
