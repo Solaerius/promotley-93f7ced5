@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { creditUpdateEvent } from './useAIAssistant';
+import { useProfileCompleteness } from './useProfileCompleteness';
 
 interface UseAIToolRequestOptions {
   toolSystemPrompt: string;
@@ -12,8 +13,10 @@ export const useAIToolRequest = <T = any>({ toolSystemPrompt }: UseAIToolRequest
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { isProfileComplete } = useProfileCompleteness();
 
   const generate = async (userMessage: string) => {
+    if (!isProfileComplete) return null;
     try {
       setLoading(true);
       setError(null);

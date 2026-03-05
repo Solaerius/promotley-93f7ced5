@@ -4,6 +4,8 @@ import { ArrowLeft, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CreditsDisplay from '@/components/CreditsDisplay';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
+import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
+import { IncompleteProfileModal } from '@/components/IncompleteProfileModal';
 
 interface AIToolPageLayoutProps {
   title: string;
@@ -15,6 +17,7 @@ interface AIToolPageLayoutProps {
 
 const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children }: AIToolPageLayoutProps) => {
   const navigate = useNavigate();
+  const { isProfileComplete, missingFields, showModal, setShowModal } = useProfileCompleteness();
 
   return (
     <DashboardLayout hideFooter>
@@ -43,9 +46,37 @@ const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children }
           </div>
         </div>
 
-        {/* Content */}
-        {children}
+        {/* Content - disabled overlay if profile incomplete */}
+        {!isProfileComplete ? (
+          <div className="relative">
+            <div className="opacity-50 pointer-events-none select-none">
+              {children}
+            </div>
+            <div
+              className="absolute inset-0 flex items-center justify-center cursor-pointer"
+              onClick={() => setShowModal(true)}
+            >
+              <div className="bg-card border rounded-xl p-6 text-center shadow-lg max-w-sm mx-4">
+                <p className="font-semibold text-lg mb-2">Företagsinformation saknas</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Fyll i obligatorisk företagsinformation för att använda AI-verktyg.
+                </p>
+                <Button variant="gradient" onClick={() => setShowModal(true)}>
+                  Fyll i information
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          children
+        )}
       </div>
+
+      <IncompleteProfileModal
+        open={showModal}
+        onOpenChange={setShowModal}
+        missingFields={missingFields}
+      />
     </DashboardLayout>
   );
 };

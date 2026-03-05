@@ -25,6 +25,7 @@ const STEPS = [
 const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -70,18 +71,55 @@ const Onboarding = () => {
 
   const updateField = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+    // Clear error when user types
+    if (fieldErrors[key]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
   };
 
   // Validation per step
-  const isStep1Valid = () =>
-    formData.foretagsnamn.trim() !== "" &&
-    formData.branch.trim() !== "" &&
-    formData.stad.trim() !== "" &&
-    formData.postnummer.trim() !== "";
+  const validateStep1 = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    if (!formData.foretagsnamn.trim()) errors.foretagsnamn = "Företagsnamn krävs";
+    else if (formData.foretagsnamn.trim().length < 2) errors.foretagsnamn = "Företagsnamn måste vara minst 2 tecken";
+    else if (formData.foretagsnamn.trim().length > 100) errors.foretagsnamn = "Max 100 tecken";
 
-  const isStep2Valid = () =>
-    formData.malgrupp.trim() !== "" &&
-    formData.produkt_beskrivning.trim() !== "";
+    if (!formData.branch.trim()) errors.branch = "Bransch krävs";
+    else if (formData.branch.trim().length < 2) errors.branch = "Bransch måste vara minst 2 tecken";
+    else if (formData.branch.trim().length > 100) errors.branch = "Max 100 tecken";
+
+    if (!formData.stad.trim()) errors.stad = "Stad krävs";
+    else if (!/^[\p{L}\s\-]+$/u.test(formData.stad.trim())) errors.stad = "Stad kan bara innehålla bokstäver";
+    else if (formData.stad.trim().length > 100) errors.stad = "Max 100 tecken";
+
+    if (!formData.postnummer.trim()) errors.postnummer = "Postnummer krävs";
+    else {
+      const cleaned = formData.postnummer.replace(/\s/g, "");
+      if (!/^\d{5}$/.test(cleaned)) errors.postnummer = "Postnummer måste vara exakt 5 siffror";
+    }
+
+    return errors;
+  };
+
+  const validateStep2 = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    if (!formData.malgrupp.trim()) errors.malgrupp = "Målgrupp krävs";
+    else if (formData.malgrupp.trim().length < 5) errors.malgrupp = "Målgrupp måste vara minst 5 tecken";
+    else if (formData.malgrupp.trim().length > 300) errors.malgrupp = "Max 300 tecken";
+
+    if (!formData.produkt_beskrivning.trim()) errors.produkt_beskrivning = "Företagsbeskrivning krävs";
+    else if (formData.produkt_beskrivning.trim().length < 10) errors.produkt_beskrivning = "Beskrivningen måste vara minst 10 tecken";
+    else if (formData.produkt_beskrivning.trim().length > 1000) errors.produkt_beskrivning = "Max 1000 tecken";
+
+    return errors;
+  };
+
+  const isStep1Valid = () => Object.keys(validateStep1()).length === 0;
+  const isStep2Valid = () => Object.keys(validateStep2()).length === 0;
 
   const canProceed = () => {
     if (step === 0) return isStep1Valid();
@@ -90,14 +128,17 @@ const Onboarding = () => {
   };
 
   const handleNext = () => {
-    if (!canProceed()) {
+    const errors = step === 0 ? validateStep1() : step === 1 ? validateStep2() : {};
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       toast({
-        title: "Fyll i obligatoriska fält",
-        description: "Fält markerade med * måste fyllas i.",
+        title: "Fyll i obligatoriska fält korrekt",
+        description: Object.values(errors)[0],
         variant: "destructive",
       });
       return;
     }
+    setFieldErrors({});
     setStep((s) => Math.min(s + 1, 2));
   };
 
@@ -116,7 +157,7 @@ const Onboarding = () => {
         foretagsnamn: formData.foretagsnamn.trim(),
         branch: formData.branch.trim(),
         stad: formData.stad.trim(),
-        postnummer: formData.postnummer.trim(),
+        postnummer: formData.postnummer.replace(/\s/g, "").trim(),
         lan: formData.lan.trim() || undefined,
         land: formData.land.trim() || "Sverige",
         malgrupp: formData.malgrupp.trim(),
@@ -234,7 +275,9 @@ const Onboarding = () => {
                     onChange={(e) => updateField("foretagsnamn", e.target.value)}
                     placeholder="T.ex. Solglimtar UF"
                     disabled={isSubmitting}
+                    className={fieldErrors.foretagsnamn ? "border-destructive" : ""}
                   />
+                  {fieldErrors.foretagsnamn && <p className="text-xs text-destructive">{fieldErrors.foretagsnamn}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Bransch <RequiredStar /></Label>
@@ -243,7 +286,9 @@ const Onboarding = () => {
                     onChange={(e) => updateField("branch", e.target.value)}
                     placeholder="T.ex. Mode, Teknik, Livsmedel"
                     disabled={isSubmitting}
+                    className={fieldErrors.branch ? "border-destructive" : ""}
                   />
+                  {fieldErrors.branch && <p className="text-xs text-destructive">{fieldErrors.branch}</p>}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -253,7 +298,9 @@ const Onboarding = () => {
                       onChange={(e) => updateField("stad", e.target.value)}
                       placeholder="T.ex. Stockholm"
                       disabled={isSubmitting}
+                      className={fieldErrors.stad ? "border-destructive" : ""}
                     />
+                    {fieldErrors.stad && <p className="text-xs text-destructive">{fieldErrors.stad}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label>Postnummer <RequiredStar /></Label>
@@ -262,7 +309,11 @@ const Onboarding = () => {
                       onChange={(e) => updateField("postnummer", e.target.value)}
                       placeholder="T.ex. 114 52"
                       disabled={isSubmitting}
+                      maxLength={6}
+                      className={fieldErrors.postnummer ? "border-destructive" : ""}
                     />
+                    {fieldErrors.postnummer && <p className="text-xs text-destructive">{fieldErrors.postnummer}</p>}
+                    {!fieldErrors.postnummer && <p className="text-xs text-muted-foreground">5 siffror, t.ex. 11452</p>}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -288,7 +339,9 @@ const Onboarding = () => {
                     onChange={(e) => updateField("malgrupp", e.target.value)}
                     placeholder="T.ex. Unga vuxna 18-25 år som gillar hållbart mode"
                     disabled={isSubmitting}
+                    className={fieldErrors.malgrupp ? "border-destructive" : ""}
                   />
+                  {fieldErrors.malgrupp && <p className="text-xs text-destructive">{fieldErrors.malgrupp}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Beskriv ditt företag <RequiredStar /></Label>
@@ -298,7 +351,9 @@ const Onboarding = () => {
                     placeholder="T.ex. Vi säljer handgjorda smycken inspirerade av nordisk natur. Vi riktar oss till unga vuxna som gillar hållbart mode."
                     rows={4}
                     disabled={isSubmitting}
+                    className={fieldErrors.produkt_beskrivning ? "border-destructive" : ""}
                   />
+                  {fieldErrors.produkt_beskrivning && <p className="text-xs text-destructive">{fieldErrors.produkt_beskrivning}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Målsättning <OptionalHint /></Label>

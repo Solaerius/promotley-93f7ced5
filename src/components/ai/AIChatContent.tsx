@@ -16,7 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useConversations } from "@/hooks/useConversations";
 import { useUserCredits } from "@/hooks/useUserCredits";
-import { useAIProfile } from "@/hooks/useAIProfile";
+import { useProfileCompleteness } from "@/hooks/useProfileCompleteness";
+import { IncompleteProfileModal } from "@/components/IncompleteProfileModal";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarketingPlanCard from "@/components/MarketingPlanCard";
 import CreditsDisplay from "@/components/CreditsDisplay";
@@ -47,7 +48,7 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
 
   const { messages, loading, sendMessage, implementPlan } = useAIAssistant(activeConversationId);
   const { credits } = useUserCredits();
-  const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
+  const { isProfileComplete, missingFields, showModal, setShowModal, requireComplete, loading: profileLoading } = useProfileCompleteness();
   const [inputMessage, setInputMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -66,15 +67,7 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
 
   const hasInsufficientCredits = credits && credits.credits_left <= 0;
 
-  const filledFields = aiProfile ? [
-    aiProfile.branch,
-    aiProfile.malgrupp,
-    aiProfile.produkt_beskrivning,
-    aiProfile.malsattning
-  ].filter(Boolean).length : 0;
-
-  const isAIProfileComplete = filledFields >= 3;
-  const isAIBlocked = !isAIProfileComplete && !aiProfileLoading;
+  const isAIBlocked = !isProfileComplete && !profileLoading;
 
   const quickCommands = [
     { icon: BarChart3, text: "Analysera min statistik", color: "from-blue-500 to-cyan-500" },
@@ -118,7 +111,8 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
   };
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || loading || isAIBlocked || hasInsufficientCredits || isSending) return;
+    if (!inputMessage.trim() || loading || hasInsufficientCredits || isSending) return;
+    if (!requireComplete()) return;
 
     const messageToSend = inputMessage.trim();
     setInputMessage("");
@@ -139,7 +133,8 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
   };
 
   const handleQuickCommand = async (command: string) => {
-    if (loading || isAIBlocked || hasInsufficientCredits || isSending) return;
+    if (loading || hasInsufficientCredits || isSending) return;
+    if (!requireComplete()) return;
 
     setIsSending(true);
     try {
@@ -258,10 +253,10 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
             >
-              <Alert variant="destructive" className="mb-4 border-0 bg-destructive/10 mx-2">
+              <Alert variant="destructive" className="mb-4 border-0 bg-destructive/10 mx-2 cursor-pointer" onClick={() => setShowModal(true)}>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Fyll i minst 3 fält i din AI-profil under Konto för att använda AI-chatten.
+                  Fyll i all obligatorisk företagsinformation för att använda AI-funktioner. <span className="underline font-medium">Klicka här</span>
                 </AlertDescription>
               </Alert>
             </motion.div>
@@ -451,6 +446,11 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
           </div>
         </motion.div>
       </div>
+      <IncompleteProfileModal
+        open={showModal}
+        onOpenChange={setShowModal}
+        missingFields={missingFields}
+      />
     </div>
   );
 };
