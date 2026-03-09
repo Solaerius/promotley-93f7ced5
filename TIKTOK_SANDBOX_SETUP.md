@@ -194,7 +194,7 @@ Den här guiden hjälper dig att integrera TikTok i sandbox-läge så att ni kan
 1. Gå till TikTok Developer Portal → din app → Login Kit settings
 2. Lägg till EXAKT denna URL:
    ```
-   https://fmvbzhlqzzwzciqgbzgp.supabase.co/functions/v1/oauth-callback
+   https://YOUR_PROJECT_REF.supabase.co/functions/v1/oauth-callback
    ```
 3. Spara och vänta några minuter innan ni testar igen
 
