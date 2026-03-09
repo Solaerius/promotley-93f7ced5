@@ -59,7 +59,7 @@ Den här guiden hjälper dig att integrera TikTok i sandbox-läge så att ni kan
    
    För **Lovable preview** (under utveckling):
    ```
-   https://fmvbzhlqzzwzciqgbzgp.supabase.co/functions/v1/oauth-callback
+   https://YOUR_PROJECT_REF.supabase.co/functions/v1/oauth-callback
    ```
 
    För **produktion** (när ni deployar):
@@ -68,7 +68,7 @@ Den här guiden hjälper dig att integrera TikTok i sandbox-läge så att ni kan
    ```
    ELLER
    ```
-   https://fmvbzhlqzzwzciqgbzgp.supabase.co/functions/v1/oauth-callback
+   https://YOUR_PROJECT_REF.supabase.co/functions/v1/oauth-callback
    ```
 
 3. **Spara inställningarna**
@@ -194,7 +194,7 @@ Den här guiden hjälper dig att integrera TikTok i sandbox-läge så att ni kan
 1. Gå till TikTok Developer Portal → din app → Login Kit settings
 2. Lägg till EXAKT denna URL:
    ```
-   https://fmvbzhlqzzwzciqgbzgp.supabase.co/functions/v1/oauth-callback
+   https://YOUR_PROJECT_REF.supabase.co/functions/v1/oauth-callback
    ```
 3. Spara och vänta några minuter innan ni testar igen
 
@@ -293,7 +293,7 @@ Innan ni testar, se till att ni har:
 - [ ] Skapat TikTok Developer account
 - [ ] Skapat en app i developer portal
 - [ ] Lagt till `user.info.basic` och `video.list` scopes
-- [ ] Konfigurerat redirect URL: `https://fmvbzhlqzzwzciqgbzgp.supabase.co/functions/v1/oauth-callback`
+- [ ] Konfigurerat redirect URL: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/oauth-callback`
 - [ ] Kopierat Client Key och Client Secret
 - [ ] Verifierat att secrets är konfigurerade i Lovable Cloud (`TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`)
 - [ ] Lagt till minst en test-användare i sandbox

@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-const DEV_EMAIL = import.meta.env.VITE_DEV_EMAIL || "test@promotely.dev";
-const DEV_PASSWORD = import.meta.env.VITE_DEV_PASSWORD || "DevTest2026!Promotely";
+const DEV_EMAIL = import.meta.env.VITE_DEV_EMAIL || "";
+const DEV_PASSWORD = import.meta.env.VITE_DEV_PASSWORD || "";
 
 const DevAutoLogin = () => {
   const navigate = useNavigate();
@@ -18,6 +18,11 @@ const DevAutoLogin = () => {
 
     if (!isAllowed) {
       navigate("/", { replace: true });
+      return;
+    }
+
+    if (!DEV_EMAIL || !DEV_PASSWORD) {
+      setStatus("Saknar VITE_DEV_EMAIL / VITE_DEV_PASSWORD i .env");
       return;
     }
 
