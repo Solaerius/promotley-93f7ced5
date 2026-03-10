@@ -233,7 +233,15 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                       <DropdownMenuItem
                         key={notification.id}
                         className="flex flex-col items-start p-3 cursor-pointer"
-                        onClick={() => !notification.read && markAsRead(notification.id)}
+                        onClick={() => {
+                          if (!notification.read) markAsRead(notification.id);
+                          if ((notification as any).action_url) {
+                            const url = (notification as any).action_type
+                              ? `${(notification as any).action_url}?spotlight=${(notification as any).action_type}`
+                              : (notification as any).action_url;
+                            navigate(url);
+                          }
+                        }}
                       >
                         <div className="flex items-start justify-between w-full">
                           <div className="flex-1">
