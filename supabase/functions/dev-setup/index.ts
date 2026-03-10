@@ -11,20 +11,15 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    // Only allow from preview / localhost origins
-    const origin = req.headers.get("origin") || "";
-    const isAllowed =
-      origin.includes("localhost") ||
-      origin.includes("lovable.app") ||
-      origin.includes("lovableproject.com");
+  // Block in production — only available when APP_ENV is explicitly set to "development"
+  if (Deno.env.get("APP_ENV") !== "development") {
+    return new Response(JSON.stringify({ error: "Not available" }), {
+      status: 404,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
-    if (!isAllowed) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+  try {
 
     const { email, password } = await req.json();
 
