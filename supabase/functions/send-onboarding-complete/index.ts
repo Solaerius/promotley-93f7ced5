@@ -131,7 +131,7 @@ serve(async (req) => {
         body: JSON.stringify({
           from: MAIL_FROM,
           to: [user.email],
-          subject: "Du är igång – första AI-analysen är gratis! 🎉",
+          subject: "Du är igång – första AI-analysen är gratis!",
           html,
         }),
       });
