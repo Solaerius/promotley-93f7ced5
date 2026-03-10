@@ -490,15 +490,12 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                       value={credits?.max_credits ? (credits.credits_left / credits.max_credits) * 100 : 0} 
                       className="h-2" 
                     />
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-[10px] text-muted-foreground">
-                        Förnyas {credits?.renewal_date ? new Date(credits.renewal_date).toLocaleDateString('sv-SE') : '—'}
-                      </span>
+                    <div className="flex justify-end mt-2">
                       <Button 
                         variant="outline" 
                         size="sm" 
                         className="h-5 text-[10px] px-2 rounded"
-                        onClick={() => navigate('/buy-credits')}
+                        onClick={() => navigate('/pricing')}
                       >
                         <Coins className="w-3 h-3 mr-1" />
                         Köp
