@@ -122,6 +122,15 @@ const AIPage = () => {
             </motion.div>
           </Tabs>
         </div>
+
+        {/* Spotlight overlay for notifications */}
+        {showSpotlight === 'spotlight_ai_analysis' && (
+          <SpotlightHighlight
+            selector='[data-spotlight="ai-analysis-btn"]'
+            duration={3000}
+            onDismiss={() => setShowSpotlight(null)}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
