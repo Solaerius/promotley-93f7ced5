@@ -112,9 +112,11 @@ serve(async (req) => {
     // Create in-app notification
     await adminClient.from("notifications").insert({
       user_id: user.id,
-      title: "Välkommen till Promotely! 🎉",
+      title: "Välkommen till Promotely!",
       message: `Din profil är klar. Prova din första AI-analys – den är gratis!`,
       read: false,
+      action_url: "/ai",
+      action_type: "spotlight_ai_analysis",
     });
 
     // Send email if Resend is configured
