@@ -55,13 +55,6 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Onboarding Tutorial */}
-      <AnimatePresence>
-        {showTutorial && (
-          <OnboardingTutorial onComplete={() => setShowTutorial(false)} />
-        )}
-      </AnimatePresence>
-
       {/* Gradient Background - Light mode: clean white / Dark mode: darker slate */}
       <div className="fixed inset-0 z-0 bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" />
       
