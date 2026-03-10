@@ -28,6 +28,7 @@ import AdminBanManagement from "./pages/AdminBanManagement";
 import AdminSwishOrders from "./pages/AdminSwishOrders";
 import AdminPromotions from "./pages/AdminPromotions";
 import AdminEmailBroadcast from "./pages/AdminEmailBroadcast";
+import AdminEmailAutomation from "./pages/AdminEmailAutomation";
 import OrganizationOnboarding from "./pages/OrganizationOnboarding";
 import OrganizationSettings from "./pages/OrganizationSettings";
 import CreateOrganization from "./pages/CreateOrganization";
