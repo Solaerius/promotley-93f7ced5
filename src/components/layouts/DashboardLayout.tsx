@@ -44,17 +44,8 @@ const DashboardLayout = ({ children, showBackButton, pageTitle, hideFooter }: Da
   const { user } = useAuth();
   const { needsOnboarding, loading: orgLoading } = useOrganization();
   const { position } = useNavbarPosition();
-  const { profile, loading: profileLoading } = useAIProfile();
-  const [showTutorial, setShowTutorial] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Show tutorial if profile loaded and tutorial not yet seen
-  useEffect(() => {
-    if (!profileLoading && profile && profile.tutorial_seen === false) {
-      setShowTutorial(true);
-    }
-  }, [profileLoading, profile]);
 
   useEffect(() => {
     if (!orgLoading && needsOnboarding && !location.pathname.startsWith('/organization')) {
