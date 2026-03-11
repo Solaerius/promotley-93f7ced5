@@ -10,7 +10,6 @@ import {
   Home,
   LogOut,
   MessageSquare,
-  Move,
   Coins,
   Moon,
   Sun,
@@ -21,9 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useUserCredits } from "@/hooks/useUserCredits";
-import { useNavbarPosition } from "@/hooks/useNavbarPosition";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -43,12 +41,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import logo from "@/assets/logo.png";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const navItems = [
-  { title: "Home", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Hem", href: "/dashboard", icon: LayoutDashboard },
   { title: "Statistik", href: "/analytics", icon: BarChart3 },
   { title: "AI", href: "/ai", icon: Sparkles },
+  { title: "AI-Chat", href: "/ai/chat", icon: MessageSquare },
   { title: "Kalender", href: "/calendar", icon: Calendar },
   { title: "Konto", href: "/account", icon: User },
 ];
@@ -61,7 +64,6 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { activeOrganization } = useOrganization();
   const { credits } = useUserCredits();
-  const { cyclePosition, getPositionLabel, position } = useNavbarPosition();
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
@@ -96,20 +98,25 @@ export function AppSidebar() {
 
   const isActive = (path: string) => {
     if (path === "/dashboard") return location.pathname === "/dashboard" || location.pathname === "/";
-    if (path === "/ai") return location.pathname.startsWith("/ai");
+    if (path === "/ai") return location.pathname === "/ai";
+    if (path === "/ai/chat") return location.pathname === "/ai/chat";
     if (path === "/account") return location.pathname.startsWith("/account") || location.pathname.startsWith("/settings") || location.pathname.startsWith("/organization");
     return location.pathname.startsWith(path);
   };
 
   const creditPct = credits?.max_credits ? (credits.credits_left / credits.max_credits) * 100 : 0;
   const creditColor = creditPct > 50 ? "bg-green-500" : creditPct > 20 ? "bg-yellow-500" : "bg-destructive";
+  const displayName = activeOrganization?.name || user?.email?.split("@")[0] || "Användare";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
+    <Sidebar collapsible="icon" className="border-r border-border/40 bg-background">
       <SidebarHeader className="p-3">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <img src={logo} alt="Promotley" className="w-7 h-7 shrink-0" />
-          {!collapsed && <span className="font-semibold text-sm text-foreground">Promotley</span>}
+        <Link to="/dashboard" className="flex items-center gap-2.5">
+          {/* SVG logo instead of image to prevent flicker */}
+          <div className="w-7 h-7 shrink-0 rounded-lg bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-xs">P</span>
+          </div>
+          {!collapsed && <span className="font-semibold text-sm text-foreground tracking-tight">Promotely</span>}
         </Link>
       </SidebarHeader>
 
@@ -123,46 +130,36 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
-                      isActive={active}
                       tooltip={item.title}
+                      className={cn(
+                        "transition-all duration-150",
+                        active && "bg-primary/10 text-primary font-medium shadow-sm"
+                      )}
                     >
                       <Link to={item.href}>
-                        <item.icon className="h-4 w-4" />
+                        <item.icon className={cn("h-4 w-4", active && "text-primary")} />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}
-
-              {/* Chat / AI link */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="AI-Chat"
-                  isActive={location.pathname === "/ai/chat"}
-                >
-                  <Link to="/ai/chat">
-                    <MessageSquare className="h-4 w-4" />
-                    <span>AI-Chat</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Position toggle at bottom of content */}
+        {/* Dark mode toggle - always visible */}
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={cyclePosition}
-                  tooltip={`Flytta: ${getPositionLabel(position)}`}
+                  onClick={toggleTheme}
+                  tooltip={theme === "light" ? "Mörkt läge" : "Ljust läge"}
+                  className="transition-colors"
                 >
-                  <Move className="h-4 w-4" />
-                  <span>Flytta navbar</span>
+                  {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                  <span>{theme === "light" ? "Mörkt läge" : "Ljust läge"}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -170,79 +167,42 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="w-full"
-                >
-                  <Avatar className="h-6 w-6 shrink-0">
-                    <AvatarImage src={userAvatarUrl || undefined} />
-                    <AvatarFallback className="text-[10px] bg-muted">
-                      {activeOrganization?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="text-xs font-medium truncate">
-                      {activeOrganization?.name || user?.email?.split("@")[0] || "Användare"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
-                  </div>
-                  <ChevronUp className="h-3 w-3 shrink-0 text-muted-foreground" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-56">
-                {/* Credit gauge */}
-                <div className="px-3 py-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] text-muted-foreground">Krediter</span>
-                    <span className="text-[11px] font-semibold">
-                      {credits?.credits_left ?? 0} / {credits?.max_credits ?? 0}
-                    </span>
-                  </div>
-                  <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className={cn("h-full transition-all rounded-full", creditColor)}
-                      style={{ width: `${Math.min(creditPct, 100)}%` }}
-                    />
-                  </div>
-                  <button
-                    onClick={() => navigate("/buy-credits")}
-                    className="mt-2 flex items-center gap-1 text-[10px] text-primary hover:underline"
-                  >
-                    <Coins className="h-3 w-3" />
-                    Köp krediter
-                  </button>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={toggleTheme}>
-                  {theme === "light" ? <Moon className="mr-2 h-3.5 w-3.5" /> : <Sun className="mr-2 h-3.5 w-3.5" />}
-                  {theme === "light" ? "Mörkt läge" : "Ljust läge"}
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/account">
-                    <Settings className="mr-2 h-3.5 w-3.5" />
-                    Inställningar
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/">
-                    <Home className="mr-2 h-3.5 w-3.5" />
-                    Till startsidan
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                  <LogOut className="mr-2 h-3.5 w-3.5" />
-                  Logga ut
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className="p-2 border-t border-border/30">
+        {/* Profile with quick buttons */}
+        <div className="flex items-center gap-2">
+          <Avatar className="h-7 w-7 shrink-0">
+            <AvatarImage src={userAvatarUrl || undefined} />
+            <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+              {displayName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          {!collapsed && (
+            <>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate text-foreground">{displayName}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
+              </div>
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate("/account")}>
+                      <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Inställningar</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSignOut}>
+                      <LogOut className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Logga ut</TooltipContent>
+                </Tooltip>
+              </div>
+            </>
+          )}
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

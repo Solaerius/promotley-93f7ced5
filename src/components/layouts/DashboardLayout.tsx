@@ -19,8 +19,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 interface DashboardLayoutProps {
@@ -45,15 +43,12 @@ const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutPro
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
 
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Subtle gradient background */}
-          <div className="fixed inset-0 z-0 bg-gradient-to-br from-slate-50 via-white to-slate-100/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" />
-
           {/* Content header */}
-          <header className="sticky top-0 z-20 h-12 flex items-center justify-between gap-2 px-4 border-b border-border/50 backdrop-blur-sm bg-background/80">
+          <header className="sticky top-0 z-20 h-12 flex items-center justify-between gap-2 px-4 border-b border-border/40 bg-background/95 backdrop-blur-sm">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="h-8 w-8" />
               {pageTitle && (
@@ -140,23 +135,17 @@ const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutPro
           {/* Email verification */}
           <EmailVerificationBanner />
 
-          {/* Main content */}
-          <motion.main
-            key={location.pathname}
-            className="flex-1 relative z-10 p-4 md:p-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.2 }}
-          >
+          {/* Main content - no motion wrapper */}
+          <main className="flex-1 p-4 md:p-6">
             <CreditWarningBanner />
             {children}
-          </motion.main>
+          </main>
 
           {/* Minimal footer */}
           {!hideFooter && (
-            <footer className="relative z-10 py-4 px-4 text-center text-xs text-muted-foreground border-t border-border/30">
+            <footer className="py-4 px-4 text-center text-xs text-muted-foreground border-t border-border/30">
               <p>
-                © {new Date().getFullYear()} Promotley UF ·{" "}
+                © {new Date().getFullYear()} Promotely UF ·{" "}
                 <Link to="/privacy-policy" className="hover:text-foreground transition-colors">Integritetspolicy</Link>
                 {" · "}
                 <Link to="/terms-of-service" className="hover:text-foreground transition-colors">Villkor</Link>

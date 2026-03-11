@@ -1,80 +1,129 @@
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Building2, Palette } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { User, Building2, Palette, ChevronDown } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
-import ChatWidget from "@/components/ChatWidget";
-import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Import content components
 import AccountContent from "@/components/account/AccountContent";
 import OrganizationContent from "@/components/account/OrganizationContent";
 import AppSettingsContent from "@/components/account/AppSettingsContent";
 
+const sections = [
+  { id: "konto", label: "Konto", icon: User },
+  { id: "organisation", label: "Organisation", icon: Building2 },
+  { id: "app", label: "Kopplingar & Tema", icon: Palette },
+];
+
 const AccountPage = () => {
-  const [activeTab, setActiveTab] = useState("konto");
+  const [searchParams] = useSearchParams();
+  const isMobile = useIsMobile();
+  const [activeSection, setActiveSection] = useState(() => {
+    return searchParams.get("tab") || "konto";
+  });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && sections.some(s => s.id === tab)) {
+      setActiveSection(tab);
+    }
+  }, [searchParams]);
+
+  const currentSection = sections.find(s => s.id === activeSection) || sections[0];
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case "konto":
+        return <AccountContent />;
+      case "organisation":
+        return <OrganizationContent />;
+      case "app":
+        return <AppSettingsContent />;
+      default:
+        return <AccountContent />;
+    }
+  };
 
   return (
     <DashboardLayout>
-      <div data-tour="account-section" className="w-full max-w-6xl mx-auto">
-        {/* Header - Force dark mode colors */}
-        <div className="text-center mb-4">
-          <h1 className="text-xl md:text-2xl font-bold dashboard-heading-dark mb-1">
-            Konto & Inställningar
-          </h1>
-          <p className="dashboard-subheading-dark text-sm">
-            Hantera ditt konto, organisation och appinställningar
-          </p>
-        </div>
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-xl font-semibold text-foreground mb-1">Konto & Inställningar</h1>
+        <p className="text-sm text-muted-foreground mb-6">Hantera ditt konto, organisation och kopplingar</p>
 
-        {/* Tabs - Glass styling */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex justify-center mb-4">
-            <TabsList className="inline-flex h-11 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 backdrop-blur-sm border border-black/10 dark:border-white/20 p-1 gap-1">
-              <TabsTrigger 
-                value="konto" 
-                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-foreground/60 dark:text-white/70 data-[state=active]:bg-black/10 dark:data-[state=active]:bg-white/20 data-[state=active]:text-foreground dark:data-[state=active]:text-white transition-all"
-              >
-                <User className="w-4 h-4" />
-                Konto
-              </TabsTrigger>
-              <TabsTrigger 
-                value="organisation" 
-                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-foreground/60 dark:text-white/70 data-[state=active]:bg-black/10 dark:data-[state=active]:bg-white/20 data-[state=active]:text-foreground dark:data-[state=active]:text-white transition-all"
-              >
-                <Building2 className="w-4 h-4" />
-                Organisation
-              </TabsTrigger>
-              <TabsTrigger 
-                value="app" 
-                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-foreground/60 dark:text-white/70 data-[state=active]:bg-black/10 dark:data-[state=active]:bg-white/20 data-[state=active]:text-foreground dark:data-[state=active]:text-white transition-all"
-              >
-                <Palette className="w-4 h-4" />
-                App
-              </TabsTrigger>
-            </TabsList>
+        {/* Mobile: dropdown selector */}
+        {isMobile ? (
+          <div className="mb-4">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-card shadow-sm text-sm font-medium text-foreground"
+            >
+              <div className="flex items-center gap-2">
+                <currentSection.icon className="w-4 h-4 text-muted-foreground" />
+                {currentSection.label}
+              </div>
+              <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", mobileMenuOpen && "rotate-180")} />
+            </button>
+            {mobileMenuOpen && (
+              <div className="mt-1 rounded-xl bg-card shadow-md overflow-hidden">
+                {sections.map((section) => {
+                  const Icon = section.icon;
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => {
+                        setActiveSection(section.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-4 py-3 text-sm transition-colors",
+                        activeSection === section.id
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {section.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div className="mt-4">{renderContent()}</div>
           </div>
+        ) : (
+          /* Desktop: sidebar + content */
+          <div className="flex gap-6">
+            {/* Sidebar nav */}
+            <nav className="w-48 shrink-0 space-y-1">
+              {sections.map((section) => {
+                const Icon = section.icon;
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id)}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all",
+                      activeSection === section.id
+                        ? "bg-primary/10 text-primary font-medium shadow-sm"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {section.label}
+                  </button>
+                );
+              })}
+            </nav>
 
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            <TabsContent value="konto" className="mt-0">
-              <AccountContent />
-            </TabsContent>
-
-            <TabsContent value="organisation" className="mt-0">
-              <OrganizationContent />
-            </TabsContent>
-
-            <TabsContent value="app" className="mt-0">
-              <AppSettingsContent />
-            </TabsContent>
-          </motion.div>
-        </Tabs>
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              {renderContent()}
+            </div>
+          </div>
+        )}
       </div>
-      <ChatWidget />
     </DashboardLayout>
   );
 };

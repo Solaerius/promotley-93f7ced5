@@ -1,136 +1,157 @@
 import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Wand2, BarChart3, Radar } from "lucide-react";
+import {
+  MessageSquare,
+  FileText,
+  Hash,
+  Image,
+  Calendar,
+  Target,
+  Lightbulb,
+  BarChart3,
+  Radar,
+  ArrowRight,
+  Sparkles,
+  AlertCircle,
+} from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
-import { motion } from "framer-motion";
-import { useSearchParams } from "react-router-dom";
-import SpotlightHighlight from "@/components/SpotlightHighlight";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAIProfile } from "@/hooks/useAIProfile";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
 
-// Import content components
-import AIChatContent from "@/components/ai/AIChatContent";
-import AIToolsContent from "@/components/ai/AIToolsContent";
-import AIAnalysisContent from "@/components/analytics/AIAnalysisContent";
-import SalesRadarContent from "@/components/ai/SalesRadarContent";
+const tools = [
+  {
+    icon: FileText,
+    title: "Caption-generator",
+    description: "Skapa engagerande captions för dina inlägg",
+    route: "/ai/caption",
+  },
+  {
+    icon: Hash,
+    title: "Hashtag-förslag",
+    description: "Få relevanta hashtags för ökad räckvidd",
+    route: "/ai/hashtags",
+  },
+  {
+    icon: Image,
+    title: "Content-idéer",
+    description: "Brainstorma nya innehållsidéer",
+    route: "/ai/content-ideas",
+  },
+  {
+    icon: Calendar,
+    title: "Veckoplanering",
+    description: "Planera din innehållskalender",
+    route: "/ai/weekly-plan",
+  },
+  {
+    icon: Target,
+    title: "Kampanjstrategi",
+    description: "Bygg en strategi för din nästa kampanj",
+    route: "/ai/campaign",
+  },
+  {
+    icon: Lightbulb,
+    title: "UF-tips",
+    description: "Få råd specifikt för UF-företag",
+    route: "/ai/uf-tips",
+  },
+  {
+    icon: BarChart3,
+    title: "AI-analys",
+    description: "Analysera dina sociala medier med AI",
+    route: "/ai-dashboard",
+  },
+  {
+    icon: Radar,
+    title: "Säljradar",
+    description: "Hitta leads och trender i din bransch",
+    route: "/ai?tab=radar",
+    isInternal: true,
+  },
+];
 
 const AIPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(() => {
-    return searchParams.get('tab') || localStorage.getItem('promotely_ai_tab') || 'verktyg';
-  });
-  const [prefillAction, setPrefillAction] = useState<string | null>(null);
-  const [showSpotlight, setShowSpotlight] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
 
+  const filledFields = aiProfile
+    ? [aiProfile.branch, aiProfile.malgrupp, aiProfile.produkt_beskrivning, aiProfile.malsattning].filter(Boolean).length
+    : 0;
+  const isAIProfileComplete = filledFields >= 3;
+  const isBlocked = !isAIProfileComplete && !aiProfileLoading;
+
+  // If ?tab=radar, could redirect or show radar inline - for now navigate
   useEffect(() => {
-    const tabParam = searchParams.get('tab');
-    const actionParam = searchParams.get('action');
-    const spotlightParam = searchParams.get('spotlight');
-    if (tabParam) {
-      setActiveTab(tabParam);
-      localStorage.setItem('promotely_ai_tab', tabParam);
+    const tab = searchParams.get("tab");
+    if (tab === "radar") {
+      // Keep on this page, radar is shown as a tool card
     }
-    if (spotlightParam) {
-      // Navigate to analysis tab if spotlight is for AI analysis
-      if (spotlightParam === 'spotlight_ai_analysis') {
-        setActiveTab('analys');
-        localStorage.setItem('promotely_ai_tab', 'analys');
-      }
-      setShowSpotlight(spotlightParam);
-      setSearchParams({}, { replace: true });
-    }
-    if (actionParam) {
-      setPrefillAction(actionParam);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    localStorage.setItem('promotely_ai_tab', tab);
-  };
+  }, [searchParams]);
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-full min-h-0">
-        {/* Sticky Header */}
-        <div data-tour="ai-tabs" className="sticky top-0 z-20 backdrop-blur-xl pb-4 -mx-4 px-4 pt-2 border-b border-white/10 mb-4">
-          <div className="mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold dashboard-heading-dark">AI-Assistent</h1>
-            <p className="text-sm dashboard-subheading-dark">
-              Din personliga AI för marknadsföring och innehåll
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">AI-verktyg</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Din personliga AI för marknadsföring och innehåll
+          </p>
+        </div>
+
+        {/* AI profile warning */}
+        {isBlocked && (
+          <Alert variant="destructive" className="border-destructive/30">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Din AI-profil är inte komplett.{" "}
+              <Link to="/account" className="underline font-medium">
+                Fyll i den först
+              </Link>{" "}
+              för att använda AI-funktioner.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Tools grid */}
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ${isBlocked ? "opacity-50 pointer-events-none" : ""}`}>
+          {tools.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <button
+                key={tool.title}
+                onClick={() => navigate(tool.route)}
+                className="flex items-start gap-3 p-4 rounded-xl bg-card shadow-sm hover:shadow-md transition-all text-left group"
+              >
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted shrink-0">
+                  <Icon className="w-4.5 h-4.5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                    {tool.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{tool.description}</p>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1 shrink-0" />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* AI profile tip */}
+        <div className="rounded-xl bg-card shadow-sm p-4 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10 shrink-0">
+            <Sparkles className="w-4.5 h-4.5 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">AI-profil viktigt!</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Ju mer du fyller i din AI-profil under Konto, desto bättre svar får du.
             </p>
           </div>
-
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="inline-flex h-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 p-1">
-              <TabsTrigger 
-                value="chat" 
-                className="flex items-center gap-2 rounded-full px-3 sm:px-4 text-xs sm:text-sm dashboard-subheading-dark data-[state=active]:bg-white/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span className="hidden sm:inline">Chat</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="verktyg" 
-                className="flex items-center gap-2 rounded-full px-3 sm:px-4 text-xs sm:text-sm dashboard-subheading-dark data-[state=active]:bg-white/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
-              >
-                <Wand2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Verktyg</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="analys" 
-                className="flex items-center gap-2 rounded-full px-3 sm:px-4 text-xs sm:text-sm dashboard-subheading-dark data-[state=active]:bg-white/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:inline">Analys</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="radar" 
-                className="flex items-center gap-2 rounded-full px-3 sm:px-4 text-xs sm:text-sm dashboard-subheading-dark data-[state=active]:bg-white/20 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
-              >
-                <Radar className="w-4 h-4" />
-                <span className="hidden sm:inline">Säljradar</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
         </div>
-
-        {/* Content */}
-        <div className="flex-1 min-h-0">
-          <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-              className="h-full"
-            >
-              <TabsContent value="chat" className="mt-0 h-full">
-                <AIChatContent prefillMessage={prefillAction} onPrefillConsumed={() => setPrefillAction(null)} />
-              </TabsContent>
-
-              <TabsContent value="verktyg" className="mt-0">
-                <AIToolsContent />
-              </TabsContent>
-
-              <TabsContent value="analys" className="mt-0">
-                <AIAnalysisContent />
-              </TabsContent>
-
-              <TabsContent value="radar" className="mt-0">
-                <SalesRadarContent />
-              </TabsContent>
-            </motion.div>
-          </Tabs>
-        </div>
-
-        {/* Spotlight overlay for notifications */}
-        {showSpotlight === 'spotlight_ai_analysis' && (
-          <SpotlightHighlight
-            selector='[data-spotlight="ai-analysis-btn"]'
-            duration={3000}
-            onDismiss={() => setShowSpotlight(null)}
-          />
-        )}
       </div>
     </DashboardLayout>
   );

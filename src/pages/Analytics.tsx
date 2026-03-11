@@ -1,334 +1,169 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import {
-  TrendingUp,
-  TrendingDown,
   Eye,
   Users,
   Heart,
   MessageCircle,
   Instagram,
   Music2,
-  Sparkles,
-  AlertCircle,
 } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useMetaData } from "@/hooks/useMetaData";
 import { useTikTokData } from "@/hooks/useTikTokData";
 import { useConnections } from "@/hooks/useConnections";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { useAIProfile } from "@/hooks/useAIProfile";
 import { Link } from "react-router-dom";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 const Analytics = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState("7d");
   const { isConnected, connections } = useConnections();
   const metaData = useMetaData();
   const tiktokData = useTikTokData();
-  const { data: analyticsData, loading: analyticsLoading } = useAnalytics();
-  const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
+  const { data: analyticsData } = useAnalytics();
 
-  // Check if AI profile is complete (at least 3 of 4 key fields)
-  const aiProfileFields = [
-    aiProfile?.branch,
-    aiProfile?.malgrupp,
-    aiProfile?.produkt_beskrivning,
-    aiProfile?.malsattning,
-  ];
-  const filledAIFields = aiProfileFields.filter(f => f && String(f).trim() !== "").length;
-  const isAIProfileComplete = filledAIFields >= 3;
-
-  // Check if any accounts are connected
   const hasConnections = connections.length > 0;
 
-  // Beräkna totaler baserat på riktiga data från kopplade konton
-  const connectedStats = {
-    totalFollowers: 0,
-    totalViews: 0,
-    totalLikes: 0,
-    avgEngagement: 0,
-    totalComments: 0,
-  };
+  // Calculate stats
+  const stats: { title: string; value: string; icon: any }[] = [];
 
-  if (isConnected('meta_ig') && metaData.instagram) {
-    connectedStats.totalFollowers += metaData.instagram.followers_count || 0;
-  }
-  if (isConnected('tiktok') && tiktokData.user && tiktokData.stats) {
-    const followerCount = tiktokData.user.follower_count || 0;
-    const totalViews = tiktokData.stats.totalViews || 0;
-    const totalLikes = tiktokData.stats.totalLikes || 0;
-    const totalComments = tiktokData.stats.totalComments || 0;
-    
-    if (followerCount > 0) connectedStats.totalFollowers += followerCount;
-    if (totalViews > 0) connectedStats.totalViews += totalViews;
-    if (totalLikes > 0) connectedStats.totalLikes += totalLikes;
-    if (totalComments > 0) connectedStats.totalComments += totalComments;
-    
-    if (tiktokData.stats.avgEngagementRate) {
-      connectedStats.avgEngagement = parseFloat(tiktokData.stats.avgEngagementRate);
-    }
+  const totalFollowers =
+    (isConnected("meta_ig") ? metaData.instagram?.followers_count || 0 : 0) +
+    (isConnected("tiktok") ? tiktokData.user?.follower_count || 0 : 0);
+
+  if (totalFollowers > 0) stats.push({ title: "Följare", value: totalFollowers.toLocaleString(), icon: Users });
+
+  if (isConnected("tiktok") && tiktokData.stats) {
+    if (tiktokData.stats.totalViews > 0) stats.push({ title: "Visningar", value: tiktokData.stats.totalViews.toLocaleString(), icon: Eye });
+    if (tiktokData.stats.totalLikes > 0) stats.push({ title: "Likes", value: tiktokData.stats.totalLikes.toLocaleString(), icon: Heart });
+    if (tiktokData.stats.totalComments > 0) stats.push({ title: "Kommentarer", value: tiktokData.stats.totalComments.toLocaleString(), icon: MessageCircle });
   }
 
-  // Only show stats that have values
-  const stats = [];
-  
-  if (connectedStats.totalFollowers > 0) {
-    stats.push({
-      title: "Totala följare",
-      value: connectedStats.totalFollowers.toLocaleString(),
-      icon: Users,
-    });
-  }
-  
-  if (connectedStats.totalViews > 0) {
-    stats.push({
-      title: "Visningar (totalt)",
-      value: connectedStats.totalViews.toLocaleString(),
-      icon: Eye,
-    });
-  }
-  
-  if (connectedStats.totalLikes > 0) {
-    stats.push({
-      title: "Likes",
-      value: connectedStats.totalLikes.toLocaleString(),
-      icon: Heart,
-    });
-  }
-  
-  if (connectedStats.totalComments > 0) {
-    stats.push({
-      title: "Kommentarer",
-      value: connectedStats.totalComments.toLocaleString(),
-      icon: MessageCircle,
-    });
-  }
-
-  // Get history data for graphs from analytics table
   const getHistoryData = (platform: string) => {
-    const platformData = analyticsData.find(a => a.platform === platform);
-    return platformData?.history as any[] || null;
+    const platformData = analyticsData.find((a) => a.platform === platform);
+    return (platformData?.history as any[]) || null;
   };
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 animate-fade-in">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground mb-1">Statistik</h1>
-            <p className="text-sm text-muted-foreground">
-              Översikt av dina sociala medier-prestationer
-            </p>
-          </div>
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Statistik</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Översikt av dina sociala medier</p>
         </div>
 
-        {/* No connections state */}
+        {/* No connections */}
         {!hasConnections && (
-          <Card className="border-2 border-dashed">
-            <CardContent className="p-8 text-center">
-              <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Inga konton kopplade</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Koppla dina sociala medier-konton för att se statistik och insikter
-              </p>
-              <Link to="/settings">
-                <Button>Gå till inställningar</Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <div className="rounded-xl bg-card shadow-sm p-8 text-center">
+            <Users className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+            <h3 className="text-base font-medium mb-1">Inga konton kopplade</h3>
+            <p className="text-sm text-muted-foreground mb-4">Koppla dina sociala medier för att se statistik.</p>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/account?tab=app">Gå till kopplingar</Link>
+            </Button>
+          </div>
         )}
 
-        {/* Stats Cards */}
+        {/* Stats */}
         {hasConnections && stats.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {stats.map((stat, index) => {
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {stats.map((stat, i) => {
               const Icon = stat.icon;
               return (
-                <Card key={index} className="hover:shadow-elegant transition-all duration-300">
-                  <CardContent className="p-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="w-6 h-6 rounded-lg bg-gradient-primary flex items-center justify-center">
-                        <Icon className="w-3 h-3 text-white" />
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-0.5">{stat.title}</p>
-                    <p className="text-lg font-bold text-foreground">{stat.value}</p>
-                  </CardContent>
-                </Card>
+                <div key={i} className="rounded-xl bg-card shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icon className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-[11px] text-muted-foreground">{stat.title}</span>
+                  </div>
+                  <p className="text-xl font-semibold text-foreground">{stat.value}</p>
+                </div>
               );
             })}
           </div>
         )}
 
-        {/* AI Analysis Section */}
-        <Card className="bg-gradient-hero border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              AI-analys
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              Få personliga insikter och rekommendationer baserat på din data med AI-assistenten.
-            </p>
-            {!isAIProfileComplete && (
-              <Alert variant="default" className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-                <AlertCircle className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-amber-700 dark:text-amber-400">
-                  Fyll i minst 3 av 4 fält i din{" "}
-                  <Link to="/settings" className="underline font-medium">
-                    AI-profil
-                  </Link>{" "}
-                  för att använda AI-analys.
-                </AlertDescription>
-              </Alert>
-            )}
-            <Button 
-              variant="gradient" 
-              size="lg" 
-              disabled={!isAIProfileComplete}
-              asChild={isAIProfileComplete}
-            >
-              {isAIProfileComplete ? (
-                <Link to="/ai-dashboard">Generera analys med AI</Link>
-              ) : (
-                <span>Fyll i AI-profil först</span>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Charts - Only show if we have history data */}
-        {hasConnections && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Historik</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {analyticsData.some(a => a.history && Array.isArray(a.history) && a.history.length > 0) ? (
-                  <ResponsiveContainer width="100%" height={160}>
-                    <LineChart data={getHistoryData(analyticsData[0]?.platform || '')}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-                      <Legend />
-                      <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} name="Värde" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-[160px] flex items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <Eye className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Ingen historikdata ännu</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Engagemangsöversikt</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[160px] flex items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <Heart className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Ingen historikdata ännu</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Chart */}
+        {hasConnections && analyticsData.some((a) => a.history && Array.isArray(a.history) && (a.history as any[]).length > 0) && (
+          <div className="rounded-xl bg-card shadow-sm p-5">
+            <h2 className="text-sm font-medium text-foreground mb-4">Historik</h2>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={getHistoryData(analyticsData[0]?.platform || "")}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                />
+                <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} name="Värde" />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         )}
 
-        {/* Platform Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Plattformsoversikt</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue={isConnected('meta_ig') ? 'instagram' : 'tiktok'} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="instagram" className={!isConnected('meta_ig') ? 'opacity-50' : ''}>
-                  <Instagram className="w-4 h-4 mr-2" />
-                  Instagram
-                </TabsTrigger>
-                <TabsTrigger value="tiktok" className={!isConnected('tiktok') ? 'opacity-50' : ''}>
-                  <Music2 className="w-4 h-4 mr-2" />
-                  TikTok
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="instagram" className="space-y-4 pt-4">
-                {isConnected('meta_ig') && metaData.instagram ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Följare</p>
-                      <p className="text-2xl font-bold">{metaData.instagram.followers_count?.toLocaleString()}</p>
+        {/* Platform breakdown */}
+        {hasConnections && (
+          <div className="space-y-3">
+            {/* TikTok */}
+            {isConnected("tiktok") && tiktokData.user && tiktokData.stats && (
+              <div className="rounded-xl bg-card shadow-sm p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Music2 className="w-4 h-4 text-muted-foreground" />
+                  <h2 className="text-sm font-medium text-foreground">TikTok</h2>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: "Följare", value: tiktokData.user.follower_count?.toLocaleString() || "0" },
+                    { label: "Visningar", value: tiktokData.stats.totalViews?.toLocaleString() || "0" },
+                    { label: "Likes", value: tiktokData.stats.totalLikes?.toLocaleString() || "0" },
+                    { label: "Engagemang", value: `${tiktokData.stats.avgEngagementRate || "0"}%` },
+                  ].map((item) => (
+                    <div key={item.label} className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-[11px] text-muted-foreground">{item.label}</p>
+                      <p className="text-lg font-semibold text-foreground">{item.value}</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Följer</p>
-                      <p className="text-2xl font-bold">{metaData.instagram.follows_count?.toLocaleString()}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Instagram */}
+            {isConnected("meta_ig") && metaData.instagram && (
+              <div className="rounded-xl bg-card shadow-sm p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Instagram className="w-4 h-4 text-muted-foreground" />
+                  <h2 className="text-sm font-medium text-foreground">Instagram</h2>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: "Följare", value: metaData.instagram.followers_count?.toLocaleString() || "0" },
+                    { label: "Följer", value: metaData.instagram.follows_count?.toLocaleString() || "0" },
+                    { label: "Inlägg", value: metaData.instagram.media_count?.toLocaleString() || "0" },
+                    { label: "Namn", value: metaData.instagram.name || "-" },
+                  ].map((item) => (
+                    <div key={item.label} className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-[11px] text-muted-foreground">{item.label}</p>
+                      <p className="text-lg font-semibold text-foreground">{item.value}</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Inlägg</p>
-                      <p className="text-2xl font-bold">{metaData.instagram.media_count?.toLocaleString()}</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Namn</p>
-                      <p className="text-xl font-bold">{metaData.instagram.name}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">Anslut Instagram för att se statistik</p>
-                )}
-              </TabsContent>
-              <TabsContent value="tiktok" className="space-y-4 pt-4">
-                {isConnected('tiktok') && tiktokData.user && tiktokData.stats ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Följare</p>
-                      <p className="text-2xl font-bold">{tiktokData.user.follower_count?.toLocaleString() || 0}</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Visningar</p>
-                      <p className="text-2xl font-bold">{tiktokData.stats.totalViews?.toLocaleString() || 0}</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Likes</p>
-                      <p className="text-2xl font-bold">{tiktokData.stats.totalLikes?.toLocaleString() || 0}</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-muted">
-                      <p className="text-sm text-muted-foreground mb-1">Engagemang</p>
-                      <p className="text-2xl font-bold">{tiktokData.stats.avgEngagementRate || "0"}%</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">Anslut TikTok för att se statistik</p>
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

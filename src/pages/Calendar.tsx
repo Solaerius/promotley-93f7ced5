@@ -241,8 +241,8 @@ const Calendar = () => {
         {/* Header - Force dark mode colors */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold dashboard-heading-dark mb-1">Innehållskalender</h1>
-            <p className="dashboard-subheading-dark">
+            <h1 className="text-xl font-semibold text-foreground mb-0.5">Innehållskalender</h1>
+            <p className="text-sm text-muted-foreground">
               Planera dina inlägg och håll koll på din content-strategi
             </p>
           </div>
@@ -352,7 +352,7 @@ const Calendar = () => {
         )}
 
         {/* Calendar Controls - Glass card */}
-        <Card className="liquid-glass-light border-white/20">
+        <div className="rounded-xl bg-card shadow-sm p-5">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl">
@@ -449,10 +449,10 @@ const Calendar = () => {
               })}
             </div>
           </CardContent>
-        </Card>
+        </div>
 
         {/* Upcoming posts - Glass card */}
-        <Card className="liquid-glass-light border-white/20">
+        <div className="rounded-xl bg-card shadow-sm">
           <CardHeader>
             <CardTitle>Kommande inlägg</CardTitle>
           </CardHeader>
@@ -499,7 +499,7 @@ const Calendar = () => {
               )}
             </div>
           </CardContent>
-        </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
