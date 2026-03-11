@@ -172,5 +172,4 @@
   .divider { @apply h-px w-full bg-gradient-to-r from-transparent via-border to-transparent; }
   .input-field { @apply w-full px-4 py-3 rounded-xl bg-background border-2 text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30; border-color: var(--outline-subtle); box-shadow: var(--shadow-input); }
   .input-field:focus { border-color: var(--outline-subtle-focus); box-shadow: var(--shadow-input-focus); }
-
-
+}
