@@ -27,6 +27,7 @@ import {
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
+import { useConversations } from "@/hooks/useConversations";
 import { useUserCredits } from "@/hooks/useUserCredits";
 import { useAIProfile } from "@/hooks/useAIProfile";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
@@ -45,7 +46,14 @@ const AIChat = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { messages, loading, sendMessage, implementPlan } = useAIAssistant(null);
+  const {
+    conversations,
+    activeConversationId,
+    setActiveConversationId,
+    createConversation,
+    loading: convsLoading,
+  } = useConversations();
+  const { messages, loading, sendMessage, implementPlan } = useAIAssistant(activeConversationId);
   const { credits } = useUserCredits();
   const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
   const [inputMessage, setInputMessage] = useState("");
@@ -54,6 +62,16 @@ const AIChat = () => {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [pendingPlan, setPendingPlan] = useState<any>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Auto-create or select a conversation on mount
+  useEffect(() => {
+    if (convsLoading) return;
+    if (!activeConversationId && conversations.length === 0) {
+      createConversation();
+    } else if (!activeConversationId && conversations.length > 0) {
+      setActiveConversationId(conversations[0].id);
+    }
+  }, [convsLoading, conversations, activeConversationId, createConversation, setActiveConversationId]);
 
   const hasInsufficientCredits = credits && credits.credits_left <= 0;
 
