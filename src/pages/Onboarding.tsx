@@ -172,7 +172,7 @@ export default function Onboarding() {
             produkt_beskrivning: formData.produkt_beskrivning,
             malsattning: formData.malsattning || null,
             prisniva: formData.prisniva || null,
-            nyckelord: formData.nyckelord || null,
+            nyckelord: formData.nyckelord ? (Array.isArray(formData.nyckelord) ? formData.nyckelord : [formData.nyckelord]) : null,
             tonalitet: formData.tonalitet || null,
             allman_info: formData.allman_info || null,
             onboarding_completed: true,
