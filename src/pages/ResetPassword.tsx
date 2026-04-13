@@ -49,9 +49,14 @@ export default function ResetPassword() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
+        const errorMessage =
+          error.message?.includes("weak") || error.message?.includes("pwned")
+            ? "Lösenordet är för vanligt eller finns i en känd dataläcka. Välj ett helt unikt lösenord, gärna 16+ tecken eller en lång lösenordsfras."
+            : error.message;
+
         toast({
           title: "Fel vid lösenordsändring",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive",
         });
       } else {
