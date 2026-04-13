@@ -1,0 +1,625 @@
+import { useTranslation } from "react-i18next";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { SettingsPopup } from "@/components/SettingsPopup";
+import { motion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
+import { sv } from "date-fns/locale";
+import {
+  Home,
+  TrendingUp,
+  CalendarDays,
+  Wand2,
+  CircleUser,
+  Bell,
+  Settings,
+  ArrowLeft,
+  Move,
+  LogOut,
+  ChevronRight,
+  Trash2
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useUserCredits } from "@/hooks/useUserCredits";
+import { Coins } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/hooks/useAuth";
+import { useOrganization } from "@/hooks/useOrganization";
+import { useNavbarPosition } from "@/hooks/useNavbarPosition";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import logo from "@/assets/logo.png";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DashboardNavbarProps {
+  showBackButton?: boolean;
+  title?: string;
+}
+
+export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps) {
+  const { t } = useTranslation();
+  const location = useLocation();
+
+  const tabs = [
+    { name: t('nav.home'), href: "/dashboard", icon: Home },
+    { name: t('nav.analytics'), href: "/analytics", icon: TrendingUp },
+    { name: t('nav.tools'), href: "/ai", icon: Wand2 },
+    { name: t('nav.calendar'), href: "/calendar", icon: CalendarDays },
+    { name: t('nav.account'), href: "/account", icon: CircleUser },
+  ];
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { activeOrganization } = useOrganization();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
+  const { position, cyclePosition, getPositionLabel } = useNavbarPosition();
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
+
+  const { credits } = useUserCredits();
+
+  useEffect(() => {
+    const fetchUserAvatar = async () => {
+      if (!user?.id) return;
+      const { data } = await supabase
+        .from('users')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+      if (data?.avatar_url) {
+        setUserAvatarUrl(data.avatar_url);
+      }
+    };
+    fetchUserAvatar();
+  }, [user?.id]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  const isActive = (path: string) => {
+    if (path === "/dashboard") {
+      return location.pathname === "/dashboard" || location.pathname === "/";
+    }
+    if (path === "/ai") {
+      return location.pathname.startsWith("/ai");
+    }
+    if (path === "/account") {
+      return location.pathname.startsWith("/account") || 
+             location.pathname.startsWith("/settings") || 
+             location.pathname.startsWith("/organization");
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  const isVertical = position === 'left' || position === 'right';
+
+  // Position classes
+  const getNavbarPositionClasses = () => {
+    switch (position) {
+      case 'top':
+        return 'fixed top-0 left-0 right-0 z-50 mx-4 md:mx-6 lg:mx-12 mt-2';
+      case 'bottom':
+        return 'fixed bottom-0 left-0 right-0 z-50 mx-4 md:mx-6 lg:mx-12 mb-2 pb-safe';
+      case 'left':
+        return 'fixed left-0 top-1/2 -translate-y-1/2 z-50 ml-2';
+      case 'right':
+        return 'fixed right-0 top-1/2 -translate-y-1/2 z-50 mr-2';
+    }
+  };
+
+  // Vertical (left/right) layout
+  if (isVertical) {
+    return (
+      <nav className={getNavbarPositionClasses()}>
+        <div 
+          className="rounded-2xl border border-border backdrop-blur-xl p-2"
+          style={{
+            background: 'linear-gradient(180deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--secondary) / 0.1) 50%, hsl(var(--accent) / 0.12) 100%)',
+          }}
+        >
+          <div className="flex flex-col items-center gap-1">
+            {/* Logo */}
+            <Link to="/dashboard" className="p-2 mb-2">
+              <img src={logo} alt="Promotley" className="w-7 h-7" />
+            </Link>
+
+            {/* Navigation tabs */}
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = isActive(tab.href);
+              
+              return (
+                <TooltipProvider key={tab.name}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        to={tab.href}
+                        className={cn(
+                          "relative flex items-center justify-center w-9 h-9 rounded-xl transition-colors",
+                          active 
+                            ? "text-foreground bg-foreground/15" 
+                            : "text-foreground/60 hover:text-foreground hover:bg-foreground/10"
+                        )}
+                      >
+                        {active && (
+                          <motion.div
+                            layoutId="activeTabVertical"
+                            className="absolute inset-0 rounded-xl bg-foreground/10 border border-foreground/15"
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          />
+                        )}
+                        <Icon className="w-4 h-4 relative z-10" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side={position === 'left' ? 'right' : 'left'}>
+                      <p>{tab.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
+
+            {/* Separator */}
+            <div className="w-6 h-px bg-foreground/20 my-2" />
+
+            {/* Position toggle */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={cyclePosition}
+                    className="w-9 h-9 rounded-xl text-foreground/50 hover:text-foreground hover:bg-foreground/10"
+                  >
+                    <Move className="w-3.5 h-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side={position === 'left' ? 'right' : 'left'}>
+                  <p>{`${t('nav.move_position')} `}{getPositionLabel(position)}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <DarkModeToggle />
+
+            {/* Notifications */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative w-9 h-9 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/10">
+                  <Bell className="w-4 h-4" />
+                  {unreadCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side={position === 'left' ? 'right' : 'left'} className="w-72">
+                <div className="px-3 py-2 border-b flex items-center justify-between">
+                  <h3 className="font-semibold text-sm">{t('nav.notifications')}</h3>
+                  <div className="flex items-center gap-2">
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={(e) => { e.preventDefault(); markAllAsRead(); }}
+                        className="text-[10px] text-primary hover:underline"
+                      >
+                        {t('nav.mark_all_read')}
+                      </button>
+                    )}
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={(e) => { e.preventDefault(); clearAll(); }}
+                        className="text-[10px] text-destructive hover:underline flex items-center gap-0.5"
+                      >
+                        <Trash2 className="h-2.5 w-2.5" />
+                        {t('nav.clear_all')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <ScrollArea className="h-[250px]">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground text-sm">
+                      {t('common.no_notifications')}
+                    </div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className={cn(
+                          "flex flex-col items-start p-3 cursor-pointer",
+                          notification.action_url && "hover:bg-accent/80"
+                        )}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          if (!notification.read) markAsRead(notification.id);
+                          if (notification.action_url) {
+                            const url = notification.action_type
+                              ? `${notification.action_url}?spotlight=${notification.action_type}`
+                              : notification.action_url;
+                            navigate(url);
+                          }
+                        }}
+                      >
+                        <div className="flex items-start justify-between w-full">
+                          <div className="flex-1">
+                            <p className="font-medium text-xs">{notification.title}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{notification.message}</p>
+                            <p className="text-[9px] text-muted-foreground/60 mt-1">
+                              {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: sv })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 ml-2 mt-1 shrink-0">
+                            {!notification.read && (
+                              <div className="h-2 w-2 bg-primary rounded-full" />
+                            )}
+                            {notification.action_url && (
+                              <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </ScrollArea>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* User Profile */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full hover:bg-foreground/10">
+                  <Avatar className="w-7 h-7 border border-foreground/20">
+                    <AvatarImage src={userAvatarUrl || undefined} />
+                    <AvatarFallback className="bg-foreground/10 text-foreground text-xs">
+                      {activeOrganization?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side={position === 'left' ? 'right' : 'left'} className="w-48">
+                <div className="px-2 py-1.5">
+                  <p className="text-xs font-medium truncate">{user?.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                {/* Credit gauge */}
+                <div className="px-3 py-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] text-muted-foreground dark:text-white/90">{t('nav.credits_label')}</span>
+                    <span className="text-[11px] font-semibold">{credits?.credits_left ?? 0} / {credits?.max_credits ?? 0}</span>
+                  </div>
+                  <Progress
+                    value={credits?.max_credits ? (credits.credits_left / credits.max_credits) * 100 : 0}
+                    className="h-2"
+                  />
+                  <div className="flex justify-end mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-5 text-[10px] px-2 rounded"
+                      onClick={() => navigate('/pricing')}
+                    >
+                      <Coins className="w-3 h-3 mr-1" />
+                      {t('nav.buy_credits')}
+                    </Button>
+                  </div>
+                </div>
+                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                  <SettingsPopup>
+                    <button className="flex w-full items-center cursor-pointer text-sm px-2 py-1.5 rounded-sm hover:bg-accent hover:text-accent-foreground">
+                      <Settings className="mr-2 h-3.5 w-3.5" />
+                      {t('nav.settings')}
+                    </button>
+                  </SettingsPopup>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/" className="cursor-pointer text-sm">
+                    <Home className="mr-2 h-3.5 w-3.5" />
+                    {t('nav.to_home')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive text-sm">
+                  <LogOut className="mr-2 h-3.5 w-3.5" />
+                  {t('nav.sign_out')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  // Horizontal (top/bottom) layout
+  return (
+    <nav className={getNavbarPositionClasses()}>
+      <div 
+        className="rounded-2xl border border-border backdrop-blur-xl"
+        style={{
+          background: 'linear-gradient(135deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--secondary) / 0.1) 50%, hsl(var(--accent) / 0.12) 100%)',
+        }}
+      >
+        <div className="px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left side - Logo/Back button */}
+            <div className="flex items-center gap-2">
+              {showBackButton ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate(-1)}
+                  className="rounded-xl text-foreground/90 hover:text-foreground hover:bg-foreground/10 w-8 h-8"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+              ) : (
+                <Link to="/dashboard" className="flex items-center gap-2 group">
+                  <img src={logo} alt="Promotley" className="w-7 h-7" />
+                  <span className="font-semibold text-sm text-foreground hidden sm:inline">Promotley</span>
+                </Link>
+              )}
+              {title && (
+                <h1 className="font-medium text-sm text-foreground">{title}</h1>
+              )}
+            </div>
+
+            {/* Center - Navigation tabs (desktop) */}
+            <div className="hidden md:flex items-center gap-0.5">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const active = isActive(tab.href);
+                
+                return (
+                  <Link
+                    key={tab.name}
+                    to={tab.href}
+                    className={cn(
+                      "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors",
+                      active 
+                        ? "text-foreground bg-foreground/15" 
+                        : "text-foreground/60 hover:text-foreground hover:bg-foreground/10"
+                    )}
+                  >
+                    {active && (
+                      <motion.div
+                        layoutId="activeTabDesktop"
+                        className="absolute inset-0 rounded-lg bg-foreground/10 border border-foreground/15"
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      />
+                    )}
+                    <Icon className="w-3.5 h-3.5 relative z-10" />
+                    <span className="text-xs font-medium relative z-10">{tab.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Right side - Actions */}
+            <div className="flex items-center gap-1">
+              {/* Position toggle */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={cyclePosition}
+                      className="w-8 h-8 rounded-lg text-foreground/50 hover:text-foreground hover:bg-foreground/10"
+                    >
+                      <Move className="w-3.5 h-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{`${t('nav.move_position')} `}{getPositionLabel(position)}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <DarkModeToggle />
+              
+              {/* Notifications */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative w-8 h-8 rounded-lg text-foreground/60 hover:text-foreground hover:bg-foreground/10">
+                    <Bell className="w-4 h-4" />
+                    {unreadCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+                      >
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72">
+                  <div className="px-3 py-2 border-b flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">{t('nav.notifications')}</h3>
+                    <div className="flex items-center gap-2">
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={(e) => { e.preventDefault(); markAllAsRead(); }}
+                          className="text-[10px] text-primary hover:underline"
+                        >
+                          {t('nav.mark_all_read')}
+                        </button>
+                      )}
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={(e) => { e.preventDefault(); clearAll(); }}
+                          className="text-[10px] text-destructive hover:underline flex items-center gap-0.5"
+                        >
+                          <Trash2 className="h-2.5 w-2.5" />
+                          {t('nav.clear_all')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <ScrollArea className="h-[250px]">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-muted-foreground text-sm">
+                        {t('common.no_notifications')}
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <DropdownMenuItem
+                          key={notification.id}
+                          className={cn(
+                            "flex flex-col items-start p-3 cursor-pointer",
+                            notification.action_url && "hover:bg-accent/80"
+                          )}
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            if (!notification.read) markAsRead(notification.id);
+                            if (notification.action_url) {
+                              const url = notification.action_type
+                                ? `${notification.action_url}?spotlight=${notification.action_type}`
+                                : notification.action_url;
+                              navigate(url);
+                            }
+                          }}
+                        >
+                          <div className="flex items-start justify-between w-full">
+                            <div className="flex-1">
+                              <p className="font-medium text-xs">{notification.title}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">{notification.message}</p>
+                              <p className="text-[9px] text-muted-foreground/60 mt-1">
+                                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: sv })}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1 ml-2 mt-1 shrink-0">
+                              {!notification.read && (
+                                <div className="h-2 w-2 bg-primary rounded-full" />
+                              )}
+                              {notification.action_url && (
+                                <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                              )}
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* User Profile */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full hover:bg-foreground/10">
+                    <Avatar className="w-7 h-7 border border-foreground/20">
+                      <AvatarImage src={userAvatarUrl || undefined} />
+                      <AvatarFallback className="bg-foreground/10 text-foreground text-xs">
+                        {activeOrganization?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5">
+                    <p className="text-xs font-medium truncate">{user?.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  {/* Credit gauge */}
+                  <div className="px-3 py-2">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] text-muted-foreground dark:text-white/90">{t('nav.credits_label')}</span>
+                      <span className="text-[11px] font-semibold">{credits?.credits_left ?? 0} / {credits?.max_credits ?? 0}</span>
+                    </div>
+                    <Progress
+                      value={credits?.max_credits ? (credits.credits_left / credits.max_credits) * 100 : 0}
+                      className="h-2"
+                    />
+                    <div className="flex justify-end mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-5 text-[10px] px-2 rounded"
+                        onClick={() => navigate('/pricing')}
+                      >
+                        <Coins className="w-3 h-3 mr-1" />
+                        {t('nav.buy_credits')}
+                      </Button>
+                    </div>
+                  </div>
+                  <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                    <SettingsPopup>
+                      <button className="flex w-full items-center cursor-pointer text-sm px-2 py-1.5 rounded-sm hover:bg-accent hover:text-accent-foreground">
+                        <Settings className="mr-2 h-3.5 w-3.5" />
+                        {t('nav.settings')}
+                      </button>
+                    </SettingsPopup>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/" className="cursor-pointer text-sm">
+                      <Home className="mr-2 h-3.5 w-3.5" />
+                      {t('nav.to_home')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive text-sm">
+                    <LogOut className="mr-2 h-3.5 w-3.5" />
+                    {t('nav.sign_out')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {/* Mobile navigation tabs */}
+          <div className="flex md:hidden items-center justify-around mt-2 pt-2 border-t border-foreground/10">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = isActive(tab.href);
+              
+              return (
+                <Link
+                  key={tab.name}
+                  to={tab.href}
+                  className={cn(
+                    "relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors",
+                    active 
+                      ? "text-foreground" 
+                      : "text-foreground/50 hover:text-foreground"
+                  )}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="activeTabMobile"
+                      className="absolute inset-0 rounded-lg bg-foreground/10"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                  <Icon className={cn("w-4 h-4 relative z-10", active && "text-foreground")} />
+                  <span className={cn("relative z-10 text-[9px]", active && "font-medium")}>{tab.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}
