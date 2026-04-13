@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { creditUpdateEvent } from './useAIAssistant';
@@ -36,6 +37,7 @@ export const useSalesRadar = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchResults = async () => {
     try {
@@ -106,8 +108,8 @@ export const useSalesRadar = () => {
     } catch (error: any) {
       if (!error?.message?.includes('INSUFFICIENT_CREDITS') && !error?.message?.includes('NO_ACTIVE_PLAN')) {
         toast({
-          title: 'Fel',
-          description: 'Kunde inte generera Säljradar. Försök igen.',
+          title: t('common.error'),
+          description: t('toasts.could_not_generate_radar'),
           variant: 'destructive',
         });
       }

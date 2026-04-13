@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,6 +33,7 @@ export const useAIProfile = () => {
   const [profile, setProfile] = useState<AIProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchProfile = async () => {
     try {
@@ -90,8 +92,8 @@ export const useAIProfile = () => {
     } catch (error) {
       console.error('Error updating AI profile:', error);
       toast({
-        title: 'Fel',
-        description: 'Kunde inte uppdatera profilen.',
+        title: t('common.error'),
+        description: t('toasts.could_not_update_profile'),
         variant: 'destructive',
       });
       throw error;

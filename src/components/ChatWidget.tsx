@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { filterMessage } from "@/lib/contentFilter";
+import { useTranslation } from "react-i18next";
 
 interface Message {
   id: string;
@@ -18,7 +19,13 @@ interface Message {
   is_automated?: boolean;
 }
 
-const ChatWidget = () => {
+interface ChatWidgetProps {
+  // Controls whether the trigger button is visible (used on landing page to hide until hero is scrolled past)
+  visible?: boolean;
+}
+
+const ChatWidget = ({ visible = true }: ChatWidgetProps) => {
+  const { t } = useTranslation();
   const { position: navbarPosition } = useNavbarPosition();
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -265,7 +272,7 @@ const ChatWidget = () => {
     const autoMessage: Message = {
       id: `auto-${Date.now()}`,
       session_id: sessionId,
-      message: "Tack för ditt meddelande! Vi kan vara upptagna just nu, så svarstiden kan variera beroende på hur många som chattar. Vi återkommer så snart vi kan!",
+      message: t('chat_widget.auto_reply'),
       sender_type: "admin",
       created_at: new Date().toISOString(),
       read: false,
@@ -391,7 +398,7 @@ const ChatWidget = () => {
     const { filtered, wasCensored } = filterMessage(inputValue);
     
     if (wasCensored) {
-      setSendError("Meddelandet innehöll olämpligt innehåll som har filtrerats.");
+      setSendError(t('chat_widget.filtered_content'));
     }
 
     setIsLoading(true);
@@ -431,7 +438,7 @@ const ChatWidget = () => {
 
     if (error) {
       console.error("Error sending message:", error);
-      setSendError("Kunde inte skicka meddelande");
+      setSendError(t('chat_widget.send_error'));
       
       // Remove optimistic message on error
       setMessages((prev) => prev.filter(m => m.id !== tempId));
@@ -515,14 +522,14 @@ const ChatWidget = () => {
       return (
         <div className="flex items-center gap-1 text-xs text-yellow-500">
           <RefreshCw className="w-3 h-3 animate-spin" />
-          <span>Ansluter...</span>
+          <span>{t('chat_widget.connecting')}</span>
         </div>
       );
     } else {
       return (
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <WifiOff className="w-3 h-3" />
-          <span>Uppdaterar var 4s</span>
+          <span>{t('chat_widget.update_interval')}</span>
         </div>
       );
     }
@@ -530,16 +537,22 @@ const ChatWidget = () => {
 
   return (
     <>
-      {/* Chat Button */}
+      {/* Chat Button — fades in smoothly when visible prop becomes true */}
       {!isOpen && (
         <button
           onClick={handleOpen}
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(8px)',
+            pointerEvents: visible ? 'auto' : 'none',
+            transition: 'opacity 0.4s ease, transform 0.4s ease',
+          }}
           className={`fixed z-[60] w-14 h-14 rounded-full bg-gradient-primary text-primary-foreground shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-110 flex items-center justify-center group ${
             navbarPosition === 'bottom' ? 'bottom-20 right-6' :
             navbarPosition === 'right' ? 'bottom-6 right-20' :
             'bottom-6 right-6'
           }`}
-          aria-label="Öppna chat"
+          aria-label={t('chat_widget.open_chat')}
         >
           <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
           {hasUnread && (
@@ -587,14 +600,14 @@ const ChatWidget = () => {
                 <MessageCircle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold">Promotely Support</h3>
+                <h3 className="font-semibold">{t('chat_widget.support_title')}</h3>
                 <ConnectionIndicator />
               </div>
             </div>
             <button
               onClick={handleClose}
               className="hover:bg-hero-foreground/20 rounded-full p-2 transition-colors"
-              aria-label="Stäng chat"
+              aria-label={t('chat_widget.close_aria')}
             >
               <X className="w-5 h-5" />
             </button>
@@ -607,22 +620,22 @@ const ChatWidget = () => {
                 <div className="mb-4 p-4 rounded-full bg-muted/50">
                   <X className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Chatten har avslutats</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('chat_widget.chat_closed_heading')}</h3>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Support har avslutat denna chatt. Du kan starta en ny chatt om du har fler frågor.
+                  {t('chat_widget.chat_closed_message')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     variant="outline"
                     onClick={handleCloseAndReset}
                   >
-                    Stäng chatt
+                    {t('chat_widget.close_chat')}
                   </Button>
                   <Button
                     onClick={handleStartNewChat}
                     className="bg-gradient-primary hover:opacity-90"
                   >
-                    Starta ny chatt
+                    {t('chat_widget.start_new_chat')}
                   </Button>
                 </div>
               </div>
@@ -631,9 +644,9 @@ const ChatWidget = () => {
                 <div className="mb-4 p-4 rounded-full bg-muted/50">
                   <MessageCircle className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Hej!</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('chat_widget.greeting')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Skriv ett meddelande så återkommer vi så snart vi kan!
+                  {t('chat_widget.greeting_message')}
                 </p>
               </div>
             ) : (
@@ -653,12 +666,12 @@ const ChatWidget = () => {
                             {isAutomated ? (
                               <>
                                 <Bot className="w-3 h-3" />
-                                <span>Automatiserat meddelande</span>
+                                <span>{t('chat_widget.automated')}</span>
                               </>
                             ) : (
                               <>
                                 <User className="w-3 h-3" />
-                                <span>Från support</span>
+                                <span>{t('chat_widget.from_support')}</span>
                               </>
                             )}
                           </div>
@@ -674,7 +687,7 @@ const ChatWidget = () => {
                           <p className={`text-[10px] mt-1 ${
                             msg.sender_type === "user" ? "text-primary-foreground/70" : "text-muted-foreground"
                           }`}>
-                            {msg.id.startsWith('temp-') ? 'Skickar...' : new Date(msg.created_at).toLocaleTimeString("sv-SE", {
+                            {msg.id.startsWith('temp-') ? t('chat_widget.sending') : new Date(msg.created_at).toLocaleTimeString("sv-SE", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
@@ -702,7 +715,7 @@ const ChatWidget = () => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                  placeholder="Skriv ett meddelande..."
+                  placeholder={t('chat_widget.message_placeholder')}
                   className="flex-1 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
                   disabled={isLoading}
                 />

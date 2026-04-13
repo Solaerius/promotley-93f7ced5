@@ -1,4 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
@@ -27,6 +29,7 @@ interface TopNavProps {
 }
 
 export function TopNav({ showBackButton, title }: TopNavProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { activeOrganization } = useOrganization();
@@ -81,6 +84,7 @@ export function TopNav({ showBackButton, title }: TopNavProps) {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <DarkModeToggle />
           
           {/* Notifications */}
@@ -100,20 +104,20 @@ export function TopNav({ showBackButton, title }: TopNavProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <div className="px-4 py-2 border-b flex items-center justify-between">
-                <h3 className="font-semibold">Notiser</h3>
+                <h3 className="font-semibold">{t('common.notifications')}</h3>
                 {unreadCount > 0 && (
                   <button
                     onClick={(e) => { e.preventDefault(); markAllAsRead(); }}
                     className="text-xs text-primary hover:underline"
                   >
-                    Markera alla som lästa
+                    {t('common.mark_all_read')}
                   </button>
                 )}
               </div>
               <ScrollArea className="h-[300px]">
                 {notifications.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
-                    Inga notiser
+                    {t('common.no_notifications')}
                   </div>
                 ) : (
                   notifications.map((notification) => (
@@ -161,12 +165,12 @@ export function TopNav({ showBackButton, title }: TopNavProps) {
               <DropdownMenuItem asChild>
                 <Link to="/settings" className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
-                  Inställningar
+                  {t('common.settings')}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
-                Logga ut
+                {t('common.logout')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

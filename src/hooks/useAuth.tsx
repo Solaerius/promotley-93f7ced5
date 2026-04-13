@@ -1,3 +1,4 @@
+// TODO: i18n - use i18n.t() for toast messages in future
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";

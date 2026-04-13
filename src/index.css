@@ -6,48 +6,51 @@
 
 @layer base {
   :root {
-    /* Core colors - vibrant and bold */
-    --background: 0 0% 100%;
-    --foreground: 344 45% 10%;
+    /* Core colors — slate-based neutral */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 344 45% 10%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 344 45% 10%;
-    
-    /* Primary: rich purple-magenta */
-    --primary: 331 65% 35%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary: brand magenta-pink (from logo gradient) */
+    --primary: 326 56% 37%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 331 70% 45%;
-    
-    /* Secondary: rich magenta-pink */
-    --secondary: 331 65% 35%;
+    --primary-glow: 326 60% 50%;
+    --accent-brand: 10 84% 58%;
+    --brand-wine: 347 45% 14%;
+    --gradient-hero-bg: 0 0% 99%;
+
+    /* Secondary */
+    --secondary: 326 56% 37%;
     --secondary-foreground: 0 0% 100%;
-    
-    --muted: 0 0% 98%;
-    --muted-foreground: 344 20% 40%;
-    
-    /* Accent: deep wine/maroon */
-    --accent: 344 55% 12%;
-    --accent-foreground: 0 0% 100%;
-    
+
+    --muted: 214 32% 95%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent */
+    --accent: 214 32% 91%;
+    --accent-foreground: 222 47% 11%;
+
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    
-    --border: 30 15% 82%;
-    --input: 30 15% 82%;
-    --ring: 331 65% 35%;
+
+    --border: 214 32% 87%;
+    --input: 214 32% 87%;
+    --ring: 326 56% 37%;
     --radius: 0.75rem;
     
     /* VIBRANT Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(9 90% 55%) 0%, hsl(331 70% 45%) 50%, hsl(344 60% 35%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(10 84% 58%) 0%, hsl(326 56% 45%) 50%, hsl(347 45% 30%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(331 65% 40%) 0%, hsl(344 55% 15%) 100%);
     --gradient-diagonal: linear-gradient(135deg, hsl(344 55% 12%) 0%, hsl(331 65% 28%) 40%, hsl(9 85% 48%) 100%);
     --gradient-warm: linear-gradient(135deg, hsl(9 84% 52% / 0.12) 0%, hsl(331 65% 35% / 0.08) 100%);
-    --gradient-text: linear-gradient(135deg, hsl(9 90% 58%) 0%, hsl(331 75% 50%) 50%, hsl(344 60% 40%) 100%);
+    --gradient-text: linear-gradient(135deg, hsl(10 84% 62%) 0%, hsl(326 60% 55%) 50%, hsl(347 45% 40%) 100%);
     
     /* Shadows (+30% deeper) */
     --shadow-xs: 0 1px 3px hsl(344 45% 10% / 0.08);
@@ -66,38 +69,51 @@
     --outline-subtle-focus: hsl(331 65% 35%);
     --outline-input: hsl(30 30% 62%);
     --outline-input-focus: hsl(331 65% 35%);
+
+    /* Surface tokens */
+    --surface-base: var(--background);
+    --surface-raised: var(--card);
+    --surface-overlay: var(--popover);
+    --surface-elevated: var(--card);
+    --surface-muted: var(--muted);
+    --hero-foreground: var(--foreground);
+    --hero-foreground-muted: var(--muted-foreground);
   }
 
   .dark {
-    --background: 344 40% 6%;
-    --foreground: 30 20% 95%;
-    --card: 344 35% 9%;
-    --card-foreground: 30 20% 95%;
-    --popover: 344 35% 9%;
-    --popover-foreground: 30 20% 95%;
-    --primary: 331 60% 42%;
+    /* Dark: wine / brand family */
+    --background: 347 40% 5%;
+    --foreground: 0 0% 96%;
+    --card: 347 35% 8%;
+    --card-foreground: 0 0% 96%;
+    --popover: 347 35% 8%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 326 60% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 331 65% 48%;
-    --secondary: 331 60% 42%;
+    --primary-glow: 326 65% 62%;
+    --secondary: 326 60% 55%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 344 30% 12%;
-    --muted-foreground: 30 12% 65%;
-    --accent: 344 40% 18%;
-    --accent-foreground: 30 20% 95%;
+    --muted: 347 30% 13%;
+    --muted-foreground: 215 20% 58%;
+    --accent: 347 30% 16%;
+    --accent-foreground: 0 0% 96%;
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
     --success: 142 60% 32%;
     --success-foreground: 0 0% 100%;
     --warning: 38 80% 45%;
     --warning-foreground: 0 0% 100%;
-    --border: 344 25% 22%;
-    --input: 344 25% 22%;
-    --ring: 331 60% 42%;
-    --gradient-primary: linear-gradient(135deg, hsl(9 85% 55%) 0%, hsl(331 65% 45%) 50%, hsl(344 50% 35%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(331 60% 42%) 0%, hsl(344 40% 18%) 100%);
-    --gradient-diagonal: linear-gradient(135deg, hsl(344 40% 10%) 0%, hsl(331 55% 25%) 40%, hsl(9 75% 45%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(9 85% 55% / 0.15) 0%, hsl(331 60% 42% / 0.1) 100%);
-    --gradient-text: linear-gradient(135deg, hsl(9 90% 60%) 0%, hsl(331 70% 52%) 50%, hsl(344 55% 42%) 100%);
+    --border: 347 30% 18%;
+    --input: 347 30% 18%;
+    --ring: 326 60% 55%;
+    --gradient-primary: linear-gradient(135deg, hsl(10 84% 58%) 0%, hsl(326 56% 45%) 50%, hsl(347 45% 30%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(326 60% 42%) 0%, hsl(347 40% 18%) 100%);
+    --gradient-diagonal: linear-gradient(135deg, hsl(347 40% 10%) 0%, hsl(326 55% 25%) 40%, hsl(10 75% 45%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(10 84% 58% / 0.15) 0%, hsl(326 60% 42% / 0.1) 100%);
+    --gradient-text: linear-gradient(135deg, hsl(10 84% 62%) 0%, hsl(326 60% 55%) 50%, hsl(347 45% 40%) 100%);
+    --accent-brand: 10 84% 65%;
+    --brand-wine: 347 45% 14%;
+    --gradient-hero-bg: 347 40% 5%;
     --shadow-xs: 0 1px 3px hsl(0 0% 0% / 0.33);
     --shadow-sm: 0 2px 6px hsl(0 0% 0% / 0.39);
     --shadow-md: 0 6px 16px hsl(0 0% 0% / 0.46);
@@ -114,9 +130,19 @@
     --outline-subtle-focus: hsl(9 85% 55%);
     --outline-input: hsl(30 15% 30%);
     --outline-input-focus: hsl(9 85% 55%);
+
+    /* Surface tokens */
+    --surface-base: var(--background);
+    --surface-raised: var(--card);
+    --surface-overlay: var(--popover);
+    --surface-elevated: var(--card);
+    --surface-muted: var(--muted);
+    --hero-foreground: var(--foreground);
+    --hero-foreground-muted: var(--muted-foreground);
   }
 
   html {
+    font-size: 15px;
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -172,4 +198,61 @@
   .divider { @apply h-px w-full bg-gradient-to-r from-transparent via-border to-transparent; }
   .input-field { @apply w-full px-4 py-3 rounded-xl bg-background border-2 text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30; border-color: var(--outline-subtle); box-shadow: var(--shadow-input); }
   .input-field:focus { border-color: var(--outline-subtle-focus); box-shadow: var(--shadow-input-focus); }
+
+  /* Ambient glow orbs used in Hero section */
+  .blur-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blur-orb-primary {
+    background: hsl(331 65% 35% / 0.28);
+  }
+  .blur-orb-secondary {
+    background: hsl(9 90% 55% / 0.18);
+  }
+
+  /* Gradient text used throughout landing page */
+  .text-gradient {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Hero ambient orb CSS animations — GPU-composited, no Framer Motion jank */
+  @keyframes hero-orb-pulse-a {
+    0%, 100% { transform: translateZ(0) scale(1); opacity: var(--orb-opacity-lo); }
+    50% { transform: translateZ(0) scale(1.12); opacity: var(--orb-opacity-hi); }
+  }
+  @keyframes hero-orb-pulse-b {
+    0%, 100% { transform: translateZ(0) scale(1); opacity: var(--orb-opacity-lo-b); }
+    50% { transform: translateZ(0) scale(1.18); opacity: var(--orb-opacity-hi-b); }
+  }
+
+  /* Light mode (default) — increased opacity for readability */
+  .hero-orb-a {
+    will-change: transform, opacity;
+    animation: hero-orb-pulse-a 9s ease-in-out infinite;
+    --orb-opacity-lo: 0.16;
+    --orb-opacity-hi: 0.24;
+  }
+  .hero-orb-b {
+    will-change: transform, opacity;
+    animation: hero-orb-pulse-b 12s ease-in-out infinite 3s;
+    --orb-opacity-lo-b: 0.12;
+    --orb-opacity-hi-b: 0.18;
+  }
+
+  /* Dark mode — higher opacity */
+  .dark .hero-orb-a {
+    --orb-opacity-lo: 0.28;
+    --orb-opacity-hi: 0.38;
+  }
+  .dark .hero-orb-b {
+    --orb-opacity-lo-b: 0.12;
+    --orb-opacity-hi-b: 0.20;
+  }
 }

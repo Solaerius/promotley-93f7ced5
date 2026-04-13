@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { creditUpdateEvent } from './useAIAssistant';
@@ -40,6 +41,7 @@ export const useAIAnalysis = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchAnalyses = async () => {
     try {
@@ -131,8 +133,8 @@ export const useAIAnalysis = () => {
       // Only show generic error if it's not a credit error (already handled)
       if (!error?.message?.includes('INSUFFICIENT_CREDITS')) {
         toast({
-          title: 'Fel',
-          description: 'Kunde inte generera analys. Försök igen.',
+          title: t('common.error'),
+          description: t('toasts.could_not_generate_analysis'),
           variant: 'destructive',
         });
       }

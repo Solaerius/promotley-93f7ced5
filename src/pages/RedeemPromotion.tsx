@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ const RedeemPromotion = () => {
   const { code } = useParams<{ code: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<"loading" | "success" | "error" | "idle">("idle");
   const [message, setMessage] = useState("");
   const [creditsGiven, setCreditsGiven] = useState(0);
@@ -37,7 +39,7 @@ const RedeemPromotion = () => {
       }
     } catch {
       setStatus("error");
-      setMessage("Kunde inte lösa in koden");
+      setMessage(t('toasts.could_not_redeem'));
     }
   };
 

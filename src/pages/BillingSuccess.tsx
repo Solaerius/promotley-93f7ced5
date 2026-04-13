@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Sparkles, Zap } from "lucide-react";
+import { Check, Loader2, Wand2, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 
@@ -163,7 +163,7 @@ const BillingSuccess = () => {
 
                 <div className="bg-muted/50 p-6 rounded-lg mb-8 text-left space-y-3 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 delay-200">
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
+                    <Wand2 className="w-5 h-5 text-primary" />
                     Vad kan du göra?
                   </h3>
                   <p className="text-sm flex items-start gap-3">
@@ -213,7 +213,7 @@ const BillingSuccess = () => {
 
                 <div className="bg-muted/50 p-6 rounded-lg mb-8 text-left space-y-3 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 delay-200">
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
+                    <Wand2 className="w-5 h-5 text-primary" />
                     Vad händer nu?
                   </h3>
                   <p className="text-sm flex items-start gap-3">

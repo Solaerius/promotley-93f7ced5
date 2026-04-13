@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { X, Zap, Sparkles, Brain, ArrowRight } from "lucide-react";
+import { X, Zap, Wand2, Brain, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface UpgradePromptOverlayProps {
   open: boolean;
@@ -11,12 +12,13 @@ interface UpgradePromptOverlayProps {
 
 const plans = [
   { name: "Starter", price: "29 kr/mån", credits: "50 krediter", icon: Zap },
-  { name: "Growth", price: "49 kr/mån", credits: "100 krediter", icon: Sparkles },
+  { name: "Growth", price: "49 kr/mån", credits: "100 krediter", icon: Wand2 },
   { name: "Pro", price: "99 kr/mån", credits: "200 krediter", icon: Brain },
 ];
 
 const UpgradePromptOverlay = ({ open, onClose, feature }: UpgradePromptOverlayProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <AnimatePresence>
@@ -42,13 +44,13 @@ const UpgradePromptOverlay = ({ open, onClose, feature }: UpgradePromptOverlayPr
 
             <div className="text-center mb-6">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <Sparkles className="w-6 h-6 text-primary" />
+                <Wand2 className="w-6 h-6 text-primary" />
               </div>
-              <h2 className="text-xl font-bold">Uppgradera för att låsa upp</h2>
+              <h2 className="text-xl font-bold">{t('upgrade.title')}</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {feature
-                  ? `${feature} kräver ett betalt abonnemang.`
-                  : "Den här funktionen kräver ett betalt abonnemang."}
+                  ? t('upgrade.desc_feature', { feature })
+                  : t('upgrade.desc_generic')}
               </p>
             </div>
 
@@ -80,7 +82,7 @@ const UpgradePromptOverlay = ({ open, onClose, feature }: UpgradePromptOverlayPr
               size="lg"
               onClick={() => { onClose(); navigate("/pricing"); }}
             >
-              Se alla planer
+              {t('upgrade.view_plans')}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </motion.div>

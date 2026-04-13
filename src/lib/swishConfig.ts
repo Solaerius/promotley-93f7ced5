@@ -18,7 +18,7 @@ export const SWISH_PLANS = {
     credits: 50,
     model: "gpt-4o-mini",
     features: [
-      "AI-modell: GPT-4o Mini",
+      "AI-modell: Standard",
       "50 AI-krediter per månad",
       "Enkel strategi (2 poster/vecka)",
       "3 branschtips per månad",
@@ -31,7 +31,7 @@ export const SWISH_PLANS = {
     credits: 100,
     model: "gpt-4.1-mini",
     features: [
-      "AI-modell: GPT-4.1 Mini",
+      "AI-modell: Standard",
       "100 AI-krediter per månad",
       "Personlig innehållskalender",
       "5 content-idéer per vecka",
@@ -44,7 +44,7 @@ export const SWISH_PLANS = {
     credits: 300,
     model: "gpt-5.1",
     features: [
-      "AI-modell: GPT-5.1 (senaste)",
+      "AI-modell: Premium",
       "300 AI-krediter per månad",
       "Komplett strategi + kalender",
       "Creative Mode (fri AI-generering)",

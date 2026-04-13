@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Calendar, Sparkles, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Calendar, Wand2, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ Format: {"days": [{"day": "Måndag", "type": "Reel", "time": "18:00", "title": "
 Skapa exakt 7 poster, en för varje dag måndag till söndag.`;
 
 const WeeklyPlanner = () => {
+  const { t } = useTranslation();
   const [platforms, setPlatforms] = useState<string[]>(['instagram', 'tiktok']);
   const { result, loading, error, generate } = useAIToolRequest<WeeklyPlanResult>({ toolSystemPrompt: SYSTEM_PROMPT });
 
@@ -49,15 +51,22 @@ const WeeklyPlanner = () => {
 
   return (
     <AIToolPageLayout
-      title="Veckoplanering"
-      description="Få en komplett veckoplan med inlägg, tid och format för varje dag"
+      title={t('weekly.title')}
+      description={t('weekly.description')}
       icon={Calendar}
       gradient="from-green-500 to-emerald-500"
     >
+      {/* Loading progress bar */}
+      {loading && (
+        <div className="h-1 w-full bg-border rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
+        </div>
+      )}
+
       <Card className="liquid-glass-light">
         <CardContent className="p-5 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium dashboard-heading-dark">Plattformar</label>
+            <label className="text-sm font-medium dashboard-heading-dark">{t('weekly.platforms_label')}</label>
             <div className="flex gap-4">
               {['instagram', 'tiktok', 'facebook'].map(p => (
                 <label key={p} className="flex items-center gap-2 cursor-pointer">
@@ -68,7 +77,7 @@ const WeeklyPlanner = () => {
             </div>
           </div>
           <Button variant="gradient" className="w-full" onClick={handleGenerate} disabled={loading || platforms.length === 0}>
-            {loading ? <><Sparkles className="w-4 h-4 mr-2 animate-spin" /> Genererar...</> : <><Sparkles className="w-4 h-4 mr-2" /> Skapa veckoplan</>}
+            {loading ? <><Wand2 className="w-4 h-4 mr-2 animate-spin" /> {t('ai_tool.generating')}</> : <><Wand2 className="w-4 h-4 mr-2" /> {t('weekly.generate_btn')}</>}
           </Button>
         </CardContent>
       </Card>
@@ -81,7 +90,7 @@ const WeeklyPlanner = () => {
 
       {result?.days && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold dashboard-heading-dark">Din veckoplan</h2>
+          <h2 className="text-lg font-semibold dashboard-heading-dark">{t('weekly.results_heading')}</h2>
           <div className="grid grid-cols-1 gap-2">
             {DAYS.map(dayName => {
               const plan = result.days?.find(d => d.day.toLowerCase().startsWith(dayName.toLowerCase().slice(0, 3)));

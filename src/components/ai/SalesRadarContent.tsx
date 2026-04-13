@@ -33,8 +33,10 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { trackEvent } from '@/lib/trackEvent';
+import { useTranslation } from 'react-i18next';
 
 const SalesRadarContent = () => {
+  const { t, i18n } = useTranslation();
   const { latestResult, history, loading, generating, generateRadar } = useSalesRadar();
   const { isWatched, addWatch, removeWatch, watches } = useSalesRadarWatches();
   const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
@@ -58,7 +60,7 @@ const SalesRadarContent = () => {
     aiProfile.produkt_beskrivning,
     aiProfile.malsattning
   ].filter(Boolean).length : 0;
-  
+
   const isAIProfileComplete = filledFields >= 3;
   const isBlocked = !isAIProfileComplete && !aiProfileLoading;
 
@@ -94,9 +96,9 @@ const SalesRadarContent = () => {
 
   const getAktualitetLabel = (a: string) => {
     switch (a) {
-      case 'nu': return '🔴 Nu';
-      case 'denna_vecka': return '🟡 Denna vecka';
-      case 'denna_månad': return '🟢 Denna månad';
+      case 'nu': return `🔴 ${t('sales_radar.actuality_now')}`;
+      case 'denna_vecka': return `🟡 ${t('sales_radar.actuality_this_week')}`;
+      case 'denna_månad': return `🟢 ${t('sales_radar.actuality_this_month')}`;
       default: return a;
     }
   };
@@ -138,7 +140,7 @@ const SalesRadarContent = () => {
             className="gap-2"
           >
             <Radar className="h-5 w-5" />
-            {generating ? 'Skannar...' : isBlocked ? 'Fyll i AI-profil först' : 'Skanna möjligheter'}
+            {generating ? t('sales_radar.scanning') : isBlocked ? t('sales_radar.fill_profile_first') : t('sales_radar.scan_btn')}
           </Button>
 
           {history.length > 1 && (
@@ -148,13 +150,13 @@ const SalesRadarContent = () => {
             >
               <SelectTrigger className="w-[200px] liquid-glass-light border-white/20">
                 <History className="w-4 h-4 mr-2 shrink-0" />
-                <SelectValue placeholder="Historik" />
+                <SelectValue placeholder={t('sales_radar.history_placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="latest">Senaste skanningen</SelectItem>
+                <SelectItem value="latest">{t('sales_radar.latest_scan')}</SelectItem>
                 {history.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
-                    {new Date(item.created_at).toLocaleDateString('sv-SE', {
+                    {new Date(item.created_at).toLocaleDateString(i18n.language === 'sv' ? 'sv-SE' : 'en-GB', {
                       day: 'numeric', month: 'short', year: 'numeric',
                       hour: '2-digit', minute: '2-digit'
                     })}
@@ -167,7 +169,7 @@ const SalesRadarContent = () => {
 
         {history.length > 0 && (
           <p className="text-xs dashboard-subheading-dark">
-            {history.length} {history.length === 1 ? 'skanning' : 'skanningar'} sparade
+            {history.length} {history.length === 1 ? t('sales_radar.scans_saved_one') : t('sales_radar.scans_saved_many')}
           </p>
         )}
       </div>
@@ -178,11 +180,11 @@ const SalesRadarContent = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
             <span>
-              {accessError === 'no_plan' && 'Du behöver ett aktivt paket för Säljradarn'}
-              {accessError === 'no_credits' && 'Dina krediter är slut'}
+              {accessError === 'no_plan' && t('sales_radar.no_plan')}
+              {accessError === 'no_credits' && t('sales_radar.no_credits')}
             </span>
             <Button variant="gradient" size="sm" onClick={() => window.location.href = '/pricing'}>
-              Visa paket
+              {t('sales_radar.view_plans')}
             </Button>
           </AlertDescription>
         </Alert>
@@ -192,8 +194,8 @@ const SalesRadarContent = () => {
         <Alert variant="destructive">
           <AlertCircle className="h-5 w-5" />
           <AlertDescription>
-            <p className="font-bold mb-1">AI-profil krävs!</p>
-            <p>Fyll i minst 3 fält i din AI-profil under Konto → AI-profil.</p>
+            <p className="font-bold mb-1">{t('sales_radar.profile_required_title')}</p>
+            <p>{t('sales_radar.profile_required_body')}</p>
           </AlertDescription>
         </Alert>
       )}
@@ -205,10 +207,10 @@ const SalesRadarContent = () => {
             <div className="text-center py-12">
               <Radar className="h-16 w-16 text-muted-foreground/40 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2 dashboard-heading-dark">
-                Ingen skanning gjord än
+                {t('sales_radar.empty_title')}
               </h3>
               <p className="dashboard-subheading-dark max-w-md mx-auto">
-                Klicka på "Skanna möjligheter" för att hitta leads, trender och affärsmöjligheter anpassade för ditt företag
+                {t('sales_radar.empty_desc')}
               </p>
             </div>
           </CardContent>
@@ -227,7 +229,7 @@ const SalesRadarContent = () => {
                     {currentResult.sammanfattning}
                   </p>
                   <p className="text-xs dashboard-subheading-dark mt-2">
-                    Skanning {new Date(currentResult.created_at).toLocaleDateString('sv-SE')}
+                    {t('sales_radar.scan_date', { date: new Date(currentResult.created_at).toLocaleDateString(i18n.language === 'sv' ? 'sv-SE' : 'en-GB') })}
                   </p>
                 </CardContent>
               </Card>
@@ -238,7 +240,7 @@ const SalesRadarContent = () => {
           <div>
             <h3 className="text-lg font-semibold mb-3 dashboard-heading-dark flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
-              Leads & Möjligheter
+              {t('sales_radar.leads_heading')}
             </h3>
             <div className="grid gap-3 md:grid-cols-2">
               {(currentResult.leads || []).map((lead: any, index: number) => {
@@ -276,7 +278,7 @@ const SalesRadarContent = () => {
                             </div>
                             {lead.potential && (
                               <p className="text-xs dashboard-subheading-dark mt-1 italic">
-                                Potential: {lead.potential}
+                                {t('sales_radar.potential_label')} {lead.potential}
                               </p>
                             )}
                             <div className="mt-2 flex justify-end">
@@ -297,11 +299,11 @@ const SalesRadarContent = () => {
                                       }}
                                     >
                                       {isWatched(currentResult.id, 'lead', index) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                      {isWatched(currentResult.id, 'lead', index) ? 'Bevakas' : 'Bevaka'}
+                                      {isWatched(currentResult.id, 'lead', index) ? t('sales_radar.watching') : t('sales_radar.watch')}
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    {isWatched(currentResult.id, 'lead', index) ? 'Klicka för att ta bort bevakning' : 'Bevaka denna möjlighet (1 kredit)'}
+                                    {isWatched(currentResult.id, 'lead', index) ? t('sales_radar.watch_tooltip_remove') : t('sales_radar.watch_tooltip_add')}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -320,7 +322,7 @@ const SalesRadarContent = () => {
           <div>
             <h3 className="text-lg font-semibold mb-3 dashboard-heading-dark flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" />
-              Trender & Aktuellt
+              {t('sales_radar.trends_heading')}
             </h3>
             <div className="grid gap-3 md:grid-cols-2">
               {(currentResult.trends || []).map((trend: any, index: number) => {
@@ -371,11 +373,11 @@ const SalesRadarContent = () => {
                                       }}
                                     >
                                       {isWatched(currentResult.id, 'trend', index) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                      {isWatched(currentResult.id, 'trend', index) ? 'Bevakas' : 'Bevaka'}
+                                      {isWatched(currentResult.id, 'trend', index) ? t('sales_radar.watching') : t('sales_radar.watch')}
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    {isWatched(currentResult.id, 'trend', index) ? 'Klicka för att ta bort bevakning' : 'Bevaka denna trend (1 kredit)'}
+                                    {isWatched(currentResult.id, 'trend', index) ? t('sales_radar.watch_tooltip_remove') : t('sales_radar.watch_tooltip_add')}
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>

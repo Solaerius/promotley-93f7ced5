@@ -51,7 +51,7 @@ serve(async (req) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             username: "Promotely Betalningar",
-            avatar_url: "https://promotley.lovable.app/favicon.png",
+            avatar_url: `${Deno.env.get("APP_ORIGIN") || ""}/favicon.png`,
             embeds: [{
               title: "💳 Ny Swish-betalning väntar på verifiering!",
               description: `[Öppna Admin-panel för att verifiera](https://promotley.se/admin/swish)`,

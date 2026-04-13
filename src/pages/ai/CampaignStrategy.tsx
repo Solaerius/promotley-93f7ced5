@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Target, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Target, Wand2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,7 @@ Format: {"summary": "Kort sammanfattning av strategin", "steps": [{"title": "Ste
 Skapa 4-6 steg.`;
 
 const CampaignStrategy = () => {
+  const { t } = useTranslation();
   const [goal, setGoal] = useState('');
   const [budget, setBudget] = useState('');
   const [timeframe, setTimeframe] = useState('2_weeks');
@@ -41,17 +43,24 @@ const CampaignStrategy = () => {
 
   return (
     <AIToolPageLayout
-      title="Kampanjstrategi"
-      description="Bygg en steg-för-steg-strategi för din nästa kampanj"
+      title={t('campaign.title')}
+      description={t('campaign.description')}
       icon={Target}
       gradient="from-amber-500 to-orange-500"
     >
+      {/* Loading progress bar */}
+      {loading && (
+        <div className="h-1 w-full bg-border rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
+        </div>
+      )}
+
       <Card className="liquid-glass-light">
         <CardContent className="p-5 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium dashboard-heading-dark">Vad är målet med kampanjen?</label>
+            <label className="text-sm font-medium dashboard-heading-dark">{t('campaign.goal_label')}</label>
             <Textarea
-              placeholder="T.ex. öka försäljningen med 20%, nå 1000 följare, lansera ny produkt..."
+              placeholder={t('campaign.goal_placeholder')}
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
               rows={3}
@@ -59,23 +68,23 @@ const CampaignStrategy = () => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium dashboard-heading-dark">Tidsperiod</label>
+              <label className="text-sm font-medium dashboard-heading-dark">{t('campaign.timeframe_label')}</label>
               <Select value={timeframe} onValueChange={setTimeframe}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1_week">1 vecka</SelectItem>
-                  <SelectItem value="2_weeks">2 veckor</SelectItem>
-                  <SelectItem value="4_weeks">4 veckor</SelectItem>
+                  <SelectItem value="1_week">{t('campaign.timeframe_1w')}</SelectItem>
+                  <SelectItem value="2_weeks">{t('campaign.timeframe_2w')}</SelectItem>
+                  <SelectItem value="4_weeks">{t('campaign.timeframe_4w')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium dashboard-heading-dark">Budget (valfritt)</label>
-              <Input placeholder="T.ex. 500 kr" value={budget} onChange={(e) => setBudget(e.target.value)} />
+              <label className="text-sm font-medium dashboard-heading-dark">{t('campaign.budget_label')}</label>
+              <Input placeholder={t('campaign.budget_placeholder')} value={budget} onChange={(e) => setBudget(e.target.value)} />
             </div>
           </div>
           <Button variant="gradient" className="w-full" onClick={handleGenerate} disabled={loading || !goal.trim()}>
-            {loading ? <><Sparkles className="w-4 h-4 mr-2 animate-spin" /> Genererar...</> : <><Sparkles className="w-4 h-4 mr-2" /> Skapa strategi</>}
+            {loading ? <><Wand2 className="w-4 h-4 mr-2 animate-spin" /> {t('ai_tool.generating')}</> : <><Wand2 className="w-4 h-4 mr-2" /> {t('campaign.generate_btn')}</>}
           </Button>
         </CardContent>
       </Card>
@@ -95,7 +104,7 @@ const CampaignStrategy = () => {
               </CardContent>
             </Card>
           )}
-          <h2 className="text-lg font-semibold dashboard-heading-dark">Kampanjplan</h2>
+          <h2 className="text-lg font-semibold dashboard-heading-dark">{t('campaign.results_heading')}</h2>
           {/* Timeline */}
           <div className="relative pl-6 space-y-4">
             <div className="absolute left-2.5 top-2 bottom-2 w-px bg-primary/30" />

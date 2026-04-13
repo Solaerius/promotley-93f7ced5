@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, MessageSquare, Trash2, PanelLeftClose, PanelLeft } from "lucide-react";
@@ -23,6 +24,7 @@ const ChatSidebar = ({
   onDelete,
   loading,
 }: ChatSidebarProps) => {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
 
   if (collapsed) {
@@ -86,7 +88,7 @@ const ChatSidebar = ({
             <div className="px-3 py-4 text-xs text-muted-foreground dark:text-white/40 text-center">Laddar...</div>
           ) : conversations.length === 0 ? (
             <div className="px-3 py-4 text-xs text-muted-foreground dark:text-white/40 text-center">
-              Inga konversationer ännu
+              {t('common.no_conversations')}
             </div>
           ) : (
             <AnimatePresence mode="popLayout">

@@ -1,11 +1,11 @@
 import { ReactNode, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useNotifications } from "@/hooks/useNotifications";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { AppSidebar } from "@/components/AppSidebar";
-import CreditWarningBanner from "@/components/CreditWarningBanner";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Bell, Trash2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutProps) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { needsOnboarding, loading: orgLoading } = useOrganization();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
@@ -48,7 +49,7 @@ const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutPro
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Content header */}
-          <header className="sticky top-0 z-20 h-12 flex items-center justify-between gap-2 px-4 border-b border-border/40 bg-background/95 backdrop-blur-sm">
+          <header className="sticky top-0 z-20 h-12 flex items-center justify-between gap-2 px-4 border-b border-border/40 bg-background/80 backdrop-blur-md">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="h-8 w-8" />
               {pageTitle && (
@@ -59,12 +60,15 @@ const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutPro
             {/* Notifications */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative h-8 w-8">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                >
                   <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
                     <Badge
-                      variant="destructive"
-                      className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+                      className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground border-0"
                     >
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </Badge>
@@ -73,14 +77,14 @@ const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutPro
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72">
                 <div className="px-3 py-2 border-b flex items-center justify-between">
-                  <h3 className="font-semibold text-sm">Notiser</h3>
+                  <h3 className="font-semibold text-sm">{t('nav.notifications')}</h3>
                   <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
                       <button
                         onClick={(e) => { e.preventDefault(); markAllAsRead(); }}
                         className="text-[10px] text-primary hover:underline"
                       >
-                        Markera alla som lästa
+                        {t('nav.mark_all_read')}
                       </button>
                     )}
                     {notifications.length > 0 && (
@@ -89,14 +93,14 @@ const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutPro
                         className="text-[10px] text-destructive hover:underline flex items-center gap-0.5"
                       >
                         <Trash2 className="h-2.5 w-2.5" />
-                        Rensa
+                        {t('nav.clear_all')}
                       </button>
                     )}
                   </div>
                 </div>
                 <ScrollArea className="h-[250px]">
                   {notifications.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground text-sm">Inga notiser</div>
+                    <div className="p-4 text-center text-muted-foreground text-sm">{t('common.no_notifications')}</div>
                   ) : (
                     notifications.map((n) => (
                       <DropdownMenuItem
@@ -135,10 +139,11 @@ const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutPro
           {/* Email verification */}
           <EmailVerificationBanner />
 
-          {/* Main content - no motion wrapper */}
+          {/* Main content */}
           <main className="flex-1 p-4 md:p-6">
-            <CreditWarningBanner />
-            {children}
+            <div className="max-w-7xl mx-auto w-full">
+              {children}
+            </div>
           </main>
 
           {/* Minimal footer */}
@@ -146,9 +151,9 @@ const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutPro
             <footer className="py-4 px-4 text-center text-xs text-muted-foreground border-t border-border/30">
               <p>
                 © {new Date().getFullYear()} Promotely UF ·{" "}
-                <Link to="/privacy-policy" className="hover:text-foreground transition-colors">Integritetspolicy</Link>
+                <Link to="/privacy-policy" className="hover:text-foreground transition-colors">{t('footer.privacy_policy')}</Link>
                 {" · "}
-                <Link to="/terms-of-service" className="hover:text-foreground transition-colors">Villkor</Link>
+                <Link to="/terms-of-service" className="hover:text-foreground transition-colors">{t('footer.terms_link')}</Link>
               </p>
             </footer>
           )}

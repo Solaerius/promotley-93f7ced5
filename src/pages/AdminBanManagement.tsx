@@ -1,3 +1,4 @@
+// Admin pages are Swedish-only (internal use). i18n not applied here.
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";

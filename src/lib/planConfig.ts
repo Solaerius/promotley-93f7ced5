@@ -1,6 +1,9 @@
 /**
  * Plan Configuration for Promotley UF
  * Single source of truth for AI model mappings and credit policies
+ *
+ * IMPORTANT: Credit values (50/100/200) are duplicated in
+ * supabase/functions/stripe-webhook -- update both when changing.
  */
 
 export type PlanType = 'starter' | 'growth' | 'pro';

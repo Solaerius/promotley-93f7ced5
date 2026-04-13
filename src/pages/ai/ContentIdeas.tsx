@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image, Sparkles, Film, Camera, Layout, MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Image, Wand2, Film, Camera, Layout, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,6 +38,7 @@ Generera content-idéer med varierade format (Reel, Story, Carousel, Post). Varj
 Format: {"ideas": [{"title": "Kort catchy titel", "description": "Detaljerad beskrivning av innehållet", "format": "Reel/Story/Carousel/Post", "platform": "instagram/tiktok/facebook", "day": "Måndag"}]}`;
 
 const ContentIdeas = () => {
+  const { t } = useTranslation();
   const [platform, setPlatform] = useState('alla');
   const [count, setCount] = useState('5');
   const { result, loading, error, generate } = useAIToolRequest<ContentIdeasResult>({ toolSystemPrompt: SYSTEM_PROMPT });
@@ -53,20 +55,27 @@ const ContentIdeas = () => {
 
   return (
     <AIToolPageLayout
-      title="Content-idéer"
-      description="Brainstorma kreativa innehållsidéer anpassade för dina plattformar"
+      title={t('content_ideas.title')}
+      description={t('content_ideas.description')}
       icon={Image}
       gradient="from-purple-500 to-pink-500"
     >
+      {/* Loading progress bar */}
+      {loading && (
+        <div className="h-1 w-full bg-border rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
+        </div>
+      )}
+
       <Card className="liquid-glass-light">
         <CardContent className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium dashboard-heading-dark">Plattform</label>
+              <label className="text-sm font-medium dashboard-heading-dark">{t('ai_tool.platform')}</label>
               <Select value={platform} onValueChange={setPlatform}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="alla">Alla plattformar</SelectItem>
+                  <SelectItem value="alla">{t('ai_tool.all_platforms')}</SelectItem>
                   <SelectItem value="instagram">Instagram</SelectItem>
                   <SelectItem value="tiktok">TikTok</SelectItem>
                   <SelectItem value="facebook">Facebook</SelectItem>
@@ -74,19 +83,19 @@ const ContentIdeas = () => {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium dashboard-heading-dark">Antal idéer</label>
+              <label className="text-sm font-medium dashboard-heading-dark">{t('content_ideas.count_label')}</label>
               <Select value={count} onValueChange={setCount}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="3">3 idéer</SelectItem>
-                  <SelectItem value="5">5 idéer</SelectItem>
-                  <SelectItem value="7">7 idéer</SelectItem>
+                  <SelectItem value="3">{t('content_ideas.count_3')}</SelectItem>
+                  <SelectItem value="5">{t('content_ideas.count_5')}</SelectItem>
+                  <SelectItem value="7">{t('content_ideas.count_7')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <Button variant="gradient" className="w-full" onClick={handleGenerate} disabled={loading}>
-            {loading ? <><Sparkles className="w-4 h-4 mr-2 animate-spin" /> Genererar...</> : <><Sparkles className="w-4 h-4 mr-2" /> Generera idéer</>}
+            {loading ? <><Wand2 className="w-4 h-4 mr-2 animate-spin" /> {t('ai_tool.generating')}</> : <><Wand2 className="w-4 h-4 mr-2" /> {t('content_ideas.generate_btn')}</>}
           </Button>
         </CardContent>
       </Card>
@@ -99,7 +108,7 @@ const ContentIdeas = () => {
 
       {result?.ideas && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold dashboard-heading-dark">Dina idéer</h2>
+          <h2 className="text-lg font-semibold dashboard-heading-dark">{t('content_ideas.results_heading')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {result.ideas.map((idea, i) => (
               <Card key={i} className="liquid-glass-light hover:shadow-elegant transition-all duration-300">

@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,6 +24,7 @@ export const ProfileImageUpload = ({
   size = "md",
   className,
 }: ProfileImageUploadProps) => {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,13 +41,13 @@ export const ProfileImageUpload = ({
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Endast bilder är tillåtna");
+      toast.error(t('profile.only_images'));
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Bilden får max vara 5MB");
+      toast.error(t('profile.max_5mb'));
       return;
     }
 
@@ -85,10 +87,10 @@ export const ProfileImageUpload = ({
       if (updateError) throw updateError;
 
       onUploadComplete(publicUrl);
-      toast.success(type === "avatar" ? "Profilbild uppdaterad" : "Företagslogga uppdaterad");
+      toast.success(type === "avatar" ? t('profile.avatar_updated') : t('profile.logo_updated'));
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Kunde inte ladda upp bilden");
+      toast.error(t('profile.upload_error'));
       setPreviewUrl(null);
     } finally {
       setUploading(false);
@@ -108,10 +110,10 @@ export const ProfileImageUpload = ({
 
       setPreviewUrl(null);
       onUploadComplete("");
-      toast.success("Bild borttagen");
+      toast.success(t('profile.image_deleted'));
     } catch (error) {
       console.error("Remove error:", error);
-      toast.error("Kunde inte ta bort bilden");
+      toast.error(t('profile.delete_error'));
     } finally {
       setUploading(false);
     }
@@ -164,7 +166,7 @@ export const ProfileImageUpload = ({
           ) : (
             <Camera className="h-4 w-4 mr-1" />
           )}
-          {type === "avatar" ? "Ändra profilbild" : "Ändra logga"}
+          {type === "avatar" ? t('profile.change_avatar') : t('profile.change_logo')}
         </Button>
         
         {displayUrl && (

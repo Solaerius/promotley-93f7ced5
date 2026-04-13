@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Send,
-  Sparkles,
+  Wand2,
   BarChart3,
   Calendar,
   FileText,
@@ -30,7 +31,6 @@ import { useUserCredits } from "@/hooks/useUserCredits";
 import { useAIProfile } from "@/hooks/useAIProfile";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import MarketingPlanCard from "@/components/MarketingPlanCard";
-import CreditsDisplay from "@/components/CreditsDisplay";
 import { useNavigate } from "react-router-dom";
 
 interface Message {
@@ -42,6 +42,7 @@ interface Message {
 }
 
 const AIChat = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { messages, loading, sendMessage, implementPlan } = useAIAssistant(null);
@@ -67,10 +68,10 @@ const AIChat = () => {
   const isAIBlocked = !isAIProfileComplete && !aiProfileLoading;
 
   const quickCommands = [
-    { icon: BarChart3, text: "Analysera min statistik" },
-    { icon: Calendar, text: "Skapa marknadsforingsplan" },
-    { icon: FileText, text: "Skriv caption" },
-    { icon: TrendingUp, text: "Skapa 30-dagars strategi" },
+    { icon: BarChart3, text: t('chat.quick_analyze'), key: 'analyze' },
+    { icon: Calendar, text: t('chat.quick_plan'), key: 'plan' },
+    { icon: FileText, text: t('chat.quick_caption'), key: 'caption' },
+    { icon: TrendingUp, text: t('chat.quick_strategy'), key: 'strategy' },
   ];
 
   const checkIfNearBottom = () => {
@@ -112,7 +113,7 @@ const AIChat = () => {
     if (!messageText || loading) return;
 
     if (hasInsufficientCredits) {
-      toast({ title: "Otillrackliga krediter", description: "Du har slut pa krediter.", variant: "destructive" });
+      toast({ title: t('chat.insufficient_credits_title'), description: t('chat.insufficient_credits_desc'), variant: "destructive" });
       return;
     }
 
@@ -122,33 +123,33 @@ const AIChat = () => {
     } catch (error: any) {
       console.error('Error sending message:', error);
       if (error?.message?.includes('INSUFFICIENT_CREDITS')) {
-        toast({ title: "Otillrackliga krediter", description: "Du har inte tillrackligt med krediter.", variant: "destructive" });
+        toast({ title: t('chat.insufficient_credits_title'), description: t('chat.insufficient_credits_desc'), variant: "destructive" });
       }
     }
   };
 
-  const handleQuickCommand = async (command: string) => {
+  const handleQuickCommand = async (command: string, key?: string) => {
     if (loading) return;
     if (hasInsufficientCredits) {
-      toast({ title: "Otillrackliga krediter", description: "Du har slut pa krediter.", variant: "destructive" });
+      toast({ title: t('chat.insufficient_credits_title'), description: t('chat.insufficient_credits_desc'), variant: "destructive" });
       return;
     }
 
-    switch (command) {
-      case "Analysera min statistik":
+    switch (key) {
+      case 'analyze':
         await handleSendMessage("Analysera min statistik och ge mig insikter om mina sociala medier-konton.");
         break;
-      case "Skapa marknadsforingsplan":
+      case 'plan':
         await handleSendMessage(
-          "Skapa en marknadsforingsplan for kommande 4 veckor som maximerar rackvidd och engagemang. Utga fran min kalender och foretagsprofil.",
+          "Skapa en marknadsföringsplan för kommande 4 veckor som maximerar räckvidd och engagemang. Utgå från min kalender och företagsprofil.",
           { action: 'create_marketing_plan', timeframe: { preset: 'next_4_weeks' }, targets: ['reach', 'engagement'], requestId: crypto.randomUUID() }
         );
         break;
-      case "Skriv caption":
-        setInputMessage("Skriv en engagerande caption for mitt nasta inlagg om ");
+      case 'caption':
+        setInputMessage("Skriv en engagerande caption för mitt nästa inlägg om ");
         break;
-      case "Skapa 30-dagars strategi":
-        await handleSendMessage("Skapa en 30-dagars strategi for att oka min synlighet pa sociala medier. Inkludera konkreta aktiviteter och mal.");
+      case 'strategy':
+        await handleSendMessage("Skapa en 30-dagars strategi för att öka min synlighet på sociala medier. Inkludera konkreta aktiviteter och mål.");
         break;
       default:
         setInputMessage(command);
@@ -165,10 +166,10 @@ const AIChat = () => {
     setShowConfirmDialog(false);
     try {
       await implementPlan(pendingPlan.plan, pendingPlan.requestId);
-      toast({ title: "Plan implementerad", description: `${pendingPlan.plan.posts?.length || 0} inlagg har lagts till i din kalender.` });
+      toast({ title: t('chat.plan_implemented_title'), description: t('chat.plan_implemented_desc', { count: pendingPlan.plan.posts?.length || 0 }) });
     } catch (error) {
       console.error('Error implementing plan:', error);
-      toast({ title: "Fel", description: "Kunde inte implementera planen.", variant: "destructive" });
+      toast({ title: t('chat.implement_error_title'), description: t('chat.implement_error_desc'), variant: "destructive" });
     } finally {
       setPendingPlan(null);
     }
@@ -182,48 +183,45 @@ const AIChat = () => {
         {/* Header */}
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">AI-Assistent</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Chatta med Promotleys AI for personliga rad</p>
+            <h1 className="text-2xl font-bold text-foreground">{t('chat.title')}</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('chat.subtitle')}</p>
           </div>
-          <CreditsDisplay variant="compact" />
         </div>
 
         {/* AI Profile Warning */}
         {isAIBlocked && (
           <Alert variant="destructive" className="mb-4">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle className="font-medium">AI-profil kravs</AlertTitle>
+            <AlertTitle className="font-medium">{t('chat.profile_required_title')}</AlertTitle>
             <AlertDescription className="mt-1">
-              <p className="text-sm mb-2">Fyll i minst 3 av foljande falt i din AI-profil: bransch, malgrupp, produktbeskrivning och malsattning.</p>
+              <p className="text-sm mb-2">{t('chat.profile_required_desc')}</p>
               <Button onClick={() => navigate('/account')} variant="outline" size="sm">
-                Ga till Installningar
+                {t('chat.go_to_settings')}
               </Button>
             </AlertDescription>
           </Alert>
         )}
 
         {/* Quick Commands */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none">
           {quickCommands.map((cmd, index) => {
             const Icon = cmd.icon;
             return (
               <button
                 key={index}
-                className="flex items-center gap-2.5 p-3 rounded-xl bg-card shadow-sm hover:shadow-md transition-shadow text-left disabled:opacity-50"
-                onClick={() => handleQuickCommand(cmd.text)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all whitespace-nowrap text-xs font-medium text-muted-foreground disabled:opacity-40 shrink-0"
+                onClick={() => handleQuickCommand(cmd.text, cmd.key)}
                 disabled={loading || isAIBlocked}
               >
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <span className="text-xs font-medium text-foreground">{cmd.text}</span>
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                {cmd.text}
               </button>
             );
           })}
         </div>
 
         {/* Chat Container */}
-        <div className="flex-1 flex flex-col overflow-hidden rounded-xl bg-card shadow-sm">
+        <div className="flex-1 flex flex-col overflow-hidden rounded-2xl bg-card border border-border/40">
           {/* Messages */}
           <div
             className="flex-1 overflow-y-auto p-4 md:p-6"
@@ -236,16 +234,16 @@ const AIChat = () => {
                   <div className={`max-w-[80%] lg:max-w-[65%]`}>
                     {msg.role === "assistant" && (
                       <div className="flex items-center gap-2 mb-1.5">
-                        <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                          <Sparkles className="w-3 h-3 text-primary-foreground" />
+                        <div className="w-6 h-6 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center">
+                          <Wand2 className="w-3 h-3 text-primary" />
                         </div>
                         <span className="text-xs font-medium text-muted-foreground">Promotley AI</span>
                       </div>
                     )}
                     <div className={`rounded-xl px-4 py-3 ${
                       msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground"
+                        ? "bg-primary text-primary-foreground rounded-br-sm"
+                        : "border border-border/60 bg-card rounded-bl-sm text-foreground"
                     }`}>
                       {msg.role === "user" ? (
                         <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
@@ -271,16 +269,16 @@ const AIChat = () => {
                 <div className="flex justify-start">
                   <div className="max-w-[80%] lg:max-w-[65%]">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                        <Sparkles className="w-3 h-3 text-primary-foreground" />
+                      <div className="w-6 h-6 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center">
+                        <Wand2 className="w-3 h-3 text-primary" />
                       </div>
-                      <span className="text-xs text-muted-foreground">Promotley AI tanker...</span>
+                      <span className="text-xs text-muted-foreground">{t('chat.thinking')}</span>
                     </div>
-                    <div className="rounded-xl px-4 py-3 bg-muted">
+                    <div className="rounded-xl px-4 py-3 border border-border/60 bg-card rounded-bl-sm">
                       <div className="flex gap-1.5 items-center">
-                        <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+                        <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "300ms" }} />
                       </div>
                     </div>
                   </div>
@@ -296,37 +294,37 @@ const AIChat = () => {
               className="absolute bottom-24 right-8 bg-primary text-primary-foreground px-3 py-1.5 rounded-full shadow-sm hover:shadow-md transition-shadow flex items-center gap-1.5 z-10 text-sm"
             >
               <ChevronDown className="w-3.5 h-3.5" />
-              Nya meddelanden
+              {t('chat.new_messages')}
             </button>
           )}
 
           {/* Insufficient Credits */}
           {hasInsufficientCredits && (
-            <div className="border-t border-border p-3">
+            <div className="border-t border-border/40 p-3">
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
-                  <span className="text-sm">Du har slut pa krediter.</span>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/pricing')} className="ml-4">Uppgradera</Button>
+                  <span className="text-sm">{t('chat.no_credits')}</span>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/pricing')} className="ml-4">{t('chat.upgrade')}</Button>
                 </AlertDescription>
               </Alert>
             </div>
           )}
 
           {/* Input Area */}
-          <div className="border-t border-border p-3 md:p-4">
+          <div className="border-t border-border/40 p-3 md:p-4">
             <div className="flex gap-2 items-end">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => toast({ title: "Filuppladdning", description: "Kommer snart!" })}
+                onClick={() => toast({ title: t('chat.file_upload_title'), description: t('chat.file_upload_desc') })}
                 disabled={hasInsufficientCredits || isAIBlocked}
                 className="shrink-0 h-9 w-9"
               >
                 <Paperclip className="w-4 h-4" />
               </Button>
               <Textarea
-                placeholder={isAIBlocked ? "Fyll i AI-profil forst..." : hasInsufficientCredits ? "Inga krediter kvar..." : "Skriv ditt meddelande..."}
+                placeholder={isAIBlocked ? t('chat.placeholder_blocked') : hasInsufficientCredits ? t('chat.placeholder_no_credits') : t('chat.placeholder')}
                 value={inputMessage}
                 onChange={(e) => {
                   setInputMessage(e.target.value);
@@ -359,10 +357,10 @@ const AIChat = () => {
             </div>
             <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
               {isAIBlocked
-                ? "Fyll i din AI-profil i Installningar for att borja chatta"
+                ? t('chat.footer_blocked')
                 : hasInsufficientCredits
-                ? "Uppgradera din plan for att fortsatta chatta med AI"
-                : "AI kan gora misstag. Kontrollera viktig information."}
+                ? t('chat.footer_no_credits')
+                : t('chat.footer_normal')}
             </p>
           </div>
         </div>
@@ -372,16 +370,16 @@ const AIChat = () => {
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Implementera marknadsforingsplan?</DialogTitle>
+            <DialogTitle>{t('chat.implement_dialog_title')}</DialogTitle>
             <DialogDescription>
               {pendingPlan && (
-                <>Vill du lagga in {pendingPlan.plan.posts?.length || 0} inlagg i din kalender mellan {pendingPlan.plan.timeframe?.start} och {pendingPlan.plan.timeframe?.end}?</>
+                <>{t('chat.implement_dialog_desc', { count: pendingPlan.plan.posts?.length || 0, start: pendingPlan.plan.timeframe?.start, end: pendingPlan.plan.timeframe?.end })}</>
               )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>Avbryt</Button>
-            <Button onClick={confirmImplementPlan}>Implementera</Button>
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>{t('chat.cancel')}</Button>
+            <Button onClick={confirmImplementPlan}>{t('chat.implement')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

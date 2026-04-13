@@ -5,8 +5,10 @@ import { useConnections } from "@/hooks/useConnections";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const AppSettingsContent = () => {
+  const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const { connections, loadConnections, isConnected, getConnection } = useConnections();
@@ -16,22 +18,24 @@ const AppSettingsContent = () => {
     setConnectingProvider('instagram');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast({ title: "Inte inloggad", variant: "destructive" }); setConnectingProvider(null); return; }
+      if (!session) { toast({ title: t('connections.not_logged_in'), variant: "destructive" }); setConnectingProvider(null); return; }
       const { data, error } = await supabase.functions.invoke('init-meta-oauth', { headers: { Authorization: `Bearer ${session.access_token}` }, body: { provider: 'meta_ig' } });
       if (error || !data?.url) throw error;
       window.location.href = data.url;
-    } catch { toast({ title: "Anslutning misslyckades", variant: "destructive" }); setConnectingProvider(null); }
+    } catch { toast({ title: t('app_settings.connect_failed'), variant: "destructive" }); setConnectingProvider(null); }
   };
 
   const connectTikTok = async () => {
     setConnectingProvider('tiktok');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast({ title: "Inte inloggad", variant: "destructive" }); return; }
-      const { data, error } = await supabase.functions.invoke('init-tiktok-oauth');
+      if (!session) { toast({ title: t('connections.not_logged_in'), variant: "destructive" }); return; }
+      const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
       if (error || !data?.url) throw error;
       window.location.href = data.url;
-    } catch { toast({ title: "Anslutning misslyckades", variant: "destructive" }); setConnectingProvider(null); }
+    } catch { toast({ title: t('app_settings.connect_failed'), variant: "destructive" }); setConnectingProvider(null); }
   };
 
   const disconnectProvider = async (provider: 'tiktok' | 'meta_ig') => {
@@ -48,12 +52,12 @@ const AppSettingsContent = () => {
         await supabase.from('connections').delete().eq('id', connection.id);
       }
       await loadConnections();
-      toast({ title: "Frankopplad" });
-    } catch { toast({ title: "Fel", variant: "destructive" }); }
+      toast({ title: t('app_settings.disconnected') });
+    } catch { toast({ title: t('common.error'), variant: "destructive" }); }
   };
 
   const platformConnections = [
-    { name: "Instagram", provider: 'meta_ig' as const, icon: Instagram, connect: connectInstagram, note: "Kraver foretagskonto kopplat till Facebook-sida", comingSoon: true },
+    { name: "Instagram", provider: 'meta_ig' as const, icon: Instagram, connect: connectInstagram, note: t('app_settings.facebook_business_note'), comingSoon: true },
     { name: "TikTok", provider: 'tiktok' as const, icon: Music2, connect: connectTikTok },
   ];
 
@@ -61,13 +65,13 @@ const AppSettingsContent = () => {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Theme */}
       <section className="space-y-3">
-        <h2 className="text-base font-medium text-foreground">Utseende</h2>
-        <p className="text-sm text-muted-foreground">Valj mellan ljust, morkt eller systemets tema</p>
+        <h2 className="text-base font-medium text-foreground">{t('app_settings.appearance')}</h2>
+        <p className="text-sm text-muted-foreground">{t('app_settings.appearance_desc')}</p>
         <div className="grid grid-cols-3 gap-3">
           {[
-            { value: "light", label: "Ljust", icon: Sun },
-            { value: "dark", label: "Morkt", icon: Moon },
-            { value: "system", label: "System", icon: Monitor },
+            { value: "light", label: t('app_settings.light_mode'), icon: Sun },
+            { value: "dark", label: t('app_settings.dark_mode'), icon: Moon },
+            { value: "system", label: t('app_settings.system_mode'), icon: Monitor },
           ].map(({ value, label, icon: Icon }) => (
             <button
               key={value}
@@ -85,8 +89,8 @@ const AppSettingsContent = () => {
 
       {/* Social Connections */}
       <section className="space-y-3">
-        <h2 className="text-base font-medium text-foreground">Kopplade konton</h2>
-        <p className="text-sm text-muted-foreground">Anslut dina sociala medier for att se statistik</p>
+        <h2 className="text-base font-medium text-foreground">{t('app_settings.social_accounts')}</h2>
+        <p className="text-sm text-muted-foreground">{t('app_settings.social_accounts_desc')}</p>
         <div className="space-y-2">
           {platformConnections.map((platform) => {
             const connected = isConnected(platform.provider);
@@ -104,7 +108,7 @@ const AppSettingsContent = () => {
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm">{platform.name}</p>
                       {platform.comingSoon && !connected && (
-                        <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Snart</span>
+                        <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{t('connections.coming_soon')}</span>
                       )}
                     </div>
                     {connected && connection?.username && <p className="text-xs text-muted-foreground">@{connection.username}</p>}
@@ -113,12 +117,12 @@ const AppSettingsContent = () => {
                 </div>
                 {connected ? (
                   <Button variant="outline" size="sm" onClick={() => disconnectProvider(platform.provider)}>
-                    <XCircle className="w-4 h-4 mr-1" /> Koppla fran
+                    <XCircle className="w-4 h-4 mr-1" /> {t('connections.disconnect')}
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" onClick={platform.connect} disabled={isLoading || platform.comingSoon}>
                     {isLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <LinkIcon className="w-4 h-4 mr-1" />}
-                    Anslut
+                    {t('connections.connect')}
                   </Button>
                 )}
               </div>

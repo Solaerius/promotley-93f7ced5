@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +19,7 @@ export const useAnalytics = (platform?: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchAnalytics = async () => {
     try {
@@ -89,8 +91,8 @@ export const useAnalytics = (platform?: string) => {
     } catch (err) {
       console.error('Error updating analytics:', err);
       toast({
-        title: "Fel",
-        description: "Kunde inte uppdatera statistik.",
+        title: t('common.error'),
+        description: t('toasts.could_not_update_stats'),
         variant: "destructive",
       });
       throw err;

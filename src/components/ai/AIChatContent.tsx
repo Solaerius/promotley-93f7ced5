@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -35,6 +36,7 @@ interface AIChatContentProps {
 }
 
 const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -73,10 +75,10 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
   const isAIBlocked = !isProfileComplete && !profileLoading;
 
   const quickCommands = [
-    { icon: BarChart3, text: "Analysera min statistik", color: "from-blue-500 to-cyan-500" },
-    { icon: Calendar, text: "Skapa marknadsföringsplan", color: "from-purple-500 to-pink-500" },
-    { icon: FileText, text: "Skriv caption", color: "from-orange-500 to-red-500" },
-    { icon: TrendingUp, text: "Skapa 30-dagars strategi", color: "from-green-500 to-emerald-500" },
+    { icon: BarChart3, text: t('chat.quick_analyze'), color: "from-blue-500 to-cyan-500" },
+    { icon: Calendar, text: t('chat.create_plan'), color: "from-purple-500 to-pink-500" },
+    { icon: FileText, text: t('chat.quick_caption'), color: "from-orange-500 to-red-500" },
+    { icon: TrendingUp, text: t('chat.quick_strategy'), color: "from-green-500 to-emerald-500" },
   ];
 
   const checkIfNearBottom = useCallback(() => {
@@ -155,8 +157,8 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
   const handleImplementPlan = async (plan: any, requestId: string): Promise<void> => {
     await implementPlan(plan, requestId);
     toast({
-      title: "Plan implementerad",
-      description: "Inläggen har lagts till i din kalender",
+      title: t('chat.plan_implemented_title'),
+      description: t('chat.posts_added'),
     });
   };
 
@@ -232,18 +234,18 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
               variant="ghost"
               size="sm"
               onClick={() => setShowMobileSidebar(true)}
-              className="text-white/60 hover:text-white text-xs gap-1.5"
+              className="text-foreground/60 hover:text-foreground text-xs gap-1.5"
             >
               <BarChart3 className="w-3.5 h-3.5" />
-              Historik
+              {t('chat.history')}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleNewChat}
-              className="text-white/60 hover:text-white text-xs gap-1.5 ml-auto"
+              className="text-foreground/60 hover:text-foreground text-xs gap-1.5 ml-auto"
             >
-              + Ny chatt
+              {t('chat.new_chat')}
             </Button>
           </div>
         )}
@@ -259,7 +261,7 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
               <Alert variant="destructive" className="mb-4 border-0 bg-destructive/10 mx-2 cursor-pointer" onClick={() => setShowModal(true)}>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Fyll i all obligatorisk företagsinformation för att använda AI-funktioner. <span className="underline font-medium">Klicka här</span>
+                  {t('chat.fill_required_info')} <span className="underline font-medium">{t('chat.click_here')}</span>
                 </AlertDescription>
               </Alert>
             </motion.div>
@@ -274,9 +276,9 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
               <Alert variant="destructive" className="mb-4 border-0 bg-destructive/10 mx-2">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
-                  <span>Du har slut på krediter</span>
+                  <span>{t('chat.no_credits')}</span>
                   <Button variant="outline" size="sm" onClick={() => navigate('/pricing')}>
-                    Fyll på
+                    {t('chat.top_up')}
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -291,11 +293,11 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="mb-6 px-2"
+              className="mb-3 px-2"
             >
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-2 dashboard-heading-dark">Hur kan jag hjälpa dig?</h2>
-                <p className="dashboard-subheading-dark">Välj ett snabbkommando eller skriv ditt eget meddelande</p>
+              <div className="text-center mb-3">
+                <h2 className="text-2xl font-bold mb-2 dashboard-heading-dark">{t('chat.how_can_help')}</h2>
+                <p className="dashboard-subheading-dark">{t('chat.choose_quick_command')}</p>
               </div>
               <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
                 {quickCommands.map((cmd, index) => (
@@ -312,9 +314,9 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
                       disabled={loading || hasInsufficientCredits || isSending}
                     >
                       <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                        <cmd.icon className="w-4 h-4 text-white/80" />
+                        <cmd.icon className="w-4 h-4 text-foreground/80" />
                       </div>
-                      <span className="text-xs text-left text-white/80">{cmd.text}</span>
+                      <span className="text-xs text-left text-foreground/80">{cmd.text}</span>
                     </Button>
                   </motion.div>
                 ))}
@@ -328,7 +330,7 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="h-full overflow-y-auto px-2 md:px-4 py-4 space-y-4 scroll-smooth"
+            className="h-full overflow-y-auto px-2 md:px-3 py-2 space-y-2 scroll-smooth"
           >
             <AnimatePresence mode="popLayout">
               {messages.map((msg) => (
@@ -366,7 +368,7 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
                     )}
                     <p className={`text-[10px] mt-2 ${msg.role === "user" ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                       {new Date(msg.timestamp).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" })}
-                      {msg.isOptimistic && " • Skickar..."}
+                      {msg.isOptimistic && ` • ${t('chat.sending')}`}
                     </p>
                   </div>
                 </motion.div>
@@ -406,7 +408,7 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
               >
                 <Button size="sm" variant="secondary" className="shadow-lg rounded-full px-4" onClick={scrollToBottom}>
                   <ChevronDown className="w-4 h-4 mr-1" />
-                  Nya meddelanden
+                  {t('chat.new_messages')}
                 </Button>
               </motion.div>
             )}
@@ -424,8 +426,9 @@ const AIChatContent = ({ prefillMessage, onPrefillConsumed }: AIChatContentProps
           <div className="flex gap-2 items-end liquid-glass-light rounded-2xl p-2 border border-white/20">
             <Textarea
               ref={textareaRef}
-              placeholder={isAIBlocked ? "Fyll i AI-profil först..." : "Skriv ett meddelande..."}
+              placeholder={isAIBlocked ? t('chat.placeholder_blocked') : t('chat.placeholder')}
               value={inputMessage}
+              maxLength={2000}
               onChange={(e) => {
                 setInputMessage(e.target.value);
                 const el = e.target;

@@ -1,4 +1,5 @@
-import { Coins, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Coins, Wand2 } from 'lucide-react';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +11,7 @@ interface CreditsDisplayProps {
 }
 
 const CreditsDisplay = ({ variant = 'compact', showUpgrade = true }: CreditsDisplayProps) => {
+  const { t } = useTranslation();
   const { credits, loading, getPlanLabel } = useUserCredits();
   const navigate = useNavigate();
 
@@ -17,7 +19,7 @@ const CreditsDisplay = ({ variant = 'compact', showUpgrade = true }: CreditsDisp
     return (
       <div className="flex items-center gap-2 text-muted-foreground animate-pulse">
         <Coins className="w-4 h-4" />
-        <span className="text-sm">Laddar...</span>
+        <span className="text-sm">{t('common.loading')}</span>
       </div>
     );
   }
@@ -37,8 +39,8 @@ const CreditsDisplay = ({ variant = 'compact', showUpgrade = true }: CreditsDisp
         "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
         isLow ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'
       )}>
-        <Sparkles className="w-4 h-4" />
-        <span>{credits.credits_left} krediter</span>
+        <Wand2 className="w-4 h-4" />
+        <span>{credits.credits_left} {t('common.credits')}</span>
       </div>
     );
   }
@@ -54,9 +56,9 @@ const CreditsDisplay = ({ variant = 'compact', showUpgrade = true }: CreditsDisp
             <Coins className={cn("w-4 h-4", isLow ? 'text-destructive' : 'text-primary')} />
           </div>
           <div>
-            <p className="font-medium text-sm">AI-krediter</p>
+            <p className="font-medium text-sm">{t('common.ai_credits')}</p>
             <p className="text-xs text-muted-foreground">
-              {credits.plan === 'free_trial' ? 'Gratis' : getPlanLabel(credits.plan)}
+              {credits.plan === 'free_trial' ? t('common.free') : getPlanLabel(credits.plan)}
             </p>
           </div>
         </div>
@@ -64,7 +66,7 @@ const CreditsDisplay = ({ variant = 'compact', showUpgrade = true }: CreditsDisp
           <p className={cn("text-lg font-bold", isLow && 'text-destructive')}>
             {credits.credits_left}
           </p>
-          <p className="text-xs text-muted-foreground">av {credits.max_credits}</p>
+          <p className="text-xs text-muted-foreground">{t('common.of')} {credits.max_credits}</p>
         </div>
       </div>
 
@@ -83,13 +85,13 @@ const CreditsDisplay = ({ variant = 'compact', showUpgrade = true }: CreditsDisp
           className="w-full"
           onClick={() => navigate('/pricing')}
         >
-          Uppgradera för fler krediter
+          {t('common.upgrade_for_credits')}
         </Button>
       )}
 
       {credits.plan === 'free_trial' && (
         <p className="text-xs text-muted-foreground text-center">
-          Gratis plan – <button onClick={() => navigate('/pricing')} className="text-primary hover:underline font-medium">uppgradera för mer</button>
+          {t('common.free_plan')} – <button onClick={() => navigate('/pricing')} className="text-primary hover:underline font-medium">{t('common.upgrade_for_more')}</button>
         </p>
       )}
     </div>

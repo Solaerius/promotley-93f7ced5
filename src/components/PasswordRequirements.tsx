@@ -1,25 +1,27 @@
 import { Check, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface PasswordRequirementsProps {
   password: string;
 }
 
 const PasswordRequirements = ({ password }: PasswordRequirementsProps) => {
+  const { t } = useTranslation();
   const requirements = [
     {
-      text: "Minst 8 tecken",
+      text: t('password.min_chars'),
       met: password.length >= 8,
     },
     {
-      text: "Innehåller stor bokstav",
+      text: t('password.uppercase'),
       met: /[A-Z]/.test(password),
     },
     {
-      text: "Innehåller liten bokstav",
+      text: t('password.lowercase'),
       met: /[a-z]/.test(password),
     },
     {
-      text: "Innehåller siffra",
+      text: t('password.number'),
       met: /[0-9]/.test(password),
     },
   ];

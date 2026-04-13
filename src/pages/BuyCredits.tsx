@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,6 +25,7 @@ const BuyCredits = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -38,8 +40,8 @@ const BuyCredits = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           toast({
-            title: "Logga in först",
-            description: "Du måste vara inloggad för att köpa krediter.",
+            title: t('credits.login_first_title'),
+            description: t('credits.login_first_desc'),
             variant: "destructive",
           });
           navigate("/auth?redirect=/buy-credits?package=" + packageId);
@@ -54,7 +56,7 @@ const BuyCredits = () => {
         });
 
         if (configError || !configData?.publishableKey) {
-          setError("Stripe är inte konfigurerat. Kontakta administratören.");
+          setError(t('credits.stripe_not_configured'));
           setLoading(false);
           return;
         }
@@ -78,21 +80,21 @@ const BuyCredits = () => {
         });
 
         if (invokeError) {
-          throw new Error(invokeError.message || 'Kunde inte starta betalning');
+          throw new Error(invokeError.message || t('credits.start_payment_error'));
         }
 
         if (data?.clientSecret) {
           setClientSecret(data.clientSecret);
         } else {
-          throw new Error('Ingen checkout-session skapad');
+          throw new Error(t('credits.no_session_error'));
         }
 
       } catch (err: any) {
         console.error('Credits checkout init error:', err);
-        setError(err.message || 'Ett fel uppstod vid betalning');
+        setError(err.message || t('credits.start_payment_retry'));
         toast({
-          title: "Fel",
-          description: err.message || "Kunde inte starta betalning. Försök igen.",
+          title: t('credits.error_title'),
+          description: err.message || t('credits.start_payment_retry'),
           variant: "destructive",
         });
       } finally {
@@ -114,7 +116,7 @@ const BuyCredits = () => {
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[400px]">
             <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Förbereder betalning...</p>
+            <p className="text-muted-foreground">{t('credits.preparing')}</p>
           </div>
         </div>
       </div>
@@ -133,7 +135,7 @@ const BuyCredits = () => {
             </Alert>
             <Button variant="outline" onClick={() => navigate("/settings")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Tillbaka till inställningar
+              {t('credits.back_to_settings')}
             </Button>
           </div>
         </div>
@@ -144,7 +146,7 @@ const BuyCredits = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8 md:py-16">
         <div className="max-w-4xl mx-auto">
           <Button
@@ -153,24 +155,24 @@ const BuyCredits = () => {
             className="mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Tillbaka
+            {t('credits.back')}
           </Button>
 
           <div className="grid md:grid-cols-5 gap-6 md:gap-8">
             {/* Order Summary */}
             <div className="md:col-span-2">
               <Card className="p-6 sticky top-24">
-                <h2 className="text-xl font-bold mb-4">Din beställning</h2>
-                
+                <h2 className="text-xl font-bold mb-4">{t('credits.order_summary')}</h2>
+
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-semibold flex items-center gap-2">
                         <Zap className="w-4 h-4 text-primary" />
-                        {selectedPackage.name} Kreditpaket
+                        {selectedPackage.name} {t('credits.credit_package')}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {selectedPackage.credits} AI-krediter
+                        {selectedPackage.credits} {t('credits.ai_credits')}
                       </p>
                     </div>
                     <p className="font-bold">{selectedPackage.price} kr</p>
@@ -178,15 +180,15 @@ const BuyCredits = () => {
 
                   <div className="border-t pt-4 space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span>Pris</span>
+                      <span>{t('credits.price')}</span>
                       <span>{selectedPackage.price} kr</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
-                      <span>Moms (25%)</span>
+                      <span>{t('credits.vat')}</span>
                       <span>{(parseFloat(selectedPackage.price) * 0.25).toFixed(0)} kr</span>
                     </div>
                     <div className="flex justify-between font-bold text-base pt-2 border-t">
-                      <span>Totalt</span>
+                      <span>{t('credits.total')}</span>
                       <span>{(parseFloat(selectedPackage.price) * 1.25).toFixed(0)} kr</span>
                     </div>
                   </div>
@@ -195,15 +197,15 @@ const BuyCredits = () => {
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-primary" />
-                    <span>Säker betalning via Stripe</span>
+                    <span>{t('credits.secure_stripe')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CreditCard className="w-4 h-4 text-primary" />
-                    <span>Engångsköp, ingen prenumeration</span>
+                    <span>{t('credits.one_time')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Lock className="w-4 h-4 text-primary" />
-                    <span>Dina uppgifter är krypterade</span>
+                    <span>{t('credits.data_encrypted')}</span>
                   </div>
                 </div>
               </Card>
@@ -214,7 +216,7 @@ const BuyCredits = () => {
               <Card className="p-6">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                   <CreditCard className="w-5 h-5" />
-                  Betalning
+                  {t('credits.payment_heading')}
                 </h2>
 
                 {clientSecret && stripePromise ? (
@@ -229,7 +231,7 @@ const BuyCredits = () => {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-                    <p className="text-muted-foreground">Laddar betalningsformulär...</p>
+                    <p className="text-muted-foreground">{t('credits.loading_form')}</p>
                   </div>
                 )}
               </Card>

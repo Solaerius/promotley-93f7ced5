@@ -1,18 +1,19 @@
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { SettingsPopup } from "@/components/SettingsPopup";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { sv } from "date-fns/locale";
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  Calendar, 
-  Sparkles,
-  User,
+import {
+  Home,
+  TrendingUp,
+  CalendarDays,
+  Wand2,
+  CircleUser,
   Bell,
   Settings,
   ArrowLeft,
   Move,
-  Home,
   LogOut,
   ChevronRight,
   Trash2
@@ -47,21 +48,22 @@ import logo from "@/assets/logo.png";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const tabs = [
-  { name: "Home", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Statistik", href: "/analytics", icon: BarChart3 },
-  { name: "AI", href: "/ai", icon: Sparkles },
-  { name: "Kalender", href: "/calendar", icon: Calendar },
-  { name: "Konto", href: "/account", icon: User },
-];
-
 interface DashboardNavbarProps {
   showBackButton?: boolean;
   title?: string;
 }
 
 export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps) {
+  const { t } = useTranslation();
   const location = useLocation();
+
+  const tabs = [
+    { name: t('nav.home'), href: "/dashboard", icon: Home },
+    { name: t('nav.analytics'), href: "/analytics", icon: TrendingUp },
+    { name: t('nav.tools'), href: "/ai", icon: Wand2 },
+    { name: t('nav.calendar'), href: "/calendar", icon: CalendarDays },
+    { name: t('nav.account'), href: "/account", icon: CircleUser },
+  ];
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { activeOrganization } = useOrganization();
@@ -127,7 +129,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
     return (
       <nav className={getNavbarPositionClasses()}>
         <div 
-          className="rounded-2xl border border-white/20 dark:border-white/15 backdrop-blur-xl p-2"
+          className="rounded-2xl border border-border backdrop-blur-xl p-2"
           style={{
             background: 'linear-gradient(180deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--secondary) / 0.1) 50%, hsl(var(--accent) / 0.12) 100%)',
           }}
@@ -191,7 +193,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side={position === 'left' ? 'right' : 'left'}>
-                  <p>Flytta: {getPositionLabel(position)}</p>
+                  <p>{`${t('nav.move_position')} `}{getPositionLabel(position)}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -204,8 +206,8 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                 <Button variant="ghost" size="icon" className="relative w-9 h-9 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/10">
                   <Bell className="w-4 h-4" />
                   {unreadCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
+                    <Badge
+                      variant="destructive"
                       className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
                     >
                       {unreadCount > 9 ? "9+" : unreadCount}
@@ -215,14 +217,14 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
               </DropdownMenuTrigger>
               <DropdownMenuContent side={position === 'left' ? 'right' : 'left'} className="w-72">
                 <div className="px-3 py-2 border-b flex items-center justify-between">
-                  <h3 className="font-semibold text-sm">Notiser</h3>
+                  <h3 className="font-semibold text-sm">{t('nav.notifications')}</h3>
                   <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
                       <button
                         onClick={(e) => { e.preventDefault(); markAllAsRead(); }}
                         className="text-[10px] text-primary hover:underline"
                       >
-                        Markera alla som lästa
+                        {t('nav.mark_all_read')}
                       </button>
                     )}
                     {notifications.length > 0 && (
@@ -231,7 +233,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                         className="text-[10px] text-destructive hover:underline flex items-center gap-0.5"
                       >
                         <Trash2 className="h-2.5 w-2.5" />
-                        Rensa alla
+                        {t('nav.clear_all')}
                       </button>
                     )}
                   </div>
@@ -239,7 +241,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                 <ScrollArea className="h-[250px]">
                   {notifications.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground text-sm">
-                      Inga notiser
+                      {t('common.no_notifications')}
                     </div>
                   ) : (
                     notifications.map((notification) => (
@@ -304,41 +306,43 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                 {/* Credit gauge */}
                 <div className="px-3 py-2">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] text-muted-foreground">Krediter</span>
+                    <span className="text-[11px] text-muted-foreground dark:text-white/90">{t('nav.credits_label')}</span>
                     <span className="text-[11px] font-semibold">{credits?.credits_left ?? 0} / {credits?.max_credits ?? 0}</span>
                   </div>
-                  <Progress 
-                    value={credits?.max_credits ? (credits.credits_left / credits.max_credits) * 100 : 0} 
-                    className="h-2" 
+                  <Progress
+                    value={credits?.max_credits ? (credits.credits_left / credits.max_credits) * 100 : 0}
+                    className="h-2"
                   />
                   <div className="flex justify-end mt-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="h-5 text-[10px] px-2 rounded"
                       onClick={() => navigate('/pricing')}
                     >
                       <Coins className="w-3 h-3 mr-1" />
-                      Köp
+                      {t('nav.buy_credits')}
                     </Button>
                   </div>
                 </div>
-                <DropdownMenuItem asChild>
-                  <Link to="/account" className="cursor-pointer text-sm">
-                    <Settings className="mr-2 h-3.5 w-3.5" />
-                    Inställningar
-                  </Link>
+                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                  <SettingsPopup>
+                    <button className="flex w-full items-center cursor-pointer text-sm px-2 py-1.5 rounded-sm hover:bg-accent hover:text-accent-foreground">
+                      <Settings className="mr-2 h-3.5 w-3.5" />
+                      {t('nav.settings')}
+                    </button>
+                  </SettingsPopup>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/" className="cursor-pointer text-sm">
                     <Home className="mr-2 h-3.5 w-3.5" />
-                    Till startsidan
+                    {t('nav.to_home')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive text-sm">
                   <LogOut className="mr-2 h-3.5 w-3.5" />
-                  Logga ut
+                  {t('nav.sign_out')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -352,7 +356,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
   return (
     <nav className={getNavbarPositionClasses()}>
       <div 
-        className="rounded-2xl border border-white/20 dark:border-white/15 backdrop-blur-xl"
+        className="rounded-2xl border border-border backdrop-blur-xl"
         style={{
           background: 'linear-gradient(135deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--secondary) / 0.1) 50%, hsl(var(--accent) / 0.12) 100%)',
         }}
@@ -428,7 +432,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Flytta: {getPositionLabel(position)}</p>
+                    <p>{`${t('nav.move_position')} `}{getPositionLabel(position)}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -452,14 +456,14 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
                   <div className="px-3 py-2 border-b flex items-center justify-between">
-                    <h3 className="font-semibold text-sm">Notiser</h3>
+                    <h3 className="font-semibold text-sm">{t('nav.notifications')}</h3>
                     <div className="flex items-center gap-2">
                       {unreadCount > 0 && (
                         <button
                           onClick={(e) => { e.preventDefault(); markAllAsRead(); }}
                           className="text-[10px] text-primary hover:underline"
                         >
-                          Markera alla som lästa
+                          {t('nav.mark_all_read')}
                         </button>
                       )}
                       {notifications.length > 0 && (
@@ -468,7 +472,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                           className="text-[10px] text-destructive hover:underline flex items-center gap-0.5"
                         >
                           <Trash2 className="h-2.5 w-2.5" />
-                          Rensa alla
+                          {t('nav.clear_all')}
                         </button>
                       )}
                     </div>
@@ -476,7 +480,7 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                   <ScrollArea className="h-[250px]">
                     {notifications.length === 0 ? (
                       <div className="p-4 text-center text-muted-foreground text-sm">
-                        Inga notiser
+                        {t('common.no_notifications')}
                       </div>
                     ) : (
                       notifications.map((notification) => (
@@ -541,41 +545,43 @@ export function DashboardNavbar({ showBackButton, title }: DashboardNavbarProps)
                   {/* Credit gauge */}
                   <div className="px-3 py-2">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] text-muted-foreground">Krediter</span>
+                      <span className="text-[11px] text-muted-foreground dark:text-white/90">{t('nav.credits_label')}</span>
                       <span className="text-[11px] font-semibold">{credits?.credits_left ?? 0} / {credits?.max_credits ?? 0}</span>
                     </div>
-                    <Progress 
-                      value={credits?.max_credits ? (credits.credits_left / credits.max_credits) * 100 : 0} 
-                      className="h-2" 
+                    <Progress
+                      value={credits?.max_credits ? (credits.credits_left / credits.max_credits) * 100 : 0}
+                      className="h-2"
                     />
                     <div className="flex justify-end mt-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="h-5 text-[10px] px-2 rounded"
                         onClick={() => navigate('/pricing')}
                       >
                         <Coins className="w-3 h-3 mr-1" />
-                        Köp
+                        {t('nav.buy_credits')}
                       </Button>
                     </div>
                   </div>
-                  <DropdownMenuItem asChild>
-                    <Link to="/account" className="cursor-pointer text-sm">
-                      <Settings className="mr-2 h-3.5 w-3.5" />
-                      Inställningar
-                    </Link>
+                  <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                    <SettingsPopup>
+                      <button className="flex w-full items-center cursor-pointer text-sm px-2 py-1.5 rounded-sm hover:bg-accent hover:text-accent-foreground">
+                        <Settings className="mr-2 h-3.5 w-3.5" />
+                        {t('nav.settings')}
+                      </button>
+                    </SettingsPopup>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/" className="cursor-pointer text-sm">
                       <Home className="mr-2 h-3.5 w-3.5" />
-                      Till startsidan
+                      {t('nav.to_home')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive text-sm">
                     <LogOut className="mr-2 h-3.5 w-3.5" />
-                    Logga ut
+                    {t('nav.sign_out')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

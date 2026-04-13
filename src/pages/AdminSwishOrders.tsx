@@ -1,3 +1,4 @@
+// Admin pages are Swedish-only (internal use). i18n not applied here.
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface Notification {
   id: string;
@@ -16,6 +17,7 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -63,8 +65,8 @@ export const useNotifications = () => {
     } catch (err) {
       console.error("Error marking notification as read:", err);
       toast({
-        title: "Fel",
-        description: "Kunde inte markera notis som läst.",
+        title: t('notifications.error_title'),
+        description: t('notifications.mark_read_error'),
         variant: "destructive",
       });
     }
@@ -105,8 +107,8 @@ export const useNotifications = () => {
     } catch (err) {
       console.error("Error clearing notifications:", err);
       toast({
-        title: "Fel",
-        description: "Kunde inte rensa notiser.",
+        title: t('notifications.error_title'),
+        description: t('notifications.clear_error'),
         variant: "destructive",
       });
     }

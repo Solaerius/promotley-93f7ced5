@@ -162,3 +162,28 @@ export const demoChatMessages = [
 ];
 
 export const DEMO_LIMIT_MESSAGE = 'Detta är en demo – skapa ett konto för att låsa upp alla funktioner.';
+
+export const demoTikTokVideos = [
+  { id: "demo-1", title: "Ny kollektion: Arctic Hoodie Drop 🧊", views: 18400, likes: 1820, shares: 243, comments: 87, created_at: new Date(Date.now() - 86400000 * 2).toISOString(), duration: 22 },
+  { id: "demo-2", title: "Bakom kulisserna – screentryck i Malmö", views: 31200, likes: 3340, shares: 512, comments: 194, created_at: new Date(Date.now() - 86400000 * 5).toISOString(), duration: 38 },
+  { id: "demo-3", title: "Kundreaction på Nordic Hoodie #streetwear", views: 9700, likes: 760, shares: 98, comments: 55, created_at: new Date(Date.now() - 86400000 * 8).toISOString(), duration: 15 },
+  { id: "demo-4", title: "Outfit of the day ft. Midnight Hoodie", views: 44100, likes: 5210, shares: 780, comments: 312, created_at: new Date(Date.now() - 86400000 * 11).toISOString(), duration: 18 },
+  { id: "demo-5", title: "Skandinavisk design – vad betyder det för oss?", views: 12800, likes: 1030, shares: 145, comments: 76, created_at: new Date(Date.now() - 86400000 * 14).toISOString(), duration: 45 },
+  { id: "demo-6", title: "Limited keps – 50 exemplar kvar!", views: 27600, likes: 2950, shares: 430, comments: 228, created_at: new Date(Date.now() - 86400000 * 18).toISOString(), duration: 12 },
+  { id: "demo-7", title: "#ScandiStreet challenge – delta nu", views: 61000, likes: 7820, shares: 1240, comments: 510, created_at: new Date(Date.now() - 86400000 * 22).toISOString(), duration: 28 },
+  { id: "demo-8", title: "Vinterkollektion lansering – swipe up", views: 8300, likes: 590, shares: 67, comments: 41, created_at: new Date(Date.now() - 86400000 * 26).toISOString(), duration: 20 },
+];
+
+export const demoAIResponses: Record<string, string> = {
+  caption: `✨ Caption för @stockholmskaffet:\n\n"Måndag smakar bättre med rätt kaffe ☕ Vi har precis fått in vår nya single origin från Etiopien — blommig, ljus och helt underbar. Kom in och prova, vi bjuder på det första provsmakat hela måndag förmiddag!\n\n#stockholmskaffet #nytkaffe #etiopiskkaffe #specialtykaffe #stockholm #kaffeälskare #mondaymood #lokalkaffe"`,
+
+  hashtags: `🏷️ Rekommenderade hashtags för Stockholms Kaffet:\n\n**Volym (1M+):** #kaffe #coffee #fika #stockholm\n**Medel (100k–1M):** #specialtycoffee #kaffekultur #stockholmcafe #swedishcoffee\n**Nisch (<100k):** #stockholmskaffet #etiopiskkaffe #singleorigincoffee #kafferostning\n\n💡 Tips: Mixa 3–4 volymtaggar med 4–5 nischtaggar för bäst organisk räckvidd på Instagram.`,
+
+  contentIdeas: `💡 5 Content-idéer för Stockholms Kaffet:\n\n1. **"Bakom kulisserna"** — Visa rostningsprocessen i en 30 sek Reel. Autentiskt och delbart.\n2. **"Kaffekunskap"** — Förklara skillnaden mellan washed och natural process. Bygger expertposition.\n3. **"Kundporträtt"** — Intervjua en stamkund om deras morgonrutin. Stärker community-känslan.\n4. **"Produktteaser"** — En 3-delad story-serie inför nästa säsongskaffe. Skapar förväntning.\n5. **"Before/after"** — Visa kaffebönan från farm till kopp i ett enda inlägg. Storytelling som säljer.`,
+
+  weeklyPlan: `📅 Veckoplanen för Stockholms Kaffet (v.12):\n\n**Måndag:** Instagram-Reel — Lansering av ny etiopisk single origin\n**Tisdag:** Story-poll — "Filter eller espresso?" (ökar engagemang)\n**Onsdag:** Inlägg — Bakom kulisserna i rostningen\n**Torsdag:** TikTok — "3 saker du inte visste om kaffe"\n**Fredag:** Story — Helgmeny + påminnelse om öppettider\n**Lördag:** Reel — Kundmoment / café-stämning\n**Söndag:** Citat-inlägg — Veckans kaffetanke\n\n⏰ Bästa publiceringstider: 7–9 och 17–19 för din målgrupp.`,
+
+  campaign: `🎯 Kampanjstrategi: Påsklansering 2025\n\n**Mål:** Öka butiksbesök +20% under påskhelgen\n**Målgrupp:** Stockholmare 25–45 år, kaffeintresserade\n\n**Fas 1 – Teaser (v.13):** "Något nytt är på väg" — mystiska stories, inga detaljer\n**Fas 2 – Lansering (v.14):** Påskkaffe + limited edition påse, Reel + pressmeddelande\n**Fas 3 – Avslutning (v.15):** "Sista chansen" + UGC från kunder, avsluta med tackinlägg\n\n**Kanaler:** Instagram (primär), TikTok (räckvidd), e-post (lojala kunder)\n**Budget:** 80% organiskt, 20% boostat innehåll på Meta\n**KPI:er:** Räckvidd, butiksbesök, UGC-andel`,
+
+  ufTips: `🚀 UF-tips för Stockholms Kaffet:\n\n1. **Mässor:** Anmäl er till UF-mässan i god tid — er monter är ert varumärke inför jury och besökare\n2. **Årsredovisning:** Börja dokumentera försäljning och marknadsföringsinsatser redan nu, inte sista veckan\n3. **Sociala medier:** Visa UF-resan! Följare älskar autentiska "vi bygger ett företag"-berättelser\n4. **Samarbeten:** Ta kontakt med andra UF-företag för cross-promo — inga konkurrenter, bara partners\n5. **Prissättning:** Räkna alltid in din arbetstid i priset. Sälj inte för billigt — det undervärderar hela UF-rörelsen`,
+};

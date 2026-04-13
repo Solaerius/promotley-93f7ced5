@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -14,18 +15,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { 
-  Settings, Users, Link as LinkIcon, Copy, Mail, Loader2, 
+import {
+  Settings, Users, Link as LinkIcon, Copy, Mail, Loader2,
   Shield, ShieldCheck, Trash2, UserMinus, Crown, AlertTriangle,
   Check, X
 } from "lucide-react";
 import { ProfileImageUpload } from "@/components/ProfileImageUpload";
 
 export default function OrganizationSettings() {
-  const { 
-    activeOrganization, 
-    membership, 
-    members, 
+  const { t } = useTranslation();
+  const {
+    activeOrganization,
+    membership,
+    members,
     invites,
     updateOrganization,
     createEmailInvite,
@@ -73,7 +75,7 @@ export default function OrganizationSettings() {
   const handleCopyInviteCode = () => {
     if (activeOrganization?.invite_code) {
       navigator.clipboard.writeText(activeOrganization.invite_code);
-      toast.success("Inbjudningskod kopierad!");
+      toast.success(t("org_settings.code_copied"));
     }
   };
 
@@ -81,7 +83,7 @@ export default function OrganizationSettings() {
     if (activeOrganization?.invite_code) {
       const link = `${window.location.origin}/join/${activeOrganization.invite_code}`;
       navigator.clipboard.writeText(link);
-      toast.success("Inbjudningslänk kopierad!");
+      toast.success(t("org_settings.link_copied"));
     }
   };
 
@@ -96,8 +98,8 @@ export default function OrganizationSettings() {
   };
 
   const handleTogglePermission = async (
-    memberId: string, 
-    currentPermissions: any, 
+    memberId: string,
+    currentPermissions: any,
     permission: string
   ) => {
     const newPermissions = {
@@ -113,7 +115,7 @@ export default function OrganizationSettings() {
       await updateMemberRole(member.id, "admin");
     }
     setShowGiveAllVdWarning(false);
-    toast.success("Alla medlemmar har nu VD-status");
+    toast.success(t("org_settings.all_vd_done"));
   };
 
   if (!activeOrganization || !membership) {
@@ -133,9 +135,9 @@ export default function OrganizationSettings() {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Organisationsinställningar</h1>
+          <h1 className="text-3xl font-bold">{t("org_settings.title")}</h1>
           <p className="text-muted-foreground">
-            Hantera {activeOrganization.name}
+            {t("org_settings.subtitle", { name: activeOrganization.name })}
           </p>
         </div>
 
@@ -143,15 +145,15 @@ export default function OrganizationSettings() {
           <TabsList>
             <TabsTrigger value="general" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Allmänt
+              {t("org_settings.tab_general")}
             </TabsTrigger>
             <TabsTrigger value="members" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Medlemmar ({members.length})
+              {t("org_settings.tab_members")} ({members.length})
             </TabsTrigger>
             <TabsTrigger value="invites" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              Inbjudningar
+              {t("org_settings.tab_invites")}
             </TabsTrigger>
           </TabsList>
 
@@ -159,9 +161,9 @@ export default function OrganizationSettings() {
           <TabsContent value="general" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Organisationsdetaljer</CardTitle>
+                <CardTitle>{t("org_settings.details_title")}</CardTitle>
                 <CardDescription>
-                  Grundläggande information om din organisation
+                  {t("org_settings.details_desc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -174,24 +176,24 @@ export default function OrganizationSettings() {
                     size="lg"
                   />
                   <div className="flex-1 space-y-2">
-                    <Label htmlFor="orgName">Organisationsnamn</Label>
+                    <Label htmlFor="orgName">{t("org_settings.org_name_label")}</Label>
                     <Input
                       id="orgName"
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
-                      placeholder="Mitt företag"
+                      placeholder={t("org_settings.org_name_placeholder")}
                     />
                   </div>
                 </div>
 
-                <Button 
-                  onClick={handleSaveSettings} 
+                <Button
+                  onClick={handleSaveSettings}
                   disabled={isSaving || orgName === activeOrganization.name}
                 >
                   {isSaving ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : null}
-                  Spara ändringar
+                  {isSaving ? t("org_settings.saving") : t("org_settings.save_changes")}
                 </Button>
               </CardContent>
             </Card>
@@ -200,18 +202,18 @@ export default function OrganizationSettings() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <LinkIcon className="h-5 w-5" />
-                  Inbjudningsinställningar
+                  {t("org_settings.invite_settings_title")}
                 </CardTitle>
                 <CardDescription>
-                  Hantera hur nya medlemmar kan gå med
+                  {t("org_settings.invite_settings_desc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">Inbjudningslänk aktiv</p>
+                    <p className="font-medium">{t("org_settings.invite_link_active")}</p>
                     <p className="text-sm text-muted-foreground">
-                      Tillåt nya medlemmar att gå med via länk eller kod
+                      {t("org_settings.invite_link_desc")}
                     </p>
                   </div>
                   <Switch
@@ -227,24 +229,24 @@ export default function OrganizationSettings() {
                   <div className="p-4 bg-muted/50 rounded-lg space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium">Inbjudningskod</p>
+                        <p className="text-sm font-medium">{t("org_settings.invite_code_label")}</p>
                         <p className="text-lg font-mono">{activeOrganization.invite_code}</p>
                       </div>
                       <Button variant="outline" size="sm" onClick={handleCopyInviteCode}>
                         <Copy className="h-4 w-4 mr-1" />
-                        Kopiera
+                        {t("org_settings.copy")}
                       </Button>
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium">Inbjudningslänk</p>
+                        <p className="text-sm font-medium">{t("org_settings.invite_link_label")}</p>
                         <p className="text-sm text-muted-foreground truncate max-w-xs">
                           {window.location.origin}/join/{activeOrganization.invite_code}
                         </p>
                       </div>
                       <Button variant="outline" size="sm" onClick={handleCopyInviteLink}>
                         <Copy className="h-4 w-4 mr-1" />
-                        Kopiera
+                        {t("org_settings.copy")}
                       </Button>
                     </div>
                   </div>
@@ -260,7 +262,7 @@ export default function OrganizationSettings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Crown className="h-5 w-5 text-yellow-500" />
-                    Grundaråtgärder
+                    {t("org_settings.founder_actions_title")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -268,29 +270,29 @@ export default function OrganizationSettings() {
                     <AlertDialogTrigger asChild>
                       <Button variant="outline">
                         <ShieldCheck className="h-4 w-4 mr-2" />
-                        Ge alla VD-status
+                        {t("org_settings.give_all_vd")}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
                           <AlertTriangle className="h-5 w-5 text-orange-500" />
-                          Varning
+                          {t("org_settings.warning")}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          Detta ger ALLA medlemmar full administratörsåtkomst. De kommer kunna:
+                          {t("org_settings.vd_warning_desc")}
                           <ul className="list-disc list-inside mt-2 space-y-1">
-                            <li>Ändra organisationens inställningar</li>
-                            <li>Bjuda in och ta bort andra medlemmar</li>
-                            <li>Ändra andras behörigheter</li>
+                            <li>{t("org_settings.vd_warning_1")}</li>
+                            <li>{t("org_settings.vd_warning_2")}</li>
+                            <li>{t("org_settings.vd_warning_3")}</li>
                           </ul>
-                          <p className="mt-2 font-medium">Är du säker?</p>
+                          <p className="mt-2 font-medium">{t("org_settings.vd_warning_confirm")}</p>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                        <AlertDialogCancel>{t("org_settings.cancel")}</AlertDialogCancel>
                         <AlertDialogAction onClick={handleGiveAllVdStatus}>
-                          Ja, ge alla VD-status
+                          {t("org_settings.confirm_vd")}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -301,15 +303,15 @@ export default function OrganizationSettings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Medlemmar ({members.length})</CardTitle>
+                <CardTitle>{t("org_settings.members_title")} ({members.length})</CardTitle>
                 <CardDescription>
-                  Hantera medlemmar och deras behörigheter
+                  {t("org_settings.members_desc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {members.map((member) => (
-                  <div 
-                    key={member.id} 
+                  <div
+                    key={member.id}
                     className="flex items-start justify-between p-4 border rounded-lg"
                   >
                     <div className="flex items-center gap-3">
@@ -321,22 +323,22 @@ export default function OrganizationSettings() {
                       </Avatar>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-medium">{member.user_email || "Okänd användare"}</p>
+                          <p className="font-medium">{member.user_email || t("org_settings.unknown_user")}</p>
                           {member.role === "founder" && (
                             <Badge variant="default" className="bg-yellow-500">
                               <Crown className="h-3 w-3 mr-1" />
-                              Grundare
+                              {t("org_settings.founder_badge")}
                             </Badge>
                           )}
                           {member.role === "admin" && (
                             <Badge variant="secondary">
                               <Shield className="h-3 w-3 mr-1" />
-                              Admin
+                              {t("org_settings.admin_badge")}
                             </Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Gick med {new Date(member.joined_at).toLocaleDateString("sv-SE")}
+                          {t("org_settings.joined")} {new Date(member.joined_at).toLocaleDateString("sv-SE")}
                         </p>
                       </div>
                     </div>
@@ -348,14 +350,14 @@ export default function OrganizationSettings() {
                             variant="outline"
                             size="sm"
                             onClick={() => updateMemberRole(
-                              member.id, 
+                              member.id,
                               member.role === "admin" ? "member" : "admin"
                             )}
                           >
-                            {member.role === "admin" ? "Ta bort admin" : "Gör till admin"}
+                            {member.role === "admin" ? t("org_settings.remove_admin") : t("org_settings.make_admin")}
                           </Button>
                         )}
-                        
+
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="sm" className="text-destructive">
@@ -364,18 +366,18 @@ export default function OrganizationSettings() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Ta bort medlem?</AlertDialogTitle>
+                              <AlertDialogTitle>{t("org_settings.remove_member_title")}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Är du säker på att du vill ta bort {member.user_email} från organisationen?
+                                {t("org_settings.remove_member_desc", { email: member.user_email })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                              <AlertDialogAction 
+                              <AlertDialogCancel>{t("org_settings.cancel")}</AlertDialogCancel>
+                              <AlertDialogAction
                                 onClick={() => removeMember(member.id)}
                                 className="bg-destructive text-destructive-foreground"
                               >
-                                Ta bort
+                                {t("org_settings.remove")}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -388,16 +390,16 @@ export default function OrganizationSettings() {
                 {/* Permissions section for non-admin members */}
                 {members.filter(m => m.role === "member").length > 0 && isAdmin && (
                   <div className="mt-6 pt-6 border-t">
-                    <h4 className="font-medium mb-4">Medlemsbehörigheter</h4>
+                    <h4 className="font-medium mb-4">{t("org_settings.permissions_heading")}</h4>
                     {members.filter(m => m.role === "member").map((member) => (
                       <div key={member.id} className="p-4 border rounded-lg mb-3">
                         <p className="font-medium mb-3">{member.user_email}</p>
                         <div className="grid grid-cols-2 gap-3">
                           {[
-                            { key: "can_edit_settings", label: "Ändra inställningar" },
-                            { key: "can_use_ai", label: "Använda AI" },
-                            { key: "can_manage_calendar", label: "Hantera kalender" },
-                            { key: "can_manage_members", label: "Hantera medlemmar" },
+                            { key: "can_edit_settings", label: t("org_settings.perm_edit_settings") },
+                            { key: "can_use_ai", label: t("org_settings.perm_use_ai") },
+                            { key: "can_manage_calendar", label: t("org_settings.perm_manage_calendar") },
+                            { key: "can_manage_members", label: t("org_settings.perm_manage_members") },
                           ].map(({ key, label }) => (
                             <div key={key} className="flex items-center justify-between">
                               <span className="text-sm">{label}</span>
@@ -424,16 +426,16 @@ export default function OrganizationSettings() {
           <TabsContent value="invites" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Skicka e-postinbjudan</CardTitle>
+                <CardTitle>{t("org_settings.send_invite_title")}</CardTitle>
                 <CardDescription>
-                  Bjud in specifika personer via e-post
+                  {t("org_settings.send_invite_desc")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2">
                   <Input
                     type="email"
-                    placeholder="namn@exempel.se"
+                    placeholder={t("org_settings.invite_placeholder")}
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                   />
@@ -443,7 +445,7 @@ export default function OrganizationSettings() {
                     ) : (
                       <Mail className="h-4 w-4 mr-1" />
                     )}
-                    Skicka
+                    {isSendingInvite ? t("org_settings.sending") : t("org_settings.send")}
                   </Button>
                 </div>
               </CardContent>
@@ -451,21 +453,21 @@ export default function OrganizationSettings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Väntande inbjudningar ({invites.length})</CardTitle>
+                <CardTitle>{t("org_settings.pending_invites_title")} ({invites.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 {invites.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">
-                    Inga väntande inbjudningar
+                    {t("org_settings.no_pending_invites")}
                   </p>
                 ) : (
                   <div className="space-y-2">
                     {invites.map((invite) => (
                       <div key={invite.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
-                          <p className="font-medium">{invite.email || "Inbjudningskod"}</p>
+                          <p className="font-medium">{invite.email || t("org_settings.invite_code_label2")}</p>
                           <p className="text-sm text-muted-foreground">
-                            Kod: {invite.invite_code} • Upphör {new Date(invite.expires_at).toLocaleDateString("sv-SE")}
+                            {t("org_settings.invite_code_label2")}: {invite.invite_code} • {t("org_settings.expires")} {new Date(invite.expires_at).toLocaleDateString("sv-SE")}
                           </p>
                         </div>
                         <Button
@@ -473,7 +475,7 @@ export default function OrganizationSettings() {
                           size="sm"
                           onClick={() => {
                             navigator.clipboard.writeText(invite.invite_code);
-                            toast.success("Kod kopierad!");
+                            toast.success(t("org_settings.invite_code_copied"));
                           }}
                         >
                           <Copy className="h-4 w-4" />

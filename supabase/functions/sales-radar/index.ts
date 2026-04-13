@@ -8,9 +8,9 @@ const corsHeaders = {
 
 // AI Council model pools
 const MODEL_POOLS: Record<string, { defaultModel: string; pool: string[] }> = {
-  fast: { defaultModel: 'google/gemini-2.5-flash-lite', pool: ['google/gemini-2.5-flash-lite', 'openai/gpt-5-nano'] },
-  standard: { defaultModel: 'google/gemini-3-flash-preview', pool: ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash', 'openai/gpt-5-mini'] },
-  premium: { defaultModel: 'google/gemini-2.5-pro', pool: ['google/gemini-2.5-pro', 'google/gemini-3-pro-preview', 'openai/gpt-5', 'openai/gpt-5.2'] },
+  fast: { defaultModel: 'gpt-4o-mini', pool: ['gpt-4o-mini'] },
+  standard: { defaultModel: 'gpt-4o', pool: ['gpt-4o', 'gpt-4o-mini'] },
+  premium: { defaultModel: 'gpt-4o', pool: ['gpt-4o'] },
 };
 
 // Credit multipliers per tier
@@ -20,11 +20,11 @@ async function routeModel(context: string, tier: string, apiKey: string): Promis
   const config = MODEL_POOLS[tier] || MODEL_POOLS.standard;
   if (config.pool.length <= 1) return config.pool[0];
   try {
-    const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: `Pick the best model for a sales radar / lead generation task from: ${config.pool.join(', ')}. Respond with ONLY the model name.` },
           { role: 'user', content: context.slice(0, 300) }
@@ -55,9 +55,9 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     
-    if (!lovableApiKey) {
+    if (!openaiApiKey) {
       return new Response(JSON.stringify({ error: 'AI not configured' }), {
         status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -178,12 +178,12 @@ ${analytics.map(a => `${a.platform}: ${a.followers || 0} följare, ${a.engagemen
 Generera leads och trender baserat på ovanstående information.`;
 
     // AI Council routing
-    const aiModel = await routeModel(userPrompt, modelTier, lovableApiKey);
+    const aiModel = await routeModel(userPrompt, modelTier, openaiApiKey);
     console.log(`🤖 Sales Radar using model: ${aiModel} (tier: ${modelTier})`);
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${lovableApiKey}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${openaiApiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: aiModel,
         messages: [

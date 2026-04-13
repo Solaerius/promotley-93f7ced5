@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -54,20 +55,34 @@ interface TikTokData {
   scope_message?: string;
 }
 
-export const useTikTokData = () => {
-  const [data, setData] = useState<TikTokData>({
-    user: null,
-    stats: null,
-    videos: [],
-    pagination: null,
-    scopeInfo: null,
-  });
-  const [loading, setLoading] = useState(true);
+// Module-level cache — persists across component mounts/unmounts for the session
+const STALE_MS = 5 * 60 * 1000; // 5 minutes
+let _cache: TikTokData | null = null;
+let _cacheTime = 0;
+let _inflight: Promise<void> | null = null;
+
+export const useTikTokData = ({ enabled = true }: { enabled?: boolean } = {}) => {
+  const [data, setData] = useState<TikTokData>(() =>
+    _cache ?? { user: null, stats: null, videos: [], pagination: null, scopeInfo: null }
+  );
+  // If we already have cached data, don't show loading spinner
+  const [loading, setLoading] = useState(!_cache && enabled);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchTikTokData = async () => {
+    // Deduplicate: if a fetch is already in flight, await it instead of starting another
+    if (_inflight) {
+      await _inflight;
+      if (_cache) setData(_cache);
+      return;
+    }
+
+    let resolve!: () => void;
+    _inflight = new Promise(r => { resolve = r; });
+
     try {
       setLoading(true);
       setError(null);
@@ -93,14 +108,14 @@ export const useTikTokData = () => {
       );
 
       if (fetchError) {
-        throw new Error(fetchError.message || 'Kunde inte hämta TikTok-data');
+        throw new Error(fetchError.message || t('toasts.could_not_fetch_tiktok'));
       }
 
       if (tiktokData && !tiktokData.success) {
-        throw new Error(tiktokData.error || 'Kunde inte hämta TikTok-data');
+        throw new Error(tiktokData.error || t('toasts.could_not_fetch_tiktok'));
       }
 
-      setData({
+      const next: TikTokData = {
         user: tiktokData.user,
         stats: tiktokData.stats,
         videos: tiktokData.videos || [],
@@ -112,8 +127,14 @@ export const useTikTokData = () => {
         },
         limited_access: tiktokData.limited_access || false,
         scope_message: tiktokData.scope_message,
-      });
-      
+      };
+
+      // Update module-level cache
+      _cache = next;
+      _cacheTime = Date.now();
+
+      setData(next);
+
       if (tiktokData.limited_access && tiktokData.scope_message) {
         toast({
           title: 'Begränsad åtkomst',
@@ -126,14 +147,19 @@ export const useTikTokData = () => {
       const error = err as Error;
       console.error('Error fetching TikTok data:', error);
       setError(error);
-      
-      toast({
-        title: 'Kunde inte hämta TikTok-data',
-        description: error.message,
-        variant: 'destructive',
-      });
+
+      // Only show toast if we have no cached data to fall back on
+      if (!_cache) {
+        toast({
+          title: t('toasts.could_not_fetch_tiktok'),
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
+      _inflight = null;
+      resolve();
     }
   };
 
@@ -171,8 +197,15 @@ export const useTikTokData = () => {
   }, [data.pagination, loadingMore]);
 
   useEffect(() => {
+    if (!enabled) return;
+    const isStale = Date.now() - _cacheTime > STALE_MS;
+    if (_cache && !isStale) {
+      // Cache is fresh — nothing to do, state was already initialised from cache
+      return;
+    }
+    // No cache, or cache is stale — fetch (silently if we have cached data to show)
     fetchTikTokData();
-  }, []);
+  }, [enabled]);
 
   return {
     ...data,

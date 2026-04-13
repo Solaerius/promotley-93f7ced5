@@ -4,35 +4,35 @@ export const authSchema = z.object({
   email: z
     .string()
     .trim()
-    .email({ message: "Ogiltig e-postadress" })
-    .max(255, { message: "E-postadressen får vara max 255 tecken" }),
+    .email({ message: "validation.email_invalid" })
+    .max(255, { message: "validation.email_too_long" }),
   password: z
     .string()
-    .min(8, { message: "Lösenordet måste vara minst 8 tecken" })
-    .max(72, { message: "Lösenordet får vara max 72 tecken" })
-    .regex(/[a-z]/, { message: "Lösenordet måste innehålla minst en liten bokstav" })
-    .regex(/[A-Z]/, { message: "Lösenordet måste innehålla minst en stor bokstav" })
-    .regex(/[0-9]/, { message: "Lösenordet måste innehålla minst en siffra" }),
+    .min(8, { message: "validation.password_too_short" })
+    .max(72, { message: "validation.password_too_long" })
+    .regex(/[a-z]/, { message: "validation.password_no_lowercase" })
+    .regex(/[A-Z]/, { message: "validation.password_no_uppercase" })
+    .regex(/[0-9]/, { message: "validation.password_no_digit" }),
   companyName: z
     .string()
     .trim()
-    .max(100, { message: "Företagsnamnet får vara max 100 tecken" })
+    .max(100, { message: "validation.company_too_long" })
     .optional(),
 });
 
 export const suggestionSchema = z.object({
   platform: z.enum(["instagram", "tiktok", "facebook"], {
-    errorMap: () => ({ message: "Välj en giltig plattform" }),
+    errorMap: () => ({ message: "validation.platform_invalid" }),
   }),
   brand: z
     .string()
     .trim()
-    .min(1, { message: "Varumärke krävs" })
-    .max(100, { message: "Varumärket får vara max 100 tecken" }),
+    .min(1, { message: "validation.brand_required" })
+    .max(100, { message: "validation.brand_too_long" }),
   keywords: z
     .string()
     .trim()
-    .max(500, { message: "Nyckelord får vara max 500 tecken" })
+    .max(500, { message: "validation.keywords_too_long" })
     .optional(),
 });
 
@@ -40,12 +40,12 @@ export const onboardingSchema = z.object({
   industry: z
     .string()
     .trim()
-    .min(1, { message: "Bransch krävs" })
-    .max(100, { message: "Bransch får vara max 100 tecken" }),
+    .min(1, { message: "validation.industry_required" })
+    .max(100, { message: "validation.industry_too_long" }),
   keywords: z
     .string()
     .trim()
-    .max(500, { message: "Nyckelord får vara max 500 tecken" }),
+    .max(500, { message: "validation.keywords_too_long" }),
 });
 
 export type AuthFormData = z.infer<typeof authSchema>;

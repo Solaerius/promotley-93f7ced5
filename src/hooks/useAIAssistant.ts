@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 // Global event for credit updates
 export const creditUpdateEvent = new EventTarget();
@@ -28,6 +29,7 @@ export const useAIAssistant = (conversationId: string | null) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchMessages = useCallback(async () => {
     if (!conversationId) {
@@ -75,8 +77,11 @@ export const useAIAssistant = (conversationId: string | null) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      // Fetch calendar context
-      const { data: contextData } = await supabase.functions.invoke('calendar/context');
+      // Fetch calendar context (correct path + auth header)
+      const { data: contextData } = await supabase.functions.invoke('calendar', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { action: 'context' }
+      });
 
       // Add user message to UI immediately (optimistic)
       const userMessage: ChatMessage = {
@@ -158,8 +163,8 @@ export const useAIAssistant = (conversationId: string | null) => {
       // Remove optimistic messages on error
       setMessages(prev => prev.filter(m => !m.isOptimistic));
       toast({
-        title: "Fel",
-        description: "Kunde inte skicka meddelande.",
+        title: t('common.error'),
+        description: t('toasts.could_not_send'),
         variant: "destructive",
       });
       throw err;
@@ -217,8 +222,8 @@ export const useAIAssistant = (conversationId: string | null) => {
     } catch (err) {
       console.error('Error implementing plan:', err);
       toast({
-        title: "Fel",
-        description: "Kunde inte implementera plan.",
+        title: t('common.error'),
+        description: t('toasts.could_not_implement'),
         variant: "destructive",
       });
       throw err;

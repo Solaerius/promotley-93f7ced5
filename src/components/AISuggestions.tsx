@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Sparkles, Copy, Check, AlertTriangle } from "lucide-react";
+import { Wand2, Copy, Check, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAIProfile } from "@/hooks/useAIProfile";
 import { useNavigate } from "react-router-dom";
 import { suggestionSchema } from "@/lib/validations";
+import { useTranslation } from "react-i18next";
 
 interface Suggestion {
   idea: string;
@@ -18,6 +19,7 @@ interface Suggestion {
 }
 
 export const AISuggestions = () => {
+  const { t } = useTranslation();
   const [platform, setPlatform] = useState<string>("instagram");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
@@ -52,8 +54,8 @@ export const AISuggestions = () => {
 
       if (!validation.success) {
         toast({
-          title: "Valideringsfel",
-          description: validation.error.errors[0].message,
+          title: t("suggestions.validation_error"),
+          description: t(validation.error.errors[0].message),
           variant: "destructive",
         });
         setLoading(false);
@@ -64,8 +66,8 @@ export const AISuggestions = () => {
       
       if (!session) {
         toast({
-          title: "Inte inloggad",
-          description: "Du måste vara inloggad för att använda AI-förslag",
+          title: t("suggestions.not_logged_in_title"),
+          description: t("suggestions.not_logged_in_desc"),
           variant: "destructive",
         });
         setLoading(false);
@@ -84,24 +86,24 @@ export const AISuggestions = () => {
           setHasAccess(false);
           setAccessError('no_plan');
           toast({
-            title: "Uppgradera för AI-förslag",
-            description: "Du behöver ett aktivt paket för att använda AI-funktioner",
+            title: t("suggestions.upgrade_title"),
+            description: t("suggestions.upgrade_desc"),
             variant: "destructive",
           });
         } else if (errorData?.error === 'INSUFFICIENT_CREDITS') {
           setHasAccess(false);
           setAccessError('no_credits');
           toast({
-            title: "Inga krediter kvar",
-            description: `Du behöver ${errorData.credits_needed} krediter. Fyll på ditt konto eller uppgradera.`,
+            title: t("suggestions.no_credits_title"),
+            description: t("suggestions.no_credits_needed", { credits: errorData.credits_needed }),
             variant: "destructive",
           });
         } else if (response.error.message?.includes("PAYWALL")) {
           setHasAccess(false);
           setAccessError('paywall');
           toast({
-            title: "Uppgradera till Pro",
-            description: "Du har använt ditt gratis förslag. Uppgradera för obegränsade AI-förslag!",
+            title: t("suggestions.paywall_title"),
+            description: t("suggestions.paywall_desc"),
             variant: "destructive",
           });
         } else {
@@ -113,14 +115,14 @@ export const AISuggestions = () => {
 
       setSuggestion(response.data);
       toast({
-        title: "Förslag genererat!",
-        description: "Ditt AI-genererade innehållsförslag är klart",
+        title: t("suggestions.generated_title"),
+        description: t("suggestions.generated_desc"),
       });
     } catch (error) {
       console.error("Error generating suggestion:", error);
       toast({
-        title: "Ett fel uppstod",
-        description: "Kunde inte generera förslag. Försök igen.",
+        title: t("suggestions.error_title"),
+        description: t("suggestions.error_desc"),
         variant: "destructive",
       });
     } finally {
@@ -136,8 +138,8 @@ export const AISuggestions = () => {
     setCopied(true);
     
     toast({
-      title: "Kopierat!",
-      description: "Caption och hashtags kopierade till urklipp",
+      title: t("suggestions.copied_title"),
+      description: t("suggestions.copied_desc"),
     });
 
     setTimeout(() => setCopied(false), 2000);
@@ -148,11 +150,11 @@ export const AISuggestions = () => {
       <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            AI-Innehållsförslag
+            <Wand2 className="h-5 w-5 text-primary" />
+            {t("suggestions.title")}
           </CardTitle>
           <CardDescription>
-            Få personliga innehållsidéer baserade på din data och målgrupp
+            {t("suggestions.description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -161,17 +163,17 @@ export const AISuggestions = () => {
             <Alert variant="destructive" className="border-2 border-destructive">
               <AlertTriangle className="h-5 w-5" />
               <AlertDescription className="ml-2">
-                <p className="font-bold mb-1">AI-profil krävs</p>
+                <p className="font-bold mb-1">{t("suggestions.profile_required_title")}</p>
                 <p className="mb-2 text-sm">
-                  Du måste fylla i minst 3 fält i din AI-profil (bransch, målgrupp, produktbeskrivning, målsättning) innan du kan använda AI-förslag.
+                  {t("suggestions.profile_required_desc")}
                 </p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => navigate('/settings')}
                   className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 >
-                  Gå till Inställningar
+                  {t("suggestions.go_to_settings")}
                 </Button>
               </AlertDescription>
             </Alert>
@@ -179,14 +181,14 @@ export const AISuggestions = () => {
 
           {!hasAccess && accessError && (
             <div className="p-4 border border-primary/20 rounded-lg bg-primary/5">
-              <h4 className="font-semibold mb-2">AI-förslag låsta</h4>
+              <h4 className="font-semibold mb-2">{t("suggestions.locked_title")}</h4>
               <p className="text-sm text-muted-foreground mb-3">
-                {accessError === 'no_plan' && 'Du behöver ett aktivt paket för att använda AI-funktioner'}
-                {accessError === 'no_credits' && 'Dina krediter är slut. Fyll på för att fortsätta'}
-                {accessError === 'paywall' && 'Uppgradera ditt paket för fler AI-förslag'}
+                {accessError === 'no_plan' && t("suggestions.no_plan")}
+                {accessError === 'no_credits' && t("suggestions.no_credits")}
+                {accessError === 'paywall' && t("suggestions.paywall")}
               </p>
               <Button variant="gradient" size="sm" onClick={() => navigate('/pricing')}>
-                Visa paket
+                {t("suggestions.view_plans")}
               </Button>
             </div>
           )}
@@ -194,7 +196,7 @@ export const AISuggestions = () => {
           <div className="flex gap-4">
             <Select value={platform} onValueChange={setPlatform} disabled={!hasAccess || isAIBlocked}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Välj plattform" />
+                <SelectValue placeholder={t("suggestions.select_platform")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="instagram">Instagram</SelectItem>
@@ -208,10 +210,10 @@ export const AISuggestions = () => {
               disabled={loading || !hasAccess || isAIBlocked}
               className="gap-2"
               variant="gradient"
-              aria-label="Generera AI-innehållsförslag"
+              aria-label={t("suggestions.generate_btn")}
             >
-              <Sparkles className="h-4 w-4" />
-              {loading ? "Genererar..." : isAIBlocked ? "Fyll i AI-profil" : "Generera förslag"}
+              <Wand2 className="h-4 w-4" />
+              {loading ? t("suggestions.generating") : isAIBlocked ? t("suggestions.fill_profile_first") : t("suggestions.generate_btn")}
             </Button>
           </div>
 
@@ -219,8 +221,8 @@ export const AISuggestions = () => {
           {!suggestion && (
             <div className="mt-6 space-y-3 p-6 rounded-lg border border-dashed border-primary/30 bg-muted/20">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <p className="text-sm font-semibold text-muted-foreground">Exempel på AI-genererat inlägg</p>
+                <Wand2 className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold text-muted-foreground">{t("suggestions.example_label")}</p>
               </div>
               <div className="space-y-2 opacity-75">
                 <p className="text-sm font-medium">Idé: Behind-the-scenes av er produktutveckling</p>
@@ -239,7 +241,7 @@ export const AISuggestions = () => {
               <div className="rounded-lg border border-primary/20 bg-card p-4 space-y-3">
                 <div>
                   <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                    Idé
+                    {t("suggestions.idea_label")}
                   </h4>
                   <p className="text-foreground">{suggestion.idea}</p>
                 </div>
@@ -247,7 +249,7 @@ export const AISuggestions = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <h4 className="font-semibold text-sm text-muted-foreground">
-                      Caption
+                      {t("suggestions.caption_label")}
                     </h4>
                     <Button
                       size="sm"
@@ -260,7 +262,7 @@ export const AISuggestions = () => {
                       ) : (
                         <Copy className="h-4 w-4" />
                       )}
-                      {copied ? "Kopierad!" : "Kopiera"}
+                      {copied ? t("suggestions.copied_btn") : t("suggestions.copy_btn")}
                     </Button>
                   </div>
                   <p className="text-foreground whitespace-pre-wrap">
@@ -270,7 +272,7 @@ export const AISuggestions = () => {
 
                 <div>
                   <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                    Hashtags
+                    {t("suggestions.hashtags_label")}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {suggestion.hashtags.map((tag, idx) => (
@@ -286,7 +288,7 @@ export const AISuggestions = () => {
 
                 <div>
                   <h4 className="font-semibold text-sm text-muted-foreground mb-1">
-                    Bästa posttid
+                    {t("suggestions.best_time_label")}
                   </h4>
                   <p className="text-foreground">{suggestion.best_time}</p>
                 </div>

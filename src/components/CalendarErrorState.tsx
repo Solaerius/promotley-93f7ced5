@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw, Calendar } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CalendarErrorStateProps {
   error: Error | null;
@@ -8,22 +9,24 @@ interface CalendarErrorStateProps {
 }
 
 export const CalendarErrorState = ({ error, onRetry }: CalendarErrorStateProps) => {
+  const { t } = useTranslation();
+
   const getErrorMessage = (error: Error | null) => {
-    if (!error) return "Ett oväntat fel uppstod";
-    
+    if (!error) return t('calendar_error.generic');
+
     const message = error.message?.toLowerCase() || "";
-    
+
     if (message.includes("unauthorized") || message.includes("jwt") || message.includes("401")) {
-      return "Din session har gått ut. Logga in igen för att fortsätta.";
+      return t('calendar_error.session_expired');
     }
     if (message.includes("network") || message.includes("fetch")) {
-      return "Kunde inte ansluta till servern. Kontrollera din internetanslutning.";
+      return t('calendar.error_connect');
     }
     if (message.includes("not_authenticated")) {
-      return "Du måste vara inloggad för att se kalendern.";
+      return t('calendar_error.auth_required');
     }
-    
-    return error.message || "Ett oväntat fel uppstod";
+
+    return error.message || t('calendar_error.generic');
   };
 
   return (
@@ -33,7 +36,7 @@ export const CalendarErrorState = ({ error, onRetry }: CalendarErrorStateProps) 
           <AlertCircle className="w-8 h-8 text-destructive" />
         </div>
         <h3 className="text-xl font-semibold text-foreground mb-2">
-          Kunde inte ladda kalendern
+          {t('calendar.error_load')}
         </h3>
         <p className="text-muted-foreground text-center max-w-md mb-6">
           {getErrorMessage(error)}

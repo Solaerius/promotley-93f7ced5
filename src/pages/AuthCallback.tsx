@@ -5,12 +5,13 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import OAuthLandingScreen from "@/components/OAuthLandingScreen";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const [status, setStatus] = useState<"loading" | "success" | "error" | "expired">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error" | "expired" | "oauth-select">("loading");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -31,6 +32,9 @@ export default function AuthCallback() {
           return;
         }
 
+        // Detect password recovery flow
+        const isRecovery = searchParams.get("type") === "recovery";
+
         // Exchange code for session if present
         const code = searchParams.get("code");
         if (code) {
@@ -43,6 +47,11 @@ export default function AuthCallback() {
               setStatus("error");
               setErrorMessage(exchangeError.message);
             }
+            return;
+          }
+          // Password recovery: redirect to reset form immediately after exchange
+          if (isRecovery) {
+            navigate("/reset-password", { replace: true });
             return;
           }
         }
@@ -59,12 +68,6 @@ export default function AuthCallback() {
         if (session?.user) {
           // Check if email is now verified
           if (session.user.email_confirmed_at) {
-            setStatus("success");
-            toast({
-              title: "E-post verifierad!",
-              description: "Ditt konto är nu aktiverat.",
-            });
-            
             // Check for invite_code in user metadata and auto-join org
             const inviteCode = session.user.user_metadata?.invite_code;
             if (inviteCode) {
@@ -75,7 +78,7 @@ export default function AuthCallback() {
                   .eq('invite_code', inviteCode)
                   .eq('invite_link_enabled', true)
                   .maybeSingle();
-                
+
                 if (org) {
                   // Check if already a member
                   const { data: existing } = await supabase
@@ -84,7 +87,7 @@ export default function AuthCallback() {
                     .eq('organization_id', org.id)
                     .eq('user_id', session.user.id)
                     .maybeSingle();
-                  
+
                   if (!existing) {
                     await supabase.from('organization_members').insert({
                       organization_id: org.id,
@@ -117,8 +120,45 @@ export default function AuthCallback() {
                 console.warn("Auto-redeem promo failed:", err);
               }
             }
-            setTimeout(() => {
-              navigate("/dashboard", { replace: true });
+
+            // ── NEW — OAuth org-membership check ──
+            const provider = session.user.app_metadata?.provider;
+            const isOAuthProvider = provider === "google" || provider === "apple";
+
+            if (isOAuthProvider) {
+              const { data: memberships } = await supabase
+                .from("organization_members")
+                .select("id")
+                .eq("user_id", session.user.id)
+                .limit(1);
+
+              if (!memberships || memberships.length === 0) {
+                // No org — show selection screen
+                setStatus("oauth-select");
+                return;
+              }
+              // Has org — navigate directly
+              (async () => {
+                const { data: profile } = await supabase
+                  .from('ai_profiles')
+                  .select('onboarding_completed')
+                  .eq('user_id', session.user.id)
+                  .single();
+                navigate(profile?.onboarding_completed ? '/dashboard' : '/onboarding', { replace: true });
+              })();
+              return;
+            }
+
+            // Non-OAuth (email verification) success path
+            setStatus("success");
+            toast({ title: "E-post verifierad!", description: "Ditt konto är nu aktiverat." });
+            setTimeout(async () => {
+              const { data: profile } = await supabase
+                .from('ai_profiles')
+                .select('onboarding_completed')
+                .eq('user_id', session.user.id)
+                .single();
+              navigate(profile?.onboarding_completed ? '/dashboard' : '/onboarding', { replace: true });
             }, 2000);
           } else {
             // Refresh user to get latest confirmation status
@@ -136,8 +176,13 @@ export default function AuthCallback() {
                 title: "E-post verifierad!",
                 description: "Ditt konto är nu aktiverat.",
               });
-              setTimeout(() => {
-                navigate("/dashboard", { replace: true });
+              setTimeout(async () => {
+                const { data: profile } = await supabase
+                  .from('ai_profiles')
+                  .select('onboarding_completed')
+                  .eq('user_id', user.id)
+                  .single();
+                navigate(profile?.onboarding_completed ? '/dashboard' : '/onboarding', { replace: true });
               }, 2000);
             } else {
               // Still not verified, redirect to verify page
@@ -167,6 +212,10 @@ export default function AuthCallback() {
       navigate("/auth");
     }
   };
+
+  if (status === "oauth-select") {
+    return <OAuthLandingScreen />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">

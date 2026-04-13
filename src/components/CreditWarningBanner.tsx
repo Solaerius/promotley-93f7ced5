@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserCredits } from "@/hooks/useUserCredits";
+import { useTranslation } from "react-i18next";
 
 const CreditWarningBanner = () => {
   const { credits, loading } = useUserCredits();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [dismissed, setDismissed] = useState(() => {
     return sessionStorage.getItem("credit_warning_dismissed") === "true";
   });
@@ -28,8 +30,8 @@ const CreditWarningBanner = () => {
       <AlertDescription className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-sm">
           {isFreePlan
-            ? "Du har inga krediter – uppgradera för att använda AI-verktyg"
-            : "Dina krediter är slut – uppgradera eller köp fler krediter"}
+            ? t('credits_banner.no_credits_upgrade')
+            : t('credits_banner.credits_empty')}
         </span>
         <div className="flex items-center gap-2">
           <Button
@@ -38,7 +40,7 @@ const CreditWarningBanner = () => {
             className="h-7 text-xs"
             onClick={() => navigate("/pricing")}
           >
-            {isFreePlan ? "Uppgradera" : "Köp fler krediter"}
+            {isFreePlan ? t('credits_banner.upgrade_btn') : t('credits_banner.buy_btn')}
           </Button>
           <button
             onClick={handleDismiss}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { creditUpdateEvent } from './useAIAssistant';
 import { useProfileCompleteness } from './useProfileCompleteness';
 
@@ -14,6 +15,7 @@ export const useAIToolRequest = <T = any>({ toolSystemPrompt, modelTier }: UseAI
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { isProfileComplete } = useProfileCompleteness();
 
   const generate = async (userMessage: string) => {
@@ -89,10 +91,10 @@ export const useAIToolRequest = <T = any>({ toolSystemPrompt, modelTier }: UseAI
       return parsed;
     } catch (err: any) {
       console.error('AI tool request error:', err);
-      const msg = err?.message || 'Kunde inte generera svar.';
+      const msg = err?.message || t('toasts.could_not_generate_response');
       setError(msg);
       toast({
-        title: 'Fel',
+        title: t('common.error'),
         description: msg,
         variant: 'destructive',
       });

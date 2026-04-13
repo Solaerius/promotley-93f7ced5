@@ -468,22 +468,8 @@ Deno.serve(async (req) => {
     // Clean up expired states
     await supabase.rpc("cleanup_expired_oauth_states");
 
-    // Redirect back to app
-    // Use custom domain if configured, otherwise fall back to lovable.app
-    let customDomain = Deno.env.get("CUSTOM_DOMAIN");
-
-    // Sanitize and normalize the custom domain
-    if (customDomain) {
-      // Lägg till https:// om det saknas
-      if (!customDomain.startsWith("http://") && !customDomain.startsWith("https://")) {
-        customDomain = `https://${customDomain}`;
-      }
-
-      // Ta bort eventuella avslutande snedstreck
-      customDomain = customDomain.replace(/\/+$/, "");
-    }
-
-    const appUrl = customDomain || supabaseUrl.replace(".supabase.co", ".lovable.app");
+    // Redirect back to app — APP_ORIGIN must be set in Supabase secrets
+    const appUrl = (Deno.env.get("APP_ORIGIN") || "").replace(/\/+$/, "");
 
     const redirectUrl = `${appUrl}/dashboard?connected=${provider}`;
     console.log("Redirecting to:", redirectUrl);

@@ -1,9 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const weekDays = ["Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör"];
+import { useTranslation } from "react-i18next";
 
 export const CalendarSkeleton = () => {
+  const { t } = useTranslation();
+  const weekDays = t('calendar_skeleton.weekdays', { returnObjects: true }) as string[];
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header skeleton */}
@@ -63,7 +64,7 @@ export const CalendarSkeleton = () => {
       {/* Upcoming posts skeleton */}
       <Card>
         <CardHeader>
-          <CardTitle>Kommande inlägg</CardTitle>
+          <CardTitle>{t('calendar_skeleton.upcoming')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">

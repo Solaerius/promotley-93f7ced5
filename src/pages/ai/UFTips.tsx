@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Lightbulb, Sparkles, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Lightbulb, Wand2, ChevronDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,16 +24,16 @@ Ge konkreta, praktiska tips med tydliga åtgärder. Varje tips ska ha 2-4 steg.
 Format: {"tips": [{"title": "Tipsets titel", "summary": "Kort sammanfattning", "actions": ["Konkret steg 1", "Konkret steg 2"]}]}
 Ge 4-6 tips.`;
 
-const CATEGORIES = [
-  { value: 'tavling', label: 'Tävling & SM' },
-  { value: 'monter', label: 'Monter & Mässor' },
-  { value: 'pitch', label: 'Pitch & Presentation' },
-  { value: 'sociala_medier', label: 'Sociala medier' },
-  { value: 'forsaljning', label: 'Försäljning' },
-  { value: 'bokforing', label: 'Bokföring & Årsredovisning' },
-];
-
 const UFTips = () => {
+  const { t } = useTranslation();
+  const CATEGORIES = [
+    { value: 'tavling', label: t('uf_tips.cat_competition') },
+    { value: 'monter', label: t('uf_tips.cat_fair') },
+    { value: 'pitch', label: t('uf_tips.cat_pitch') },
+    { value: 'sociala_medier', label: t('uf_tips.cat_social') },
+    { value: 'forsaljning', label: t('uf_tips.cat_sales') },
+    { value: 'bokforing', label: t('uf_tips.cat_accounting') },
+  ];
   const [category, setCategory] = useState('tavling');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const { result, loading, error, generate } = useAIToolRequest<UFTipsResult>({ toolSystemPrompt: SYSTEM_PROMPT });
@@ -44,15 +45,22 @@ const UFTips = () => {
 
   return (
     <AIToolPageLayout
-      title="UF-tips"
-      description="Få råd och tips specifikt anpassade för UF-företag"
+      title={t('uf_tips.title')}
+      description={t('uf_tips.description')}
       icon={Lightbulb}
       gradient="from-indigo-500 to-purple-500"
     >
+      {/* Loading progress bar */}
+      {loading && (
+        <div className="h-1 w-full bg-border rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
+        </div>
+      )}
+
       <Card className="liquid-glass-light">
         <CardContent className="p-5 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium dashboard-heading-dark">Kategori</label>
+            <label className="text-sm font-medium dashboard-heading-dark">{t('uf_tips.category_label')}</label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -63,7 +71,7 @@ const UFTips = () => {
             </Select>
           </div>
           <Button variant="gradient" className="w-full" onClick={handleGenerate} disabled={loading}>
-            {loading ? <><Sparkles className="w-4 h-4 mr-2 animate-spin" /> Genererar...</> : <><Sparkles className="w-4 h-4 mr-2" /> Ge mig tips</>}
+            {loading ? <><Wand2 className="w-4 h-4 mr-2 animate-spin" /> {t('ai_tool.generating')}</> : <><Wand2 className="w-4 h-4 mr-2" /> {t('uf_tips.generate_btn')}</>}
           </Button>
         </CardContent>
       </Card>
@@ -76,7 +84,7 @@ const UFTips = () => {
 
       {result?.tips && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold dashboard-heading-dark">Tips</h2>
+          <h2 className="text-lg font-semibold dashboard-heading-dark">{t('uf_tips.results_heading')}</h2>
           {result.tips.map((tip, i) => (
             <Collapsible key={i} open={openIndex === i} onOpenChange={(open) => setOpenIndex(open ? i : null)}>
               <Card className="liquid-glass-light">

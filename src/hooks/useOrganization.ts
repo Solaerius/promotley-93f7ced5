@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
@@ -44,6 +45,7 @@ export interface OrganizationInvite {
 }
 
 export const useOrganization = () => {
+  const { t } = useTranslation();
   const { user, session } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrganization, setActiveOrganization] = useState<Organization | null>(null);
@@ -166,7 +168,7 @@ export const useOrganization = () => {
         credit_limit: m.credit_limit,
         credits_used: m.credits_used,
         joined_at: m.joined_at,
-        user_email: profileMap.get(m.user_id)?.email ?? "Okänd användare",
+        user_email: profileMap.get(m.user_id)?.email ?? t("org_settings.unknown_user"),
         user_avatar: profileMap.get(m.user_id)?.avatar_url ?? null
       }));
 
@@ -209,17 +211,17 @@ export const useOrganization = () => {
 
       const newActive = organizations.find(o => o.id === orgId);
       setActiveOrganization(newActive || null);
-      toast.success(`Bytte till ${newActive?.name}`);
+      toast.success(t("org.switch_success", { name: newActive?.name }));
     } catch (error) {
       console.error("Error switching organization:", error);
-      toast.error("Kunde inte byta organisation");
+      toast.error(t("org.switch_error"));
     }
   };
 
   // Create new organization
   const createOrganization = async (name: string, logoUrl?: string): Promise<string | null> => {
     if (!user?.id || !session) {
-      toast.error("Du måste vara inloggad för att skapa en organisation");
+      toast.error(t("org.must_be_logged_in_create"));
       return null;
     }
 
@@ -234,12 +236,12 @@ export const useOrganization = () => {
 
       if (error) throw error;
 
-      toast.success("Organisation skapad!");
+      toast.success(t("org.created"));
       await loadOrganizations();
       return orgId;
     } catch (error) {
       console.error("Error creating organization:", error);
-      toast.error("Kunde inte skapa organisation");
+      toast.error(t("org.create_error"));
       return null;
     }
   };
@@ -247,7 +249,7 @@ export const useOrganization = () => {
   // Join organization by invite code
   const joinByCode = async (code: string): Promise<boolean> => {
     if (!user?.id || !session) {
-      toast.error("Du måste vara inloggad för att gå med i en organisation");
+      toast.error(t("org.must_be_logged_in_join"));
       return false;
     }
 
@@ -278,7 +280,7 @@ export const useOrganization = () => {
 
         if (error) {
           if (error.message.includes("duplicate")) {
-            toast.error("Du är redan medlem i denna organisation");
+            toast.error(t("org.already_member"));
             return false;
           }
           throw error;
@@ -289,7 +291,7 @@ export const useOrganization = () => {
           .update({ active_organization_id: org.id })
           .eq("id", user.id);
 
-        toast.success(`Välkommen till ${org.name}!`);
+        toast.success(t("org.welcome", { name: org.name }));
         await loadOrganizations();
         return true;
       }
@@ -303,7 +305,7 @@ export const useOrganization = () => {
         .single();
 
       if (!invite) {
-        toast.error("Ogiltig eller utgången inbjudningskod");
+        toast.error(t("org.invalid_code"));
         return false;
       }
 
@@ -335,12 +337,12 @@ export const useOrganization = () => {
         .update({ active_organization_id: invite.organization_id })
         .eq("id", user.id);
 
-      toast.success("Du har gått med i organisationen!");
+      toast.success(t("org.joined"));
       await loadOrganizations();
       return true;
     } catch (error) {
       console.error("Error joining organization:", error);
-      toast.error("Kunde inte gå med i organisationen");
+      toast.error(t("org.join_error"));
       return false;
     }
   };
@@ -348,7 +350,7 @@ export const useOrganization = () => {
   // Create email invite
   const createEmailInvite = async (email: string): Promise<boolean> => {
     if (!activeOrganization?.id || !user?.id || !session) {
-      toast.error("Du måste vara inloggad för att skicka inbjudningar");
+      toast.error(t("org_settings.must_be_logged_in_invite"));
       return false;
     }
 
@@ -384,16 +386,16 @@ export const useOrganization = () => {
       if (emailError) {
         console.error("Error sending invite email:", emailError);
         // Don't fail the whole operation - invite is created, just email failed
-        toast.success(`Inbjudan skapad för ${email} (mejl kunde ej skickas)`);
+        toast.success(t("org_settings.invite_created", { email }));
       } else {
-        toast.success(`Inbjudan skickad till ${email}`);
+        toast.success(t("org_settings.invite_sent", { email }));
       }
 
       await loadInvites();
       return true;
     } catch (error) {
       console.error("Error creating invite:", error);
-      toast.error("Kunde inte skapa inbjudan");
+      toast.error(t("org_settings.invite_error"));
       return false;
     }
   };
@@ -411,12 +413,12 @@ export const useOrganization = () => {
 
       if (error) throw error;
 
-      toast.success("Behörigheter uppdaterade");
+      toast.success(t("org_settings.permissions_updated"));
       await loadMembers();
       return true;
     } catch (error) {
       console.error("Error updating permissions:", error);
-      toast.error("Kunde inte uppdatera behörigheter");
+      toast.error(t("org_settings.permissions_error"));
       return false;
     }
   };
@@ -431,12 +433,12 @@ export const useOrganization = () => {
 
       if (error) throw error;
 
-      toast.success(role === "admin" ? "Medlem uppgraderad till Admin" : "Admin nedgraderad till Medlem");
+      toast.success(role === "admin" ? t("org_settings.role_upgraded") : t("org_settings.role_downgraded"));
       await loadMembers();
       return true;
     } catch (error) {
       console.error("Error updating role:", error);
-      toast.error("Kunde inte uppdatera roll");
+      toast.error(t("org_settings.role_error"));
       return false;
     }
   };
@@ -451,12 +453,12 @@ export const useOrganization = () => {
 
       if (error) throw error;
 
-      toast.success("Medlem borttagen");
+      toast.success(t("org.member_removed"));
       await loadMembers();
       return true;
     } catch (error) {
       console.error("Error removing member:", error);
-      toast.error("Kunde inte ta bort medlem");
+      toast.error(t("org.remove_member_error"));
       return false;
     }
   };
@@ -474,11 +476,11 @@ export const useOrganization = () => {
       if (error) throw error;
 
       setActiveOrganization(prev => prev ? { ...prev, ...updates } : null);
-      toast.success("Inställningar sparade");
+      toast.success(t("toasts.saved"));
       return true;
     } catch (error) {
       console.error("Error updating organization:", error);
-      toast.error("Kunde inte spara inställningar");
+      toast.error(t("toasts.error"));
       return false;
     }
   };

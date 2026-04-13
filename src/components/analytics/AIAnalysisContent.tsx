@@ -7,11 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, TrendingUp, Calendar, Target, Lightbulb, CheckCircle2, AlertCircle, History } from 'lucide-react';
+import { Wand2, TrendingUp, Calendar, Target, Lightbulb, CheckCircle2, AlertCircle, History } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { useTranslation } from 'react-i18next';
 
 const AIAnalysisContent = () => {
+  const { t, i18n } = useTranslation();
   const { latestAnalysis, history, loading, generating, generateAnalysis } = useAIAnalysis();
   const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
   const [hasAccess, setHasAccess] = useState(true);
@@ -20,7 +22,7 @@ const AIAnalysisContent = () => {
   const [modelTier, setModelTier] = useState<ModelTier>('standard');
 
   // Use selected analysis or latest
-  const currentAnalysis = selectedAnalysisId 
+  const currentAnalysis = selectedAnalysisId
     ? history.find(a => a.id === selectedAnalysisId) || latestAnalysis
     : latestAnalysis;
 
@@ -30,7 +32,7 @@ const AIAnalysisContent = () => {
     aiProfile.produkt_beskrivning,
     aiProfile.malsattning
   ].filter(Boolean).length : 0;
-  
+
   const isAIProfileComplete = filledFields >= 3;
   const isAIBlocked = !isAIProfileComplete && !aiProfileLoading;
 
@@ -89,8 +91,8 @@ const AIAnalysisContent = () => {
             size="lg"
             className="gap-2"
           >
-            <Sparkles className="h-5 w-5" />
-            {generating ? 'Genererar...' : isAIBlocked ? 'Fyll i AI-profil först' : 'Generera Analys'}
+            <Wand2 className="h-5 w-5" />
+            {generating ? t('analysis.generating') : isAIBlocked ? t('analysis.fill_profile_first') : t('analysis.generate_btn')}
           </Button>
 
           {/* History Selector */}
@@ -101,13 +103,13 @@ const AIAnalysisContent = () => {
             >
               <SelectTrigger className="w-[200px] liquid-glass-light border-white/20">
                 <History className="w-4 h-4 mr-2 shrink-0" />
-                <SelectValue placeholder="Historik" />
+                <SelectValue placeholder={t('analysis.history_placeholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="latest">Senaste analysen</SelectItem>
+                <SelectItem value="latest">{t('analysis.latest')}</SelectItem>
                 {history.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
-                    {new Date(item.created_at).toLocaleDateString('sv-SE', { 
+                    {new Date(item.created_at).toLocaleDateString(i18n.language === 'sv' ? 'sv-SE' : 'en-GB', {
                       day: 'numeric', month: 'short', year: 'numeric',
                       hour: '2-digit', minute: '2-digit'
                     })}
@@ -120,7 +122,7 @@ const AIAnalysisContent = () => {
 
         {history.length > 0 && (
           <p className="text-xs dashboard-subheading-dark">
-            {history.length} {history.length === 1 ? 'analys' : 'analyser'} sparade
+            {history.length} {history.length === 1 ? t('analysis.analyses_saved_one') : t('analysis.analyses_saved_many')}
           </p>
         )}
       </div>
@@ -131,11 +133,11 @@ const AIAnalysisContent = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
             <span>
-              {accessError === 'no_plan' && 'Du behöver ett aktivt paket för AI-analys'}
-              {accessError === 'no_credits' && 'Dina krediter är slut'}
+              {accessError === 'no_plan' && t('analysis.no_plan')}
+              {accessError === 'no_credits' && t('analysis.no_credits')}
             </span>
             <Button variant="gradient" size="sm" onClick={() => window.location.href = '/pricing'}>
-              Visa paket
+              {t('analysis.view_plans')}
             </Button>
           </AlertDescription>
         </Alert>
@@ -145,8 +147,8 @@ const AIAnalysisContent = () => {
         <Alert variant="destructive">
           <AlertCircle className="h-5 w-5" />
           <AlertDescription>
-            <p className="font-bold mb-1">AI-profil krävs!</p>
-            <p>Fyll i minst 3 fält i din AI-profil under Konto → AI-profil.</p>
+            <p className="font-bold mb-1">{t('analysis.profile_required_title')}</p>
+            <p>{t('analysis.profile_required_body')}</p>
           </AlertDescription>
         </Alert>
       )}
@@ -156,10 +158,10 @@ const AIAnalysisContent = () => {
         <Card className="liquid-glass-light">
           <CardContent className="pt-6">
             <div className="text-center py-12">
-              <Sparkles className="h-16 w-16 text-muted-foreground/40 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2 dashboard-heading-dark">Ingen analys genererad än</h3>
+              <Wand2 className="h-16 w-16 text-muted-foreground/40 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2 dashboard-heading-dark">{t('analysis.empty_title')}</h3>
               <p className="dashboard-subheading-dark">
-                Klicka på "Generera Analys" för att få din AI-drivna marknadsföringsplan
+                {t('analysis.empty_desc')}
               </p>
             </div>
           </CardContent>
@@ -171,10 +173,10 @@ const AIAnalysisContent = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <Target className="h-5 w-5 text-primary" />
-                Sammanfattning
+                {t('analysis.summary')}
               </CardTitle>
               <CardDescription className="dashboard-subheading-dark">
-                Genererad {new Date(currentAnalysis.created_at).toLocaleDateString('sv-SE')}
+                {t('analysis.generated_date', { date: new Date(currentAnalysis.created_at).toLocaleDateString(i18n.language === 'sv' ? 'sv-SE' : 'en-GB') })}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -187,7 +189,7 @@ const AIAnalysisContent = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                Analys av Sociala Medier
+                {t('analysis.social_analysis')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -200,7 +202,7 @@ const AIAnalysisContent = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <Calendar className="h-5 w-5 text-primary" />
-                7-Dagars Handlingsplan
+                {t('analysis.action_plan')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -224,7 +226,7 @@ const AIAnalysisContent = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <Lightbulb className="h-5 w-5 text-primary" />
-                Content-Förslag
+                {t('analysis.content_suggestions')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -250,7 +252,7 @@ const AIAnalysisContent = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <Target className="h-5 w-5 text-primary" />
-                UF-Tävlingsstrategi
+                {t('analysis.uf_strategy')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -263,7 +265,7 @@ const AIAnalysisContent = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 dashboard-heading-dark">
                 <CheckCircle2 className="h-5 w-5 text-primary" />
-                Rekommendationer
+                {t('analysis.recommendations')}
               </CardTitle>
             </CardHeader>
             <CardContent>

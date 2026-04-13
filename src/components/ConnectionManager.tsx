@@ -14,6 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useTranslation } from "react-i18next";
 
 interface Connection {
   id: string;
@@ -26,16 +27,17 @@ export const ConnectionManager = () => {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     loadConnections();
     const params = new URLSearchParams(window.location.search);
     const connected = params.get('connected');
     if (connected) {
-      toast({ title: "✓ Ansluten!", description: `${connected} har kopplats till ditt konto` });
+      toast({ title: t('connections.connected_title'), description: t('connections.connected_desc', { platform: connected }) });
       if (connected.toLowerCase() === 'tiktok') {
         setTimeout(() => {
-          toast({ title: "ℹ️ Begränsad åtkomst", description: "För full statistikåtkomst krävs TikTok API-behörigheterna video.query och video.data.", duration: 8000 });
+          toast({ title: `ℹ️ ${t('connections.limited_access')}`, description: t('connections.limited_access_desc'), duration: 8000 });
         }, 2000);
       }
       window.history.replaceState({}, '', window.location.pathname);
@@ -59,12 +61,12 @@ export const ConnectionManager = () => {
     setConnectingProvider('tiktok');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast({ title: "Inte inloggad", variant: "destructive" }); return; }
-      if (isConnected('tiktok')) { toast({ title: "Redan ansluten", variant: "destructive" }); setConnectingProvider(null); return; }
+      if (!session) { toast({ title: t('connections.not_logged_in'), variant: "destructive" }); return; }
+      if (isConnected('tiktok')) { toast({ title: t('connections.already_connected'), variant: "destructive" }); setConnectingProvider(null); return; }
       const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', { headers: { Authorization: `Bearer ${session.access_token}` } });
       if (error || !data?.url) throw new Error('Could not initialize TikTok OAuth');
       window.location.href = data.url;
-    } catch { toast({ title: "Fel vid anslutning", description: "Kunde inte ansluta till TikTok", variant: "destructive" }); setConnectingProvider(null); }
+    } catch { toast({ title: t('connections.connect_error'), description: t('connections.connect_error_tiktok'), variant: "destructive" }); setConnectingProvider(null); }
   };
 
   const disconnectProvider = async (provider: string) => {
@@ -81,10 +83,11 @@ export const ConnectionManager = () => {
         const { error: tokenError } = await supabase.from('tokens').delete().eq('user_id', session.user.id).eq('provider', provider as any);
         if (tokenError) throw tokenError;
       }
-      toast({ title: "✓ Frånkopplad", description: `${provider === 'meta_ig' ? 'Instagram' : provider === 'tiktok' ? 'TikTok' : provider} har kopplats från` });
+      const platformName = provider === 'meta_ig' ? 'Instagram' : provider === 'tiktok' ? 'TikTok' : provider;
+      toast({ title: t('connections.disconnected_title'), description: t('connections.disconnected_desc', { platform: platformName }) });
       await loadConnections();
     } catch (error) {
-      toast({ title: "Fel vid frånkoppling", description: error instanceof Error ? error.message : "Kunde inte koppla från kontot", variant: "destructive" });
+      toast({ title: t('connections.disconnect_error'), description: error instanceof Error ? error.message : t('connections.disconnect_error_desc'), variant: "destructive" });
     }
   };
 
@@ -92,12 +95,12 @@ export const ConnectionManager = () => {
     setConnectingProvider('tiktok');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast({ title: "Inte inloggad", variant: "destructive" }); setConnectingProvider(null); return; }
+      if (!session) { toast({ title: t('connections.not_logged_in'), variant: "destructive" }); setConnectingProvider(null); return; }
       await supabase.from('tokens').delete().eq('user_id', session.user.id).eq('provider', 'tiktok');
       const { data, error } = await supabase.functions.invoke('init-tiktok-oauth', { headers: { Authorization: `Bearer ${session.access_token}` } });
       if (error || !data?.url) throw new Error('Could not initialize TikTok OAuth');
       window.location.href = data.url;
-    } catch { toast({ title: "Fel vid anslutning", variant: "destructive" }); setConnectingProvider(null); }
+    } catch { toast({ title: t('connections.connect_error'), variant: "destructive" }); setConnectingProvider(null); }
   };
 
   const isConnected = (provider: string) => connections.some(c => c.provider === provider);
@@ -155,7 +158,7 @@ export const ConnectionManager = () => {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <LinkIcon className="h-4 w-4 text-muted-foreground" />
-          Anslutna konton
+          {t('connections.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -192,7 +195,7 @@ export const ConnectionManager = () => {
                     <div className="space-y-2">
                       <p className="text-xs font-medium">{platform.name}</p>
                       <p className="text-[10px] text-muted-foreground">
-                        @{connection?.username || "ansluten"}
+                        @{connection?.username || t('connections.not_connected').toLowerCase()}
                       </p>
                       <div className="flex gap-1.5">
                         {platform.onReconnect && (
@@ -204,7 +207,7 @@ export const ConnectionManager = () => {
                             disabled={connectingProvider !== null}
                           >
                             <RefreshCw className="w-3 h-3 mr-1" />
-                            Återanslut
+                            {t('connections.reconnect')}
                           </Button>
                         )}
                         <Button
@@ -214,14 +217,14 @@ export const ConnectionManager = () => {
                           onClick={() => disconnectProvider(platform.key)}
                           disabled={connectingProvider !== null}
                         >
-                          Koppla från
+                          {t('connections.disconnect')}
                         </Button>
                       </div>
                     </div>
                   ) : platform.available ? (
                     <div className="space-y-2">
                       <p className="text-xs font-medium">{platform.name}</p>
-                      <p className="text-[10px] text-muted-foreground">Ej ansluten</p>
+                      <p className="text-[10px] text-muted-foreground">{t('connections.not_connected')}</p>
                       <Button
                         variant="default"
                         size="sm"
@@ -229,13 +232,13 @@ export const ConnectionManager = () => {
                         onClick={platform.onConnect}
                         disabled={connectingProvider !== null}
                       >
-                        {connectingProvider === platform.key ? "Kopplar..." : "Anslut"}
+                        {connectingProvider === platform.key ? t('connections.connecting') : t('connections.connect')}
                       </Button>
                     </div>
                   ) : (
                     <div className="space-y-1">
                       <p className="text-xs font-medium">{platform.name}</p>
-                      <p className="text-[10px] text-muted-foreground">Kommer snart</p>
+                      <p className="text-[10px] text-muted-foreground">{t('connections.coming_soon')}</p>
                     </div>
                   )}
                 </PopoverContent>

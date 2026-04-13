@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
 export const OrganizationSelector = () => {
+  const { t } = useTranslation();
   const { organizations, activeOrganization, membership, switchOrganization } = useOrganization();
   const [open, setOpen] = useState(false);
   const [logoUrls, setLogoUrls] = useState<Record<string, string>>({});
@@ -119,7 +121,7 @@ export const OrganizationSelector = () => {
         <DropdownMenuItem asChild>
           <Link to="/organization/onboarding" className="flex items-center gap-2 cursor-pointer">
             <Plus className="h-4 w-4" />
-            <span>Skapa ny organisation</span>
+            <span>{t('common.create_new_org')}</span>
           </Link>
         </DropdownMenuItem>
 

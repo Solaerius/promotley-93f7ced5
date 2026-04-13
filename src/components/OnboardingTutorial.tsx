@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowRight, ArrowLeft, X } from "lucide-react";
 import { useAIProfile } from "@/hooks/useAIProfile";
+import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.png";
 
 /**
@@ -26,82 +27,78 @@ interface TutorialStep {
   padding?: number;
 }
 
-const STEPS: TutorialStep[] = [
-  // Dashboard page
-  {
-    selector: '[data-tour="stats-row"]',
-    route: "/dashboard",
-    title: "Dina siffror",
-    description:
-      "Här ser du en snabb översikt av dina viktigaste mätvärden – veckoframsteg, följare, planerade inlägg och AI-krediter.",
-    tooltipPosition: "bottom",
-    padding: 12,
-  },
-  {
-    selector: '[data-tour="growth-chart"]',
-    route: "/dashboard",
-    title: "Tillväxtgraf",
-    description:
-      "Grafen visar hur dina följare växer per plattform. Byt tidsperiod för att se trender över tid.",
-    tooltipPosition: "top",
-    padding: 8,
-  },
-  {
-    selector: '[data-tour="quick-links"]',
-    route: "/dashboard",
-    title: "Snabblänkar",
-    description:
-      "Hoppa direkt till Statistik, AI-Chat eller Kalender med ett klick.",
-    tooltipPosition: "bottom",
-    padding: 8,
-  },
-  // Analytics page
-  {
-    selector: '[data-tour="analytics-overview"]',
-    route: "/analytics",
-    title: "Statistiköversikt",
-    description:
-      "Utforska detaljerad data från dina kopplade sociala medier. Se följare, räckvidd och engagemang – allt på ett ställe.",
-    tooltipPosition: "bottom",
-    padding: 8,
-  },
-  // AI page
-  {
-    selector: '[data-tour="ai-tabs"]',
-    route: "/ai",
-    title: "AI-Assistent",
-    description:
-      "Här hittar du Chat, Verktyg, AI-Analys och Säljradar. Använd dessa för att få personliga marknadsföringstips och innehållsidéer.",
-    tooltipPosition: "bottom",
-    padding: 8,
-  },
-  // Calendar page
-  {
-    selector: '[data-tour="calendar-view"]',
-    route: "/calendar",
-    title: "Innehållskalender",
-    description:
-      "Planera och schemalägg dina inlägg visuellt. Klicka på en dag för att lägga till ett inlägg, eller låt AI:n fylla kalendern åt dig.",
-    tooltipPosition: "bottom",
-    padding: 8,
-  },
-  // Account page
-  {
-    selector: '[data-tour="account-section"]',
-    route: "/account",
-    title: "Konto och inställningar",
-    description:
-      "Hantera din profil, koppla sociala medier, uppdatera företagsinformation och se dina krediter.",
-    tooltipPosition: "bottom",
-    padding: 8,
-  },
-];
 
 interface OnboardingTutorialProps {
   onComplete: () => void;
 }
 
 const OnboardingTutorial = ({ onComplete }: OnboardingTutorialProps) => {
+  const { t } = useTranslation();
+
+  const STEPS: TutorialStep[] = [
+    // Dashboard page
+    {
+      selector: '[data-tour="stats-row"]',
+      route: "/dashboard",
+      title: t('tutorial.step1_title'),
+      description: t('tutorial.step1_content'),
+      tooltipPosition: "bottom",
+      padding: 12,
+    },
+    {
+      selector: '[data-tour="growth-chart"]',
+      route: "/dashboard",
+      title: t('tutorial.step2_title'),
+      description: t('tutorial.step2_desc'),
+      tooltipPosition: "top",
+      padding: 8,
+    },
+    {
+      selector: '[data-tour="quick-links"]',
+      route: "/dashboard",
+      title: t('tutorial.step3_title'),
+      description: t('tutorial.step3_desc'),
+      tooltipPosition: "bottom",
+      padding: 8,
+    },
+    // Analytics page
+    {
+      selector: '[data-tour="analytics-overview"]',
+      route: "/analytics",
+      title: t('tutorial.step4_title'),
+      description: t('tutorial.step4_desc'),
+      tooltipPosition: "bottom",
+      padding: 8,
+    },
+    // AI page
+    {
+      selector: '[data-tour="ai-tabs"]',
+      route: "/ai",
+      title: t('tutorial.step5_title'),
+      description: t('tutorial.step5_desc'),
+      tooltipPosition: "bottom",
+      padding: 8,
+    },
+    // Calendar page
+    {
+      selector: '[data-tour="calendar-view"]',
+      route: "/calendar",
+      title: t('tutorial.step6_title'),
+      description: t('tutorial.step6_desc'),
+      tooltipPosition: "bottom",
+      padding: 8,
+    },
+    // Account page
+    {
+      selector: '[data-tour="account-section"]',
+      route: "/account",
+      title: t('tutorial.step7_title'),
+      description: t('tutorial.step7_desc'),
+      tooltipPosition: "bottom",
+      padding: 8,
+    },
+  ];
+
   const [showTutorial, setShowTutorial] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
@@ -294,11 +291,10 @@ const OnboardingTutorial = ({ onComplete }: OnboardingTutorialProps) => {
                 <img src={logo} alt="Promotely" className="w-14 h-14" />
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight">
-                    Välkommen till Promotely!
+                    {t('tutorial.welcome_title')}
                   </h2>
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                    Vi hjälper dig att växa på sociala medier — snabbt, smart och
-                    enkelt. Vill du få en snabb rundtur?
+                    {t('tutorial.welcome_desc')}
                   </p>
                 </div>
                 <div className="flex w-full flex-col gap-3">
@@ -307,7 +303,7 @@ const OnboardingTutorial = ({ onComplete }: OnboardingTutorialProps) => {
                     className="w-full text-base"
                     onClick={handleStartTutorial}
                   >
-                    Visa mig runt
+                    {t('tutorial.show_around')}
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                   <Button
@@ -315,7 +311,7 @@ const OnboardingTutorial = ({ onComplete }: OnboardingTutorialProps) => {
                     className="w-full text-muted-foreground"
                     onClick={handleSkip}
                   >
-                    Hoppa till företagsinformation
+                    {t('tutorial.skip_to_info')}
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </div>
@@ -386,7 +382,7 @@ const OnboardingTutorial = ({ onComplete }: OnboardingTutorialProps) => {
               <button
                 onClick={handleSkip}
                 className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Stäng"
+                aria-label={t('tutorial.close_aria')}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -395,7 +391,7 @@ const OnboardingTutorial = ({ onComplete }: OnboardingTutorialProps) => {
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-muted-foreground font-medium">
-                    {currentStep + 1} av {STEPS.length}
+                    {currentStep + 1} {t('tutorial.step_of')} {STEPS.length}
                   </span>
                 </div>
                 <Progress value={progress} className="h-1.5" />
@@ -419,17 +415,17 @@ const OnboardingTutorial = ({ onComplete }: OnboardingTutorialProps) => {
                     onClick={handlePrev}
                   >
                     <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-                    Tillbaka
+                    {t('tutorial.back')}
                   </Button>
                 )}
                 {currentStep < STEPS.length - 1 ? (
                   <Button size="sm" className="flex-1" onClick={handleNext}>
-                    Nästa
+                    {t('tutorial.next')}
                     <ArrowRight className="ml-1 h-3.5 w-3.5" />
                   </Button>
                 ) : (
                   <Button size="sm" className="flex-1" onClick={handleFinish}>
-                    Fyll i företagsinformation
+                    {t('tutorial.fill_company_info')}
                     <ArrowRight className="ml-1 h-3.5 w-3.5" />
                   </Button>
                 )}

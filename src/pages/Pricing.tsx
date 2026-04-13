@@ -19,7 +19,7 @@ const plans = [
     tierLevel: 1,
     description: "Perfekt för nya UF-företag som precis börjat",
     features: [
-      "AI-modell: GPT-4o Mini",
+      "AI-modell: Standard",
       "50 AI-krediter per månad",
       "Enkel strategi (2 poster/vecka)",
       "3 branschtips per månad",
@@ -37,7 +37,7 @@ const plans = [
     tierLevel: 2,
     description: "Idealisk för snabbväxande UF-team",
     features: [
-      "AI-modell: GPT-4o Mini",
+      "AI-modell: Standard",
       "100 AI-krediter per månad",
       "Personlig innehållskalender",
       "5 content-idéer per vecka",
@@ -55,9 +55,9 @@ const plans = [
     tierLevel: 3,
     description: "För etablerade företag med stora ambitioner",
     features: [
-      "AI-modell: GPT-4.1 Mini + GPT-4o Premium",
+      "AI-modell: Premium",
       "200 AI-krediter per månad",
-      "Premium AI för djupanalyser (GPT-4o)",
+      "Premium AI för djupanalyser",
       "Komplett strategi + kalender",
       "Konkurrentanalys inkluderad",
       "Premium rapporter & insikter",
@@ -74,7 +74,7 @@ const Pricing = () => {
   const currentTierLevel = credits?.plan ? getTierLevel(credits.plan) : 0;
 
   const handleSelectPlan = (tier: string) => {
-    navigate(`/swish-checkout?plan=${tier}`);
+    navigate(`/checkout?plan=${tier}&type=plan`);
   };
 
   const isCurrentPlan = (plan: typeof plans[0]) => {

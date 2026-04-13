@@ -1,21 +1,23 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface CalendarPost {
   id: string;
   title: string;
   description: string | null;
-  platform: string;
+  event_type: string;
+  platform: string | null;
   date: string;
   created_at: string;
 }
 
 type MethodAction =
   | { action: 'list' }
-  | { action: 'create'; data: { title: string; description?: string; platform: 'instagram' | 'tiktok' | 'facebook'; date: string } }
-  | { action: 'bulk_create'; data: { posts: Array<{ title: string; content?: string; channel: 'instagram' | 'tiktok' | 'facebook'; date: string }>; requestId: string } }
-  | { action: 'update'; data: { id: string; patch: Partial<{ title: string; description: string; platform: 'instagram' | 'tiktok' | 'facebook'; date: string }> } }
+  | { action: 'create'; data: { title: string; description?: string; event_type: string; platform?: string | null; date: string } }
+  | { action: 'bulk_create'; data: { posts: Array<{ title: string; content?: string; event_type?: string; channel?: string; date: string }>; requestId: string } }
+  | { action: 'update'; data: { id: string; patch: Partial<{ title: string; description: string; event_type: string; platform: string | null; date: string }> } }
   | { action: 'delete'; data: { id: string } }
   | { action: 'context' };
 
@@ -29,14 +31,13 @@ async function invokeCalendar(payload: MethodAction): Promise<any> {
     const token = await getFreshToken();
     if (!token) throw Object.assign(new Error('not_authenticated'), { status: 401 });
 
-    // Ensure payload always has action
     const body = payload && payload.action ? payload : { action: 'list' };
-    
+
     console.debug('[calendar] invoking with payload:', body);
 
     const { data, error } = await supabase.functions.invoke('calendar', {
-      headers: { 
-        'Authorization': `Bearer ${token}` 
+      headers: {
+        'Authorization': `Bearer ${token}`
       },
       body
     });
@@ -68,6 +69,7 @@ export const useCalendar = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchPosts = async () => {
     try {
@@ -89,19 +91,29 @@ export const useCalendar = () => {
     }
   };
 
+  const fetchContext = async () => {
+    return invokeCalendar({ action: 'context' });
+  };
+
   const createPost = async (postData: {
     title: string;
     description?: string;
-    platform: string;
+    event_type: string;
+    platform?: string | null;
     date: string;
   }) => {
     try {
-      // Normalize platform
-      const platform = (postData.platform || '').toLowerCase();
-      if (!['instagram', 'tiktok', 'facebook'].includes(platform)) {
+      const event_type = (postData.event_type || 'inlagg').toLowerCase();
+      const validTypes = ['inlagg', 'uf_marknad', 'event', 'deadline', 'ovrigt'];
+      if (!validTypes.includes(event_type)) {
+        throw new Error('Ogiltig händelsetyp');
+      }
+
+      const platform = postData.platform ? postData.platform.toLowerCase() : null;
+      if (platform && !['instagram', 'tiktok', 'facebook'].includes(platform)) {
         throw new Error('Ogiltig kanal');
       }
-      
+
       // Normalize date to YYYY-MM-DD
       const date = new Date(postData.date);
       if (isNaN(date.valueOf())) {
@@ -109,16 +121,17 @@ export const useCalendar = () => {
       }
       const isoDate = date.toISOString().slice(0, 10);
 
-      console.debug('[calendar] creating post:', { title: postData.title, platform, date: isoDate });
+      console.debug('[calendar] creating post:', { title: postData.title, event_type, platform, date: isoDate });
 
-      const result = await invokeCalendar({ 
-        action: 'create', 
-        data: { 
-          title: postData.title, 
-          description: postData.description, 
-          platform: platform as 'instagram' | 'tiktok' | 'facebook', 
-          date: isoDate 
-        } 
+      const result = await invokeCalendar({
+        action: 'create',
+        data: {
+          title: postData.title,
+          description: postData.description,
+          event_type,
+          platform,
+          date: isoDate
+        }
       });
 
       toast({
@@ -130,9 +143,9 @@ export const useCalendar = () => {
       return result;
     } catch (err: any) {
       console.error('Error creating post:', err);
-      const errorMsg = err.message || "Kunde inte skapa inlägg.";
+      const errorMsg = err.message || t('toasts.could_not_create_post');
       toast({
-        title: "Fel",
+        title: t('common.error'),
         description: errorMsg,
         variant: "destructive",
       });
@@ -141,28 +154,27 @@ export const useCalendar = () => {
   };
 
   const bulkCreate = async (
-    postsIn: Array<{ title: string; content?: string; channel: string; date: string }>,
+    postsIn: Array<{ title: string; content?: string; event_type?: string; channel?: string; date: string }>,
     requestId: string
   ) => {
-    // Normalize all posts
     const normalizedPosts = postsIn.map(p => {
-      const platform = (p.channel || '').toLowerCase();
       const d = new Date(p.date);
       return {
         title: p.title,
         content: p.content ?? '',
-        channel: platform as 'instagram' | 'tiktok' | 'facebook',
+        event_type: p.event_type ?? 'inlagg',
+        channel: p.channel ?? undefined,
         date: isNaN(d.valueOf()) ? '' : d.toISOString().slice(0, 10)
       };
     });
 
     console.debug('[calendar] bulk creating posts:', normalizedPosts.length);
 
-    const result = await invokeCalendar({ 
-      action: 'bulk_create', 
-      data: { posts: normalizedPosts, requestId } 
+    const result = await invokeCalendar({
+      action: 'bulk_create',
+      data: { posts: normalizedPosts, requestId }
     });
-    
+
     await fetchPosts();
     return result;
   };
@@ -170,23 +182,33 @@ export const useCalendar = () => {
   const updatePost = async (id: string, postData: {
     title?: string;
     description?: string;
-    platform?: string;
+    event_type?: string;
+    platform?: string | null;
     date?: string;
   }) => {
     try {
-      const patch: Partial<{ title: string; description: string; platform: 'instagram' | 'tiktok' | 'facebook'; date: string }> = {};
-      
+      const patch: Partial<{ title: string; description: string; event_type: string; platform: string | null; date: string }> = {};
+
       if (postData.title) patch.title = postData.title;
       if (postData.description !== undefined) patch.description = postData.description;
-      
-      if (postData.platform) {
-        const platform = postData.platform.toLowerCase();
-        if (!['instagram', 'tiktok', 'facebook'].includes(platform)) {
+
+      if (postData.event_type) {
+        const event_type = postData.event_type.toLowerCase();
+        const validTypes = ['inlagg', 'uf_marknad', 'event', 'deadline', 'ovrigt'];
+        if (!validTypes.includes(event_type)) {
+          throw new Error('Ogiltig händelsetyp');
+        }
+        patch.event_type = event_type;
+      }
+
+      if (postData.platform !== undefined) {
+        const platform = postData.platform ? postData.platform.toLowerCase() : null;
+        if (platform && !['instagram', 'tiktok', 'facebook'].includes(platform)) {
           throw new Error('Ogiltig kanal');
         }
-        patch.platform = platform as 'instagram' | 'tiktok' | 'facebook';
+        patch.platform = platform;
       }
-      
+
       if (postData.date) {
         const d = new Date(postData.date);
         if (isNaN(d.valueOf())) {
@@ -195,9 +217,9 @@ export const useCalendar = () => {
         patch.date = d.toISOString().slice(0, 10);
       }
 
-      const result = await invokeCalendar({ 
-        action: 'update', 
-        data: { id, patch } 
+      const result = await invokeCalendar({
+        action: 'update',
+        data: { id, patch }
       });
 
       toast({
@@ -209,9 +231,9 @@ export const useCalendar = () => {
       return result;
     } catch (err: any) {
       console.error('Error updating post:', err);
-      const errorMsg = err.message || "Kunde inte uppdatera inlägg.";
+      const errorMsg = err.message || t('toasts.could_not_update_post');
       toast({
-        title: "Fel",
+        title: t('common.error'),
         description: errorMsg,
         variant: "destructive",
       });
@@ -231,9 +253,9 @@ export const useCalendar = () => {
       await fetchPosts();
     } catch (err: any) {
       console.error('Error deleting post:', err);
-      const errorMsg = err.message || "Kunde inte radera inlägg.";
+      const errorMsg = err.message || t('toasts.could_not_delete_post');
       toast({
-        title: "Fel",
+        title: t('common.error'),
         description: errorMsg,
         variant: "destructive",
       });
@@ -253,6 +275,7 @@ export const useCalendar = () => {
     error,
     hasPosts,
     fetchPosts,
+    fetchContext,
     createPost,
     bulkCreate,
     updatePost,

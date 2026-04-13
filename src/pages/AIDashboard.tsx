@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Sparkles, TrendingUp, Calendar, Target, Lightbulb, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Wand2, TrendingUp, Calendar, Target, Lightbulb, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 
@@ -78,7 +78,7 @@ const AIDashboard = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Sparkles className="h-8 w-8 text-primary" />
+              <Wand2 className="h-8 w-8 text-primary" />
               AI-Analys & Rekommendationer
             </h1>
             <p className="text-muted-foreground mt-1">
@@ -105,7 +105,7 @@ const AIDashboard = () => {
             size="lg"
             className="gap-2"
           >
-            <Sparkles className="h-5 w-5" />
+            <Wand2 className="h-5 w-5" />
             {generating ? 'Genererar...' : isAIBlocked ? 'Fyll i AI-profil först' : 'Generera Ny Analys'}
           </Button>
         </div>
@@ -152,7 +152,7 @@ const AIDashboard = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-12">
-                <Sparkles className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <Wand2 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Ingen analys genererad än</h3>
                 <p className="text-muted-foreground mb-6">
                   Klicka på "Generera Ny Analys" för att få din första AI-driven marknadsföringsplan

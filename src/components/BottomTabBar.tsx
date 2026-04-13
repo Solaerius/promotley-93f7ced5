@@ -1,22 +1,24 @@
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  Sparkles,
+import {
+  LayoutDashboard,
+  BarChart3,
+  Wand2,
   User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const tabs = [
-  { name: "Home", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Statistik", href: "/analytics", icon: BarChart3 },
-  { name: "AI", href: "/ai", icon: Sparkles },
-  { name: "Konto", href: "/account", icon: User },
-];
-
 export function BottomTabBar() {
+  const { t } = useTranslation();
   const location = useLocation();
+
+  const tabs = [
+    { name: t('common.home'), href: "/dashboard", icon: LayoutDashboard },
+    { name: t('nav.analytics'), href: "/analytics", icon: BarChart3 },
+    { name: "AI", href: "/ai", icon: Wand2 },
+    { name: t('nav.account'), href: "/account", icon: User },
+  ];
   
   const isActive = (path: string) => {
     if (path === "/dashboard") {

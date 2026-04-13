@@ -12,6 +12,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
+import { useTranslation } from "react-i18next";
 
 const planDetails: Record<string, { name: string; price: string; credits: string; lookupKey: string; dbPlan: string; tierLevel: number }> = {
   starter: { name: "Starter", price: "29", credits: "50", lookupKey: "starter_monthly_sek", dbPlan: "starter", tierLevel: 1 },
@@ -30,6 +31,7 @@ const getTierLevelFromDbPlan = (dbPlan: string): number => {
 };
 
 const Checkout = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -51,8 +53,8 @@ const Checkout = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           toast({
-            title: "Logga in först",
-            description: "Du måste vara inloggad för att köpa ett paket.",
+            title: t("checkout.login_first_title"),
+            description: t("checkout.login_first_desc"),
             variant: "destructive",
           });
           navigate("/auth?redirect=/checkout?plan=" + plan);
@@ -94,7 +96,7 @@ const Checkout = () => {
 
         if (configError || !configData?.publishableKey) {
           console.error('Config error:', configError, configData);
-          setError("Stripe är inte konfigurerat. Kontakta administratören.");
+          setError(t("checkout.stripe_not_configured"));
           setLoading(false);
           return;
         }
@@ -121,7 +123,7 @@ const Checkout = () => {
 
         if (invokeError) {
           console.error('Checkout error:', invokeError);
-          throw new Error(invokeError.message || 'Kunde inte starta betalning');
+          throw new Error(invokeError.message || t("checkout.error_payment"));
         }
 
         if (data?.clientSecret) {
@@ -131,15 +133,15 @@ const Checkout = () => {
           window.location.href = data.checkoutUrl;
           return;
         } else {
-          throw new Error('Ingen checkout-session skapad');
+          throw new Error(t("checkout.no_checkout_session"));
         }
 
       } catch (err: any) {
         console.error('Checkout init error:', err);
-        setError(err.message || 'Ett fel uppstod vid betalning');
+        setError(err.message || t("checkout.error_payment"));
         toast({
-          title: "Fel",
-          description: err.message || "Kunde inte starta betalning. Försök igen.",
+          title: t("checkout.payment_failed_title"),
+          description: err.message || t("checkout.payment_failed_desc"),
           variant: "destructive",
         });
       } finally {
@@ -162,7 +164,7 @@ const Checkout = () => {
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[400px]">
             <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Förbereder betalning...</p>
+            <p className="text-muted-foreground">{t("checkout.preparing")}</p>
           </div>
         </div>
       </div>
@@ -178,18 +180,18 @@ const Checkout = () => {
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold mb-4">Du har redan detta paket</h1>
+            <h1 className="text-2xl font-bold mb-4">{t("checkout.already_have_plan_title")}</h1>
             <p className="text-muted-foreground mb-6">
-              Du har redan {currentPlanName}-paketet eller ett högre paket. 
-              {selectedPlan.tierLevel > 1 && " Du kan inte nedgradera till ett lägre paket."}
+              {t("checkout.already_have_plan_desc", { plan: currentPlanName })}
+              {selectedPlan.tierLevel > 1 && " " + t("checkout.no_downgrade")}
             </p>
             <div className="flex gap-4 justify-center">
               <Button variant="outline" onClick={() => navigate("/pricing")}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Tillbaka till priser
+                {t("checkout.back_to_pricing")}
               </Button>
               <Button onClick={() => navigate("/dashboard")}>
-                Gå till dashboard
+                {t("checkout.go_to_dashboard")}
               </Button>
             </div>
           </div>
@@ -210,7 +212,7 @@ const Checkout = () => {
             </Alert>
             <Button variant="outline" onClick={() => navigate("/pricing")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Tillbaka till priser
+              {t("checkout.back_to_pricing")}
             </Button>
           </div>
         </div>
@@ -230,21 +232,21 @@ const Checkout = () => {
             className="mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Tillbaka till priser
+            {t("checkout.back_to_pricing")}
           </Button>
 
           <div className="grid md:grid-cols-5 gap-6 md:gap-8">
             {/* Order Summary */}
             <div className="md:col-span-2">
               <Card className="p-6 sticky top-24">
-                <h2 className="text-xl font-bold mb-4">Din beställning</h2>
-                
+                <h2 className="text-xl font-bold mb-4">{t("checkout.order_summary")}</h2>
+
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-semibold">{selectedPlan.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {selectedPlan.credits} AI-krediter/månad
+                        {selectedPlan.credits} {t("checkout.credits_per_month")}
                       </p>
                     </div>
                     <p className="font-bold">{selectedPlan.price} kr</p>
@@ -252,16 +254,16 @@ const Checkout = () => {
 
                   <div className="border-t pt-4 space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span>Pris per månad</span>
+                      <span>{t("checkout.price_per_month")}</span>
                       <span>{selectedPlan.price} kr</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
-                      <span>Moms (25%)</span>
+                      <span>{t("checkout.vat")}</span>
                       <span>{(parseFloat(selectedPlan.price) * 0.25).toFixed(0)} kr</span>
                     </div>
                     <div className="flex justify-between font-bold text-base pt-2 border-t">
-                      <span>Totalt</span>
-                      <span>{(parseFloat(selectedPlan.price) * 1.25).toFixed(0)} kr/mån</span>
+                      <span>{t("checkout.total")}</span>
+                      <span>{(parseFloat(selectedPlan.price) * 1.25).toFixed(0)} {t("checkout.total_per_month")}</span>
                     </div>
                   </div>
                 </div>
@@ -269,15 +271,15 @@ const Checkout = () => {
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-primary" />
-                    <span>Säker betalning via Stripe</span>
+                    <span>{t("checkout.secure_stripe")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CreditCard className="w-4 h-4 text-primary" />
-                    <span>Avsluta när du vill</span>
+                    <span>{t("checkout.cancel_anytime")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Lock className="w-4 h-4 text-primary" />
-                    <span>Dina uppgifter är krypterade</span>
+                    <span>{t("checkout.data_encrypted")}</span>
                   </div>
                 </div>
               </Card>
@@ -288,7 +290,7 @@ const Checkout = () => {
               <Card className="p-6">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                   <CreditCard className="w-5 h-5" />
-                  Betalning
+                  {t("checkout.payment_heading")}
                 </h2>
 
                 {clientSecret && stripePromise ? (
@@ -303,19 +305,19 @@ const Checkout = () => {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-                    <p className="text-muted-foreground">Laddar betalningsformulär...</p>
+                    <p className="text-muted-foreground">{t("checkout.loading_form")}</p>
                   </div>
                 )}
               </Card>
 
               <p className="text-xs text-center text-muted-foreground mt-4">
-                Genom att fortsätta godkänner du våra{" "}
+                {t("checkout.terms_agree")}{" "}
                 <a href="/terms-of-service" className="underline hover:text-primary">
-                  användarvillkor
+                  {t("checkout.terms_link")}
                 </a>{" "}
-                och{" "}
+                {t("checkout.and")}{" "}
                 <a href="/privacy-policy" className="underline hover:text-primary">
-                  integritetspolicy
+                  {t("checkout.privacy_link")}
                 </a>
               </p>
             </div>

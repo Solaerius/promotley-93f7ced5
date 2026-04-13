@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { User, Building2, Palette, ChevronDown } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { cn } from "@/lib/utils";
@@ -10,15 +11,16 @@ import AccountContent from "@/components/account/AccountContent";
 import OrganizationContent from "@/components/account/OrganizationContent";
 import AppSettingsContent from "@/components/account/AppSettingsContent";
 
-const sections = [
-  { id: "konto", label: "Konto", icon: User },
-  { id: "organisation", label: "Organisation", icon: Building2 },
-  { id: "app", label: "Kopplingar & Tema", icon: Palette },
-];
-
 const AccountPage = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
+
+  const sections = [
+    { id: "konto", label: t('account.section_account'), icon: User },
+    { id: "organisation", label: t('account.section_organisation'), icon: Building2 },
+    { id: "app", label: t('account.section_app'), icon: Palette },
+  ];
   const [activeSection, setActiveSection] = useState(() => {
     return searchParams.get("tab") || "konto";
   });
@@ -48,16 +50,16 @@ const AccountPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-xl font-semibold text-foreground mb-1">Konto & Inställningar</h1>
-        <p className="text-sm text-muted-foreground mb-6">Hantera ditt konto, organisation och kopplingar</p>
+      <div data-tour="account-section" className="max-w-5xl mx-auto">
+        <h1 className="text-2xl font-bold text-foreground mb-1">{t('account.page_title')}</h1>
+        <p className="text-sm text-muted-foreground mb-6">{t('account.page_subtitle')}</p>
 
         {/* Mobile: dropdown selector */}
         {isMobile ? (
           <div className="mb-4">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="w-full flex items-center justify-between p-3 rounded-xl bg-card shadow-sm text-sm font-medium text-foreground"
+              className="w-full flex items-center justify-between rounded-xl bg-card border border-border/40 p-3 text-sm font-medium text-foreground"
             >
               <div className="flex items-center gap-2">
                 <currentSection.icon className="w-4 h-4 text-muted-foreground" />
@@ -66,7 +68,7 @@ const AccountPage = () => {
               <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", mobileMenuOpen && "rotate-180")} />
             </button>
             {mobileMenuOpen && (
-              <div className="mt-1 rounded-xl bg-card shadow-md overflow-hidden">
+              <div className="rounded-xl bg-card border border-border/40 shadow-lg overflow-hidden mt-1">
                 {sections.map((section) => {
                   const Icon = section.icon;
                   return (
@@ -104,10 +106,9 @@ const AccountPage = () => {
                     key={section.id}
                     onClick={() => setActiveSection(section.id)}
                     className={cn(
-                      "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all",
                       activeSection === section.id
-                        ? "bg-primary/10 text-primary font-medium shadow-sm"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        ? "w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold text-primary border-l-2 border-primary bg-primary/5 transition-all rounded-r-lg"
+                        : "w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground border-l-2 border-transparent hover:border-border transition-all rounded-r-lg"
                     )}
                   >
                     <Icon className="w-4 h-4" />

@@ -11,10 +11,7 @@ const DevAutoLogin = () => {
 
   useEffect(() => {
     const hostname = window.location.hostname;
-    const isAllowed =
-      hostname === "localhost" ||
-      hostname.includes("lovable.app") ||
-      hostname.includes("lovableproject.com");
+    const isAllowed = hostname === "localhost" || hostname.includes("vercel.app");
 
     if (!isAllowed) {
       navigate("/", { replace: true });

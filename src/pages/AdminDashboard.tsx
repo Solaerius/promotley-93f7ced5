@@ -1,8 +1,9 @@
+// Admin pages are Swedish-only (internal use). i18n not applied here.
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Bell, Users, CheckCircle, XCircle, BookOpen, Loader2, Shield, CreditCard, Gift, Mail, BarChart3, Sparkles, Activity, Settings } from "lucide-react";
+import { MessageCircle, Bell, Users, CheckCircle, XCircle, BookOpen, Loader2, Shield, CreditCard, Gift, Mail, BarChart3, Wand2, Activity, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -109,7 +110,7 @@ const AdminDashboard = () => {
             { label: "Olästa meddelanden", value: stats.unreadMessages, icon: MessageCircle, color: "text-amber-500" },
             { label: "Väntande ordrar", value: stats.pendingOrders, icon: CreditCard, color: "text-orange-500" },
             { label: "Intäkter (kr)", value: stats.totalRevenue, icon: BarChart3, color: "text-emerald-500" },
-            { label: "AI-anrop", value: stats.totalAIRequests, icon: Sparkles, color: "text-purple-500" },
+            { label: "AI-anrop", value: stats.totalAIRequests, icon: Wand2, color: "text-purple-500" },
             { label: "Nya idag", value: stats.activeToday, icon: Activity, color: "text-pink-500" },
           ].map((m) => (
             <Card key={m.label} className="p-3">

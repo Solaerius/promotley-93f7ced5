@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 export interface AIConversation {
   id: string;
@@ -16,6 +17,7 @@ export const useConversations = () => {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -62,7 +64,7 @@ export const useConversations = () => {
       return conv.id;
     } catch (err) {
       console.error('Error creating conversation:', err);
-      toast({ title: "Fel", description: "Kunde inte skapa konversation.", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('toasts.could_not_create_conv'), variant: "destructive" });
       return null;
     }
   }, [toast]);
@@ -81,7 +83,7 @@ export const useConversations = () => {
       }
     } catch (err) {
       console.error('Error deleting conversation:', err);
-      toast({ title: "Fel", description: "Kunde inte ta bort konversation.", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('toasts.could_not_delete_conv'), variant: "destructive" });
     }
   }, [activeConversationId, toast]);
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 
 const CookieConsent = () => {
+  const { t } = useTranslation();
   const {
     showBanner,
     preferences,
@@ -47,19 +49,17 @@ const CookieConsent = () => {
             <div className="flex-1 space-y-2">
               <div className="flex items-center gap-3">
                 <Cookie className="w-6 h-6 text-primary shrink-0" />
-                <h3 className="font-bold text-lg">Vi använder cookies</h3>
+                <h3 className="font-bold text-lg">{t('cookies.banner_title')}</h3>
                 <button
                   onClick={handleClose}
                   className="ml-auto md:hidden text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Stäng"
+                  aria-label={t('cookies.close_aria')}
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Vi använder cookies för att förbättra din upplevelse på vår webbplats. 
-                Nödvändiga cookies krävs för att sajten ska fungera. Du kan välja att acceptera 
-                ytterligare cookies för analys och marknadsföring.
+                {t('cookies.banner_description')}
               </p>
             </div>
 
@@ -71,19 +71,19 @@ const CookieConsent = () => {
                 className="gap-2"
               >
                 <Settings className="w-4 h-4" />
-                Anpassa
+                {t('cookies.customize')}
               </Button>
               <Button
                 variant="ghost"
                 onClick={acceptNecessary}
               >
-                Endast nödvändiga
+                {t('cookies.necessary_only')}
               </Button>
               <Button
                 variant="gradient"
                 onClick={acceptAll}
               >
-                Acceptera alla
+                {t('cookies.accept_all')}
               </Button>
             </div>
           </div>
@@ -96,10 +96,10 @@ const CookieConsent = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Cookie className="w-5 h-5 text-primary" />
-              Cookie-inställningar
+              {t('cookies.settings_title')}
             </DialogTitle>
             <DialogDescription>
-              Välj vilka typer av cookies du vill tillåta. Nödvändiga cookies kan inte stängas av.
+              {t('cookies.settings_description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -107,10 +107,9 @@ const CookieConsent = () => {
             {/* Necessary Cookies */}
             <div className="flex items-start justify-between gap-4 p-4 rounded-lg bg-muted/50">
               <div className="flex-1 space-y-1">
-                <Label className="text-base font-semibold">Nödvändiga cookies</Label>
+                <Label className="text-base font-semibold">{t('cookies.necessary_label')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Dessa cookies krävs för att webbplatsen ska fungera och kan inte stängas av. 
-                  De används för grundläggande funktioner som navigation och säkerhet.
+                  {t('cookies.necessary_description')}
                 </p>
               </div>
               <Switch checked={true} disabled />
@@ -120,11 +119,10 @@ const CookieConsent = () => {
             <div className="flex items-start justify-between gap-4 p-4 rounded-lg border-2 border-border hover:border-primary/30 transition-colors">
               <div className="flex-1 space-y-1">
                 <Label htmlFor="analytics" className="text-base font-semibold cursor-pointer">
-                  Analys-cookies
+                  {t('cookies.analytics_label')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Hjälper oss att förstå hur besökare interagerar med webbplatsen genom att 
-                  samla in och rapportera information anonymt.
+                  {t('cookies.analytics_description')}
                 </p>
               </div>
               <Switch
@@ -140,11 +138,10 @@ const CookieConsent = () => {
             <div className="flex items-start justify-between gap-4 p-4 rounded-lg border-2 border-border hover:border-primary/30 transition-colors">
               <div className="flex-1 space-y-1">
                 <Label htmlFor="marketing" className="text-base font-semibold cursor-pointer">
-                  Marknadsförings-cookies
+                  {t('cookies.marketing_label')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Används för att visa relevanta annonser och marknadsföringskampanjer. 
-                  Spårar besökare över webbplatser.
+                  {t('cookies.marketing_description')}
                 </p>
               </div>
               <Switch
@@ -164,22 +161,22 @@ const CookieConsent = () => {
               onClick={acceptNecessary}
               className="flex-1"
             >
-              Endast nödvändiga
+              {t('cookies.necessary_only')}
             </Button>
             <Button
               variant="gradient"
               onClick={handleSaveCustom}
               className="flex-1"
             >
-              Spara inställningar
+              {t('cookies.save_settings')}
             </Button>
           </div>
 
           {/* Privacy Link */}
           <p className="text-xs text-muted-foreground text-center">
-            Läs mer i vår{' '}
+            {t('cookies.privacy_link')}{' '}
             <a href="/privacy-policy" className="underline hover:text-foreground transition-colors">
-              integritetspolicy
+              {t('cookies.privacy_link_text')}
             </a>
           </p>
         </DialogContent>

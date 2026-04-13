@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +15,7 @@ import { AIProfileProgress } from "@/components/AIProfileProgress";
 import CreditsDisplay from "@/components/CreditsDisplay";
 import PromoCodeInput from "@/components/PromoCodeInput";
 import { useNavigate } from "react-router-dom";
-import { SWISH_PLANS, CREDIT_PACKAGES } from "@/lib/swishConfig";
+import { STRIPE_CREDIT_PACKAGES, STRIPE_PLANS } from "@/lib/stripeConfig";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/select";
 
 const AccountContent = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
@@ -49,6 +51,24 @@ const AccountContent = () => {
     malsattning: "", tonalitet: "", allman_info: "", nyckelord: "",
   });
   const [isSavingAIProfile, setIsSavingAIProfile] = useState(false);
+  const [hasActiveStripeSubscription, setHasActiveStripeSubscription] = useState(false);
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+
+  const handleOpenPortal = async () => {
+    setIsOpeningPortal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-portal', { body: {} });
+      if (error || !data?.url) {
+        toast({ title: t('account.no_subscription'), variant: "destructive" });
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      toast({ title: t('common.error'), description: t('account.cant_open_billing'), variant: "destructive" });
+    } finally {
+      setIsOpeningPortal(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -62,6 +82,19 @@ const AccountContent = () => {
       }
     };
     fetchUserData();
+
+    // Check for active Stripe subscription
+    const checkStripeSubscription = async () => {
+      if (!user?.id) return;
+      const { data } = await supabase
+        .from('stripe_subscriptions' as any)
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      setHasActiveStripeSubscription(!!data);
+    };
+    checkStripeSubscription();
   }, [user]);
 
   useEffect(() => {
@@ -85,8 +118,8 @@ const AccountContent = () => {
       const { error } = await supabase.from('users').update({ company_name: companyName.trim() }).eq('id', user.id);
       if (error) throw error;
       setOriginalCompanyName(companyName);
-      toast({ title: "Namn uppdaterat" });
-    } catch { toast({ title: "Fel", variant: "destructive" }); }
+      toast({ title: t('account.name_updated') });
+    } catch { toast({ title: t('common.error'), variant: "destructive" }); }
     finally { setIsSavingCompanyName(false); }
   };
 
@@ -99,8 +132,8 @@ const AccountContent = () => {
         foretagsnamn: companyName.trim() || foretagsnamn,
         nyckelord: nyckelord ? nyckelord.split(",").map((k) => k.trim()).filter(Boolean) : undefined,
       });
-      toast({ title: "AI-profil sparad" });
-    } catch { toast({ title: "Fel", variant: "destructive" }); }
+      toast({ title: t('account.ai_profile_saved') });
+    } catch { toast({ title: t('common.error'), variant: "destructive" }); }
     finally { setIsSavingAIProfile(false); }
   };
 
@@ -110,10 +143,10 @@ const AccountContent = () => {
     try {
       const { error } = await supabase.from('users').update({ plan: 'free_trial', max_credits: 1, credits_left: 0, renewal_date: null }).eq('id', user.id);
       if (error) throw error;
-      toast({ title: "Prenumeration avslutad" });
+      toast({ title: t('account.subscription_cancelled') });
       refetchCredits();
       setShowCancelDialog(false);
-    } catch { toast({ title: "Fel", variant: "destructive" }); }
+    } catch { toast({ title: t('common.error'), variant: "destructive" }); }
     finally { setIsCancelling(false); }
   };
 
@@ -121,18 +154,18 @@ const AccountContent = () => {
     if (!user?.id || !selectedDowngradePlan) return;
     setIsDowngrading(true);
     try {
-      const plan = SWISH_PLANS[selectedDowngradePlan as keyof typeof SWISH_PLANS];
+      const plan = STRIPE_PLANS[selectedDowngradePlan as keyof typeof STRIPE_PLANS];
       const { error } = await supabase.from('users').update({
         plan: selectedDowngradePlan as any,
         max_credits: plan.credits,
         credits_left: Math.min(credits?.credits_left || 0, plan.credits),
       }).eq('id', user.id);
       if (error) throw error;
-      toast({ title: "Plan nedgraderad" });
+      toast({ title: t('account.plan_downgraded') });
       refetchCredits();
       setShowDowngradeDialog(false);
       setSelectedDowngradePlan(null);
-    } catch { toast({ title: "Fel", variant: "destructive" }); }
+    } catch { toast({ title: t('common.error'), variant: "destructive" }); }
     finally { setIsDowngrading(false); }
   };
 
@@ -142,17 +175,17 @@ const AccountContent = () => {
     try {
       const { error } = await supabase.rpc('soft_delete_user_account', { _user_id: user.id });
       if (error) throw error;
-      toast({ title: "Konto raderat", description: "Du har 30 dagar att angra dig." });
+      toast({ title: t('account.account_deleted'), description: t('account.account_deleted_desc') });
       await signOut();
     } catch {
-      toast({ title: "Fel", variant: "destructive" });
+      toast({ title: t('common.error'), variant: "destructive" });
       setIsDeleting(false);
     }
   };
 
   const hasActivePlan = credits?.plan && !['free_trial'].includes(credits.plan);
   const currentTierLevel = credits?.plan ? getTierLevel(credits.plan) : 0;
-  const downgradeOptions = Object.entries(SWISH_PLANS).filter(([key]) => getTierLevel(key) < currentTierLevel);
+  const downgradeOptions = Object.entries(STRIPE_PLANS).filter(([key]) => getTierLevel(key) < currentTierLevel);
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -162,20 +195,20 @@ const AccountContent = () => {
           <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
             <Zap className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
-          <h2 className="text-base font-medium text-foreground">Plan & Krediter</h2>
+          <h2 className="text-base font-medium text-foreground">{t('account.plan_and_credits')}</h2>
         </div>
         <div className="rounded-xl bg-card shadow-sm p-4 space-y-3">
           <CreditsDisplay variant="full" />
 
           <div className="pt-3 border-t border-border">
             <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-              <Plus className="w-3.5 h-3.5" /> Fyll pa krediter
+              <Plus className="w-3.5 h-3.5" /> {t('account.top_up_credits')}
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {Object.entries(CREDIT_PACKAGES).map(([key, pkg]) => (
-                <Button key={key} variant="outline" className="flex flex-col h-auto py-2" onClick={() => navigate(`/swish-checkout?type=credits&package=${key}`)}>
+              {Object.entries(STRIPE_CREDIT_PACKAGES).map(([key, pkg]) => (
+                <Button key={key} variant="outline" className="flex flex-col h-auto py-2" onClick={() => navigate(`/checkout?package=${key}&type=credits`)}>
                   <span className="text-base font-bold">{pkg.credits}</span>
-                  <span className="text-[10px] text-muted-foreground">krediter</span>
+                  <span className="text-[10px] text-muted-foreground">{t('account.credits')}</span>
                   <span className="text-sm font-semibold text-primary mt-0.5">{pkg.price} kr</span>
                 </Button>
               ))}
@@ -185,16 +218,22 @@ const AccountContent = () => {
           <div className="flex flex-wrap gap-2 pt-3 border-t border-border">
             <Button onClick={() => navigate('/pricing')} size="sm">
               <CreditCard className="w-4 h-4 mr-1.5" />
-              {hasActivePlan ? "Uppgradera plan" : "Valj plan"}
+              {hasActivePlan ? t('account.upgrade_plan') : t('account.choose_plan')}
             </Button>
+            {hasActiveStripeSubscription && (
+              <Button variant="outline" size="sm" onClick={handleOpenPortal} disabled={isOpeningPortal}>
+                <CreditCard className="w-4 h-4 mr-1.5" />
+                {isOpeningPortal ? t('account.opening') : t('account.manage_subscription')}
+              </Button>
+            )}
             {hasActivePlan && downgradeOptions.length > 0 && (
               <Button variant="outline" size="sm" onClick={() => setShowDowngradeDialog(true)}>
-                <ArrowDown className="w-4 h-4 mr-1.5" /> Nedgradera
+                <ArrowDown className="w-4 h-4 mr-1.5" /> {t('account.downgrade')}
               </Button>
             )}
             {hasActivePlan && (
               <Button variant="outline" size="sm" onClick={() => setShowCancelDialog(true)} className="text-destructive hover:text-destructive">
-                <XCircle className="w-4 h-4 mr-1.5" /> Avsluta
+                <XCircle className="w-4 h-4 mr-1.5" /> {t('account.cancel_plan')}
               </Button>
             )}
           </div>
@@ -207,16 +246,16 @@ const AccountContent = () => {
 
       {/* Profile Images */}
       <section className="space-y-3">
-        <h2 className="text-base font-medium text-foreground">Profilbilder</h2>
+        <h2 className="text-base font-medium text-foreground">{t('account.profile_images')}</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col items-center p-4 rounded-xl bg-card shadow-sm">
             <User className="h-4 w-4 mb-2 text-muted-foreground" />
-            <p className="font-medium mb-2 text-sm">Profilbild</p>
+            <p className="font-medium mb-2 text-sm">{t('account.profile_picture')}</p>
             {user?.id && <ProfileImageUpload userId={user.id} currentUrl={avatarUrl} type="avatar" onUploadComplete={(url) => setAvatarUrl(url || null)} size="lg" />}
           </div>
           <div className="flex flex-col items-center p-4 rounded-xl bg-card shadow-sm">
             <Building className="h-4 w-4 mb-2 text-muted-foreground" />
-            <p className="font-medium mb-2 text-sm">Foretagslogga</p>
+            <p className="font-medium mb-2 text-sm">{t('account.company_logo')}</p>
             {user?.id && <ProfileImageUpload userId={user.id} currentUrl={companyLogoUrl} type="company_logo" onUploadComplete={(url) => setCompanyLogoUrl(url || null)} size="lg" />}
           </div>
         </div>
@@ -224,16 +263,16 @@ const AccountContent = () => {
 
       {/* Account Info */}
       <section className="space-y-3">
-        <h2 className="text-base font-medium text-foreground">Kontoinformation</h2>
+        <h2 className="text-base font-medium text-foreground">{t('account.account_info')}</h2>
         <div className="space-y-3">
           <div>
-            <Label className="text-sm text-muted-foreground">E-post</Label>
+            <Label className="text-sm text-muted-foreground">{t('auth.email')}</Label>
             <p className="font-medium mt-1 text-sm">{user?.email}</p>
           </div>
           <div className="space-y-1">
-            <Label className="text-sm text-muted-foreground">Foretagsnamn</Label>
+            <Label className="text-sm text-muted-foreground">{t('onboarding.company_name')}</Label>
             <div className="flex gap-2">
-              <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Mitt UF-foretag" className="bg-background border-border" />
+              <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder={t('account.my_company_placeholder')} className="bg-background border-border" />
               <Button onClick={handleSaveCompanyName} disabled={isSavingCompanyName || companyName === originalCompanyName} size="icon" variant="secondary">
                 <Save className="w-4 h-4" />
               </Button>
@@ -245,21 +284,21 @@ const AccountContent = () => {
       {/* AI Profile */}
       <section className="space-y-3">
         <div>
-          <h2 className="text-base font-medium text-foreground mb-0.5">AI-profil</h2>
-          <p className="text-sm text-muted-foreground">Fyll i alla obligatoriska falt for basta AI-svar</p>
+          <h2 className="text-base font-medium text-foreground mb-0.5">{t('account.ai_profile')}</h2>
+          <p className="text-sm text-muted-foreground">{t('account.ai_profile_subtitle')}</p>
         </div>
         <AIProfileProgress />
         <div className="space-y-3 mt-2">
           <div className="grid grid-cols-2 gap-2">
             {[
-              { key: "branch", label: "Bransch", placeholder: "t.ex. E-handel", required: true },
-              { key: "stad", label: "Stad", placeholder: "t.ex. Stockholm", required: true },
-              { key: "postnummer", label: "Postnummer", placeholder: "t.ex. 114 52", required: true },
-              { key: "land", label: "Land", placeholder: "Sverige" },
-              { key: "malgrupp", label: "Malgrupp", placeholder: "t.ex. 18-25 ar", required: true },
-              { key: "malsattning", label: "Malsattning", placeholder: "t.ex. Oka synlighet" },
-              { key: "prisniva", label: "Prisniva", placeholder: "t.ex. Budget" },
-              { key: "tonalitet", label: "Ton", placeholder: "t.ex. Lekfull, professionell" },
+              { key: "branch", label: t('account.branch_label'), placeholder: t('account.branch_placeholder'), required: true },
+              { key: "stad", label: t('account.city_label'), placeholder: t('account.city_placeholder'), required: true },
+              { key: "postnummer", label: t('account.postal_label'), placeholder: t('account.postal_placeholder'), required: true },
+              { key: "land", label: t('account.country_label'), placeholder: t('account.country_placeholder') },
+              { key: "malgrupp", label: t('account.target_audience_label'), placeholder: t('account.target_audience_placeholder'), required: true },
+              { key: "malsattning", label: t('account.goal_label'), placeholder: t('account.goal_placeholder') },
+              { key: "prisniva", label: t('account.price_label'), placeholder: t('account.price_placeholder') },
+              { key: "tonalitet", label: t('account.tone_label'), placeholder: t('account.tone_placeholder') },
             ].map(({ key, label, placeholder, required }) => (
               <div key={key} className="space-y-1">
                 <Label className="text-sm">{label} {required && <span className="text-destructive">*</span>}</Label>
@@ -272,14 +311,14 @@ const AccountContent = () => {
               </div>
             ))}
             <div className="space-y-1 col-span-2">
-              <Label className="text-sm">Era grundprinciper</Label>
-              <Input value={aiFormData.nyckelord} onChange={(e) => setAiFormData(p => ({ ...p, nyckelord: e.target.value }))} placeholder="hallbarhet, handgjort (separera med komma)" className="bg-background border-border" />
+              <Label className="text-sm">{t('account.principles_label')}</Label>
+              <Input value={aiFormData.nyckelord} onChange={(e) => setAiFormData(p => ({ ...p, nyckelord: e.target.value }))} placeholder={t('account.keywords_placeholder')} className="bg-background border-border" />
             </div>
           </div>
           {[
-            { key: "produkt_beskrivning", label: "Foretagsbeskrivning", placeholder: "Beskriv din produkt/tjanst...", required: true },
-            { key: "marknadsplan", label: "Marknadsplan", placeholder: "Nuvarande marknadsforingsstrategi..." },
-            { key: "allman_info", label: "Allman information", placeholder: "Beratta mer om ert foretag..." },
+            { key: "produkt_beskrivning", label: t('account.description_label'), placeholder: t('account.description_placeholder'), required: true },
+            { key: "marknadsplan", label: t('account.marketing_plan_label'), placeholder: t('account.marketing_plan_placeholder') },
+            { key: "allman_info", label: t('account.general_info_label'), placeholder: t('account.general_info_placeholder') },
           ].map(({ key, label, placeholder, required }) => (
             <div key={key} className="space-y-1">
               <Label className="text-sm">{label} {required && <span className="text-destructive">*</span>}</Label>
@@ -293,7 +332,7 @@ const AccountContent = () => {
             </div>
           ))}
           <Button onClick={handleSaveAIProfile} disabled={isSavingAIProfile} className="w-full sm:w-auto">
-            {isSavingAIProfile ? "Sparar..." : "Spara AI-profil"}
+            {isSavingAIProfile ? t('common.loading') : t('account.save_ai_profile')}
           </Button>
         </div>
       </section>
@@ -302,11 +341,11 @@ const AccountContent = () => {
       <section className="pt-4 border-t border-destructive/20">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-medium text-destructive text-sm">Radera konto</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Permanent radering av alla data</p>
+            <h3 className="font-medium text-destructive text-sm">{t('account.delete_account')}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('account.delete_account_desc')}</p>
           </div>
           <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
-            <Trash2 className="w-4 h-4 mr-1.5" /> Radera
+            <Trash2 className="w-4 h-4 mr-1.5" /> {t('account.delete_btn')}
           </Button>
         </div>
       </section>
@@ -315,12 +354,12 @@ const AccountContent = () => {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Radera konto?</AlertDialogTitle>
-            <AlertDialogDescription>Ditt konto raderas om 30 dagar. Du kan angra dig genom att logga in igen.</AlertDialogDescription>
+            <AlertDialogTitle>{t('account.dialog_delete_title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('account.dialog_delete_desc')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Avbryt</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteAccount} disabled={isDeleting}>{isDeleting ? "Raderar..." : "Radera"}</AlertDialogAction>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteAccount} disabled={isDeleting}>{isDeleting ? t('account.deleting') : t('account.delete_btn')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -328,13 +367,13 @@ const AccountContent = () => {
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Avsluta prenumeration?</AlertDialogTitle>
-            <AlertDialogDescription>Din plan ({credits ? getPlanLabel(credits.plan) : ''}) avslutas.</AlertDialogDescription>
+            <AlertDialogTitle>{t('account.dialog_cancel_title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('account.dialog_cancel_desc', { plan: credits ? getPlanLabel(credits.plan) : '' })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Behall plan</AlertDialogCancel>
+            <AlertDialogCancel>{t('account.keep_plan')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleCancelSubscription} disabled={isCancelling} className="bg-destructive hover:bg-destructive/90">
-              {isCancelling ? "Avslutar..." : "Avsluta"}
+              {isCancelling ? t('account.cancelling') : t('account.cancel_plan')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -343,12 +382,12 @@ const AccountContent = () => {
       <AlertDialog open={showDowngradeDialog} onOpenChange={setShowDowngradeDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Nedgradera plan</AlertDialogTitle>
-            <AlertDialogDescription>Valj vilken plan du vill nedgradera till.</AlertDialogDescription>
+            <AlertDialogTitle>{t('account.dialog_downgrade_title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('account.dialog_downgrade_desc')}</AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
             <Select value={selectedDowngradePlan || ""} onValueChange={setSelectedDowngradePlan}>
-              <SelectTrigger><SelectValue placeholder="Valj plan" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('account.choose_plan')} /></SelectTrigger>
               <SelectContent>
                 {downgradeOptions.map(([key, plan]) => (
                   <SelectItem key={key} value={key}>{plan.name} - {plan.credits} krediter ({plan.price} kr)</SelectItem>
@@ -357,9 +396,9 @@ const AccountContent = () => {
             </Select>
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSelectedDowngradePlan(null)}>Avbryt</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setSelectedDowngradePlan(null)}>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDowngrade} disabled={isDowngrading || !selectedDowngradePlan}>
-              {isDowngrading ? "Nedgraderar..." : "Bekrafta"}
+              {isDowngrading ? t('account.downgrading') : t('common.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

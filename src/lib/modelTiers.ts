@@ -1,4 +1,4 @@
-import { Zap, Sparkles, Brain } from 'lucide-react';
+import { Zap, Wand2, Brain } from 'lucide-react';
 
 export type ModelTier = 'fast' | 'standard' | 'premium';
 
@@ -25,7 +25,7 @@ export const MODEL_TIERS: Record<ModelTier, ModelTierConfig> = {
   standard: {
     id: 'standard',
     label: 'Standard',
-    icon: Sparkles,
+    icon: Wand2,
     description: 'Balanserad kvalitet – AI väljer bästa modellen för din fråga',
     creditMultiplier: 1,
     defaultModel: 'google/gemini-3-flash-preview',

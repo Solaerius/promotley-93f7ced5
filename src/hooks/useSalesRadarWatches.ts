@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { creditUpdateEvent } from './useAIAssistant';
@@ -19,6 +20,7 @@ export const useSalesRadarWatches = () => {
   const [watches, setWatches] = useState<Watch[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchWatches = useCallback(async () => {
     try {
@@ -82,7 +84,7 @@ export const useSalesRadarWatches = () => {
       return true;
     } catch (err) {
       console.error('Error adding watch:', err);
-      toast({ title: 'Fel', description: 'Kunde inte lägga till bevakning.', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('toasts.could_not_add_watch'), variant: 'destructive' });
       return false;
     }
   };

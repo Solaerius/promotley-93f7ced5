@@ -1,5 +1,6 @@
-interface TikTokIconProps {
+export interface TikTokIconProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const TikTokIcon = ({ className = "w-5 h-5" }: TikTokIconProps) => (

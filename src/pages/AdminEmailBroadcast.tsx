@@ -1,3 +1,4 @@
+// Admin pages are Swedish-only (internal use). i18n not applied here.
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

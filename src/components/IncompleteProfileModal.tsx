@@ -10,6 +10,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface IncompleteProfileModalProps {
   open: boolean;
@@ -23,6 +24,7 @@ export const IncompleteProfileModal = ({
   missingFields = [],
 }: IncompleteProfileModalProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -33,14 +35,14 @@ export const IncompleteProfileModal = ({
               <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
             </div>
             <AlertDialogTitle className="text-xl">
-              Företagsinformation saknas
+              {t('incomplete_profile.title')}
             </AlertDialogTitle>
           </div>
           <AlertDialogDescription className="text-base leading-relaxed">
-            Du måste fylla i all obligatorisk företagsinformation innan du kan använda AI-funktionerna.
+            {t('incomplete_profile.desc')}
             {missingFields.length > 0 && (
               <span className="block mt-3">
-                <span className="font-medium text-foreground">Saknade fält:</span>
+                <span className="font-medium text-foreground">{t('incomplete_profile.missing_fields')}</span>
                 <span className="block mt-1 text-sm">
                   {missingFields.join(", ")}
                 </span>
@@ -49,14 +51,14 @@ export const IncompleteProfileModal = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4">
-          <AlertDialogCancel>Stäng</AlertDialogCancel>
+          <AlertDialogCancel>{t('common.close')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {
               onOpenChange(false);
               navigate("/onboarding");
             }}
           >
-            Fyll i information
+            {t('incomplete_profile.fill_in')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

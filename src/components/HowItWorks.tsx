@@ -1,56 +1,54 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Link2, BarChart3, Lightbulb, Zap } from "lucide-react";
-
-const steps = [
-  {
-    icon: Link2,
-    title: "Berätta om ditt företag",
-    description: "Budget, bransch, målgrupp och hur mycket tid du har. Promotley anpassar strategin efter just dig.",
-  },
-  {
-    icon: BarChart3,
-    title: "Koppla dina sociala medier",
-    description: "AI:n analyserar dina konton och konkurrenterna för att hitta de bästa möjligheterna.",
-  },
-  {
-    icon: Lightbulb,
-    title: "Få din personliga strategi",
-    description: "Komplett plan med exakt när, hur ofta och vad du ska posta - anpassat efter din budget och tid.",
-  },
-];
+import { useTranslation } from 'react-i18next';
 
 const HowItWorks = () => {
+  const { t } = useTranslation();
+
+  const steps = [
+    {
+      icon: Link2,
+      number: "01",
+      title: t('how_it_works.step1_title'),
+      description: t('how_it_works.step1_desc'),
+    },
+    {
+      icon: BarChart3,
+      number: "02",
+      title: t('how_it_works.step2_title'),
+      description: t('how_it_works.step2_desc'),
+    },
+    {
+      icon: Lightbulb,
+      number: "03",
+      title: t('how_it_works.step3_title'),
+      description: t('how_it_works.step3_desc'),
+    },
+  ];
+
   return (
-    <section id="how-it-works" className="relative py-24 md:py-32 overflow-hidden">
-      {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-diagonal" />
-      
-      {/* Fluid blur orbs */}
-      <div className="blur-orb blur-orb-secondary w-[600px] h-[600px] top-0 -left-32 animate-glow-pulse" />
-      <div className="blur-orb blur-orb-primary w-[500px] h-[500px] bottom-0 right-0 animate-glow-pulse" style={{ animationDelay: '1.2s' }} />
-      
-      {/* Top blend from previous section */}
-      <div 
-        className="absolute top-0 left-0 right-0 h-48 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to bottom, hsl(30 15% 95% / 0.2) 0%, transparent 100%)',
-          filter: 'blur(40px)',
-        }}
-      />
-      
+    <section id="how-it-works" className="relative py-14 md:py-20 overflow-hidden">
+      {/* Section accent glow */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, hsl(var(--primary) / 0.1) 0%, transparent 70%)' }} />
+
       <div className="container mx-auto px-4 md:px-6 relative z-10 max-w-6xl">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-6 backdrop-blur-sm">
-            <Zap className="w-4 h-4 text-white" />
-            <span className="text-sm font-medium text-white">Hur det fungerar</span>
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+            style={{
+              background: 'hsl(var(--primary) / 0.15)',
+              border: '1px solid hsl(var(--primary) / 0.3)',
+            }}
+          >
+            <Zap className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">{t('sections.howItWorks.title')}</span>
           </div>
-          
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4" style={{ textWrap: 'balance' }}>
-            Från företagsidé till <span className="text-gradient">färdig strategi</span>
+
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4" style={{ textWrap: 'balance' }}>
+            {t('how_it_works.heading1')} <span className="text-gradient">{t('how_it_works.heading2')}</span>
           </h2>
-          <p className="text-lg text-white/70 max-w-2xl mx-auto" style={{ textWrap: 'balance' }}>
-            Få din personliga innehållsplan på under 5 minuter
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: 'hsl(var(--muted-foreground))', textWrap: 'balance' }}>
+            {t('how_it_works.subtitle')}
           </p>
         </div>
 
@@ -59,53 +57,63 @@ const HowItWorks = () => {
           {steps.map((item, index) => {
             const Icon = item.icon;
             return (
-              <Card 
-                key={index} 
-                className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/[0.15] hover:border-white/30 transition-all duration-300 group relative"
+              <div
+                key={index}
+                className="relative rounded-2xl p-6 md:p-8 overflow-hidden transition-all duration-300 group"
+                style={{
+                  background: 'hsl(0 0% 100% / 0.04)',
+                  border: '1px solid hsl(0 0% 100% / 0.08)',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLDivElement).style.background = 'hsl(0 0% 100% / 0.07)';
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'hsl(0 0% 100% / 0.14)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLDivElement).style.background = 'hsl(0 0% 100% / 0.04)';
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'hsl(0 0% 100% / 0.08)';
+                }}
               >
-                <CardContent className="p-6 md:p-8">
-                  {/* Step Number */}
-                  <div className="absolute -top-3 left-6 w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                    {index + 1}
+                {/* Desktop connector line (right border on first two cards) */}
+                {index < 2 && (
+                  <div
+                    className="hidden md:block absolute top-1/2 -right-3 w-6 h-px z-20"
+                    style={{ background: 'linear-gradient(90deg, hsl(var(--accent-brand) / 0.4), hsl(var(--accent-brand) / 0.1))' }}
+                  />
+                )}
+
+                {/* Top row: number left, icon right */}
+                <div className="flex items-start justify-between mb-5">
+                  <span
+                    className="text-8xl font-bold leading-none select-none pointer-events-none"
+                    style={{ color: 'hsl(var(--foreground) / 0.08)' }}
+                  >
+                    {item.number}
+                  </span>
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 relative z-10 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background: 'linear-gradient(135deg, hsl(var(--accent-brand) / 0.2), hsl(var(--primary) / 0.15))',
+                      border: '1px solid hsl(var(--accent-brand) / 0.2)',
+                    }}
+                  >
+                    <Icon className="w-6 h-6 text-foreground" />
                   </div>
-                  
-                  {/* Icon */}
-                  <div className="w-14 h-14 rounded-xl bg-white/15 flex items-center justify-center mb-6 mt-2 group-hover:scale-110 group-hover:bg-white/25 transition-all duration-300">
-                    <Icon className="w-7 h-7 text-white" />
-                  </div>
-                  
-                  {/* Content */}
-                  <h3 className="text-xl font-semibold text-white mb-3">
+                </div>
+
+                {/* Content */}
+                <div className="relative z-10">
+                  <h3 className="text-xl font-semibold text-foreground mb-3">
                     {item.title}
                   </h3>
-                  <p className="text-white/60 leading-relaxed">
+                  <p className="leading-relaxed" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     {item.description}
                   </p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
-
-        {/* Connector dots */}
-        <div className="hidden md:flex justify-center items-center gap-4 mt-8">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-white/40" />
-              {i < 2 && <div className="w-16 h-px bg-gradient-to-r from-white/40 to-white/20" />}
-            </div>
-          ))}
-        </div>
       </div>
-      
-      {/* Bottom blend */}
-      <div 
-        className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to top, hsl(344 55% 12%) 0%, transparent 100%)',
-          filter: 'blur(30px)',
-        }}
-      />
     </section>
   );
 };

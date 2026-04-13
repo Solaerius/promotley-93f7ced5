@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,7 @@ interface PromoCodeInputProps {
 }
 
 const PromoCodeInput = ({ variant = "inline", onSuccess, className = "" }: PromoCodeInputProps) => {
+  const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [isOpen, setIsOpen] = useState(variant === "card");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +35,7 @@ const PromoCodeInput = ({ variant = "inline", onSuccess, className = "" }: Promo
       });
 
       if (fnError) {
-        setError("Kunde inte lösa in koden. Försök igen.");
+        setError(t('toasts.could_not_redeem'));
         return;
       }
 
@@ -66,7 +68,7 @@ const PromoCodeInput = ({ variant = "inline", onSuccess, className = "" }: Promo
         className={`flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors ${className}`}
       >
         <Gift className="w-4 h-4" />
-        Har du en kampanjkod?
+        {t('common.have_promo_code')}
         <ChevronDown className="w-3 h-3" />
       </button>
     );
@@ -90,7 +92,7 @@ const PromoCodeInput = ({ variant = "inline", onSuccess, className = "" }: Promo
             setCode(e.target.value.toUpperCase());
             setError("");
           }}
-          placeholder="Ange kampanjkod"
+          placeholder={t('common.enter_promo_code')}
           disabled={isLoading}
           maxLength={50}
           className="flex-1"
@@ -102,7 +104,7 @@ const PromoCodeInput = ({ variant = "inline", onSuccess, className = "" }: Promo
           size="default"
           variant="gradient"
         >
-          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Lös in"}
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.redeem')}
         </Button>
         {variant === "inline" && (
           <Button
@@ -123,10 +125,10 @@ const PromoCodeInput = ({ variant = "inline", onSuccess, className = "" }: Promo
       <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6 space-y-3">
         <div className="flex items-center gap-2">
           <Gift className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold">Har du en kampanjkod?</h3>
+          <h3 className="font-semibold">{t('common.have_promo_code')}</h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          Ange din kod nedan för att få gratiskrediter
+          {t('common.promo_code_enter_desc')}
         </p>
         {content}
       </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MODEL_TIERS, TIER_ORDER, type ModelTier } from '@/lib/modelTiers';
 import { cn } from '@/lib/utils';
 import {
@@ -18,6 +19,7 @@ interface ModelTierSelectorProps {
 }
 
 const ModelTierSelector = ({ value, onChange, compact = false }: ModelTierSelectorProps) => {
+  const { t } = useTranslation();
   const { credits } = useUserCredits();
   const isFreePlan = credits?.plan === 'free_trial';
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -82,10 +84,10 @@ const ModelTierSelector = ({ value, onChange, compact = false }: ModelTierSelect
                 <p className="font-medium">{tier.label}</p>
                 <p className="text-xs text-muted-foreground">{tier.description}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {tier.creditMultiplier}x kreditkostnad
+                  {tier.creditMultiplier}{t('common.credit_cost')}
                 </p>
                 {isLocked && (
-                  <p className="text-xs text-primary mt-1">Uppgradera för att låsa upp</p>
+                  <p className="text-xs text-primary mt-1">{t('common.upgrade_unlock')}</p>
                 )}
               </TooltipContent>
             </Tooltip>
@@ -96,7 +98,7 @@ const ModelTierSelector = ({ value, onChange, compact = false }: ModelTierSelect
       <UpgradePromptOverlay
         open={showUpgrade}
         onClose={() => setShowUpgrade(false)}
-        feature="Standard och Premium AI-modeller"
+        feature={t('common.standard_premium_models')}
       />
     </TooltipProvider>
   );

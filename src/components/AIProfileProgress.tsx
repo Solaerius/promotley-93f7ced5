@@ -2,6 +2,7 @@ import { useAIProfile } from "@/hooks/useAIProfile";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface AIProfileProgressProps {
   compact?: boolean;
@@ -9,16 +10,17 @@ interface AIProfileProgressProps {
 
 export const AIProfileProgress = ({ compact = false }: AIProfileProgressProps) => {
   const { profile, loading } = useAIProfile();
+  const { t } = useTranslation();
 
   if (loading) return null;
 
   const fields = [
-    { key: "foretagsnamn", label: "Företagsnamn" },
-    { key: "branch", label: "Bransch" },
-    { key: "stad", label: "Stad" },
-    { key: "postnummer", label: "Postnummer" },
-    { key: "malgrupp", label: "Målgrupp" },
-    { key: "produkt_beskrivning", label: "Företagsbeskrivning" },
+    { key: "foretagsnamn", label: t('ai_profile_progress.field_company') },
+    { key: "branch",       label: t('ai_profile_progress.field_industry') },
+    { key: "stad",         label: t('ai_profile_progress.field_city') },
+    { key: "postnummer",   label: t('ai_profile_progress.field_postal') },
+    { key: "malgrupp",     label: t('ai_profile_progress.field_audience') },
+    { key: "produkt_beskrivning", label: t('ai_profile_progress.field_description') },
   ];
 
   const filledFields = fields.filter(
@@ -37,7 +39,7 @@ export const AIProfileProgress = ({ compact = false }: AIProfileProgressProps) =
           <AlertCircle className="h-4 w-4 text-amber-500" />
         )}
         <span className="text-sm text-muted-foreground">
-          AI-profil: {filledFields}/{fields.length} fält
+          {t('ai_profile_progress.compact_label')} {filledFields}/{fields.length} {t('ai_profile_progress.compact_fields')}
         </span>
       </div>
     );
@@ -46,14 +48,14 @@ export const AIProfileProgress = ({ compact = false }: AIProfileProgressProps) =
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="flex items-center justify-between mb-2">
-        <h4 className="font-medium text-sm">AI-profil status</h4>
+        <h4 className="font-medium text-sm">{t('ai_profile_progress.title')}</h4>
         {isComplete ? (
           <span className="text-xs text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">
-            Redo
+            {t('ai_profile_progress.complete')}
           </span>
         ) : (
           <span className="text-xs text-amber-600 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
-            Ofullständig
+            {t('ai_profile_progress.incomplete')}
           </span>
         )}
       </div>
@@ -84,7 +86,7 @@ export const AIProfileProgress = ({ compact = false }: AIProfileProgressProps) =
           to="/settings" 
           className="block mt-3 text-xs text-primary hover:underline"
         >
-          Fyll i alla obligatoriska fält för att låsa upp AI-funktioner →
+          {t('ai_profile_progress.fill_link')}
         </Link>
       )}
     </div>

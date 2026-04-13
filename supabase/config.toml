@@ -56,3 +56,7 @@ project_id = "fmvbzhlqzzwzciqgbzgp"
     verify_jwt = false
   [functions.user-profile]
     verify_jwt = true
+  [functions.stripe-portal]
+    verify_jwt = true
+  [functions.stripe-webhook]
+    verify_jwt = false

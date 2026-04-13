@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 export interface MarketingPost {
   date: string;
@@ -109,6 +110,7 @@ export const useMarketingPlan = () => {
   const [activePlan, setActivePlan] = useState<MarketingPlan | null>(null);
   const [isImplementing, setIsImplementing] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const createPlan = async (targets: string[], timeframe: string) => {
     try {
@@ -133,9 +135,9 @@ export const useMarketingPlan = () => {
       return null;
     } catch (err: any) {
       console.error('Error creating marketing plan:', err);
-      const errorMsg = err.message || "Kunde inte skapa marknadsföringsplan.";
+      const errorMsg = err.message || t('toasts.could_not_create_marketing_plan');
       toast({
-        title: "Fel",
+        title: t('common.error'),
         description: errorMsg,
         variant: "destructive",
       });
@@ -171,9 +173,9 @@ export const useMarketingPlan = () => {
       return result;
     } catch (err: any) {
       console.error('Error implementing plan:', err);
-      const errorMsg = err.message || "Kunde inte implementera plan.";
+      const errorMsg = err.message || t('toasts.could_not_implement_plan');
       toast({
-        title: "Fel",
+        title: t('common.error'),
         description: errorMsg,
         variant: "destructive",
       });

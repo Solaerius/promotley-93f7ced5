@@ -1,61 +1,56 @@
 import { Shield, Lock, Eye, FileCheck } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-
-const trustFeatures = [
-  {
-    icon: Lock,
-    title: "AES-256 Kryptering",
-    description: "All din data krypteras med samma standard som banker använder.",
-  },
-  {
-    icon: Eye,
-    title: "Du äger din data",
-    description: "Vi delar aldrig din information. Du kan radera allt när som helst.",
-  },
-  {
-    icon: Shield,
-    title: "GDPR-kompatibelt",
-    description: "Full transparens och kontroll enligt EU:s integritetslagar.",
-  },
-  {
-    icon: FileCheck,
-    title: "Säkra anslutningar",
-    description: "OAuth-integration med Meta & TikTok - inga lösenord sparas.",
-  },
-];
+import { useTranslation } from 'react-i18next';
 
 const TrustSection = () => {
+  const { t } = useTranslation();
+
+  const trustFeatures = [
+    {
+      icon: Lock,
+      title: t('trust.feature1_title'),
+      description: t('trust.feature1_desc'),
+    },
+    {
+      icon: Eye,
+      title: t('trust.feature2_title'),
+      description: t('trust.feature2_desc'),
+    },
+    {
+      icon: Shield,
+      title: t('trust.feature3_title'),
+      description: t('trust.feature3_desc'),
+    },
+    {
+      icon: FileCheck,
+      title: t('trust.feature4_title'),
+      description: t('trust.feature4_desc'),
+    },
+  ];
+
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden">
-      {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-diagonal" />
-      
-      {/* Fluid blur orbs */}
-      <div className="blur-orb blur-orb-secondary w-[500px] h-[500px] top-0 left-0 animate-glow-pulse" />
-      <div className="blur-orb blur-orb-primary w-[400px] h-[400px] bottom-0 right-0 animate-glow-pulse" style={{ animationDelay: '1.5s' }} />
-      
-      {/* Top blend */}
-      <div 
-        className="absolute top-0 left-0 right-0 h-48 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to bottom, hsl(344 55% 12%) 0%, transparent 100%)',
-          filter: 'blur(30px)',
-        }}
-      />
-      
+    <section className="relative py-14 md:py-20 overflow-hidden">
+      {/* Section accent glow */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 50% at 70% 50%, hsl(var(--primary) / 0.1) 0%, transparent 70%)' }} />
+
       <div className="container mx-auto px-4 md:px-6 relative z-10 max-w-6xl">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-6 backdrop-blur-sm">
-            <Shield className="w-4 h-4 text-green-400" />
-            <span className="text-sm font-medium text-white">Säkerhet & Integritet</span>
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+            style={{
+              background: 'hsl(var(--primary) / 0.15)',
+              border: '1px solid hsl(var(--primary) / 0.3)',
+            }}
+          >
+            <Shield className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">{t('trust.badge')}</span>
           </div>
-          
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4" style={{ textWrap: 'balance' }}>
-            Din data är <span className="text-gradient">trygg hos oss</span>
+
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4" style={{ textWrap: 'balance' }}>
+            {t('trust.title')} <span className="text-gradient">{t('trust.title_strong')}</span>
           </h2>
-          <p className="text-lg text-white/70 max-w-2xl mx-auto" style={{ textWrap: 'balance' }}>
-            Vi tar säkerhet och integritet på största allvar
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: 'hsl(var(--muted-foreground))', textWrap: 'balance' }}>
+            {t('trust.subtitle')}
           </p>
         </div>
 
@@ -64,47 +59,55 @@ const TrustSection = () => {
           {trustFeatures.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <Card 
+              <div
                 key={index}
-                className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/[0.15] hover:border-white/30 transition-all duration-300 group"
+                className="rounded-2xl p-6 transition-all duration-300 group"
+                style={{
+                  background: 'hsl(0 0% 100% / 0.04)',
+                  border: '1px solid hsl(0 0% 100% / 0.08)',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLDivElement).style.background = 'hsl(0 0% 100% / 0.07)';
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'hsl(0 0% 100% / 0.14)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLDivElement).style.background = 'hsl(0 0% 100% / 0.04)';
+                  (e.currentTarget as HTMLDivElement).style.borderColor = 'hsl(0 0% 100% / 0.08)';
+                }}
               >
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <Icon className="w-6 h-6 text-green-400" />
-                  </div>
-                  <h3 className="font-semibold text-white mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-white/60 leading-relaxed">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: 'hsl(0 0% 100% / 0.06)' }}
+                >
+                  <Icon className="w-6 h-6 text-green-400" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {feature.description}
+                </p>
+              </div>
             );
           })}
         </div>
 
         {/* Bottom Trust Badge */}
         <div className="mt-12 text-center">
-          <Card className="inline-block bg-white/10 border-white/20 backdrop-blur-sm">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Lock className="w-5 h-5 text-white/60" />
-              <p className="text-sm text-white/60">
-                256-bit SSL • Data lagras säkert inom EU • GDPR-kompatibel
-              </p>
-            </CardContent>
-          </Card>
+          <div
+            className="inline-flex items-center gap-3 px-5 py-3 rounded-full"
+            style={{
+              background: 'hsl(0 0% 100% / 0.04)',
+              border: '1px solid hsl(0 0% 100% / 0.08)',
+            }}
+          >
+            <Lock className="w-5 h-5 shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
+            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              {t('trust.footer')}
+            </p>
+          </div>
         </div>
       </div>
-      
-      {/* Bottom blend */}
-      <div 
-        className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to top, hsl(344 55% 12%) 0%, transparent 100%)',
-          filter: 'blur(30px)',
-        }}
-      />
     </section>
   );
 };

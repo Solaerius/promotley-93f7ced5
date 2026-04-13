@@ -953,6 +953,65 @@ export type Database = {
           },
         ]
       }
+      organization_profiles: {
+        Row: {
+          city: string | null
+          created_at: string
+          facebook_page: string | null
+          goals: string | null
+          id: string
+          industry: string | null
+          instagram_handle: string | null
+          organization_id: string
+          target_audience: string | null
+          tiktok_handle: string | null
+          tone: string | null
+          unique_properties: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          facebook_page?: string | null
+          goals?: string | null
+          id?: string
+          industry?: string | null
+          instagram_handle?: string | null
+          organization_id: string
+          target_audience?: string | null
+          tiktok_handle?: string | null
+          tone?: string | null
+          unique_properties?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          facebook_page?: string | null
+          goals?: string | null
+          id?: string
+          industry?: string | null
+          instagram_handle?: string | null
+          organization_id?: string
+          target_audience?: string | null
+          tiktok_handle?: string | null
+          tone?: string | null
+          unique_properties?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -1254,6 +1313,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stripe_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       suggestions: {
         Row: {

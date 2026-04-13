@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { TrendingUp, TrendingDown, Instagram } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 const BeforeAfterSlider = () => {
+  const { t } = useTranslation();
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -9,18 +11,18 @@ const BeforeAfterSlider = () => {
 
   const beforeStats = {
     metrics: [
-      { label: "Följare", value: "1,234", change: "-3%", trending: "down" as const },
-      { label: "Engagemang", value: "2.1%", change: "-0.8%", trending: "down" as const },
-      { label: "Räckvidd", value: "3.2k", change: "-12%", trending: "down" as const },
+      { label: t('before_after.followers'), value: "1,234", change: "-3%", trending: "down" as const },
+      { label: t('before_after.engagement'), value: "2.1%", change: "-0.8%", trending: "down" as const },
+      { label: t('before_after.reach'), value: "3.2k", change: "-12%", trending: "down" as const },
       { label: "CTR", value: "0.9%", change: "-0.3%", trending: "down" as const },
     ]
   };
 
   const afterStats = {
     metrics: [
-      { label: "Följare", value: "5,847", change: "+124%", trending: "up" as const },
-      { label: "Engagemang", value: "8.4%", change: "+6.3%", trending: "up" as const },
-      { label: "Räckvidd", value: "15.2k", change: "+12k", trending: "up" as const },
+      { label: t('before_after.followers'), value: "5,847", change: "+124%", trending: "up" as const },
+      { label: t('before_after.engagement'), value: "8.4%", change: "+6.3%", trending: "up" as const },
+      { label: t('before_after.reach'), value: "15.2k", change: "+12k", trending: "up" as const },
       { label: "CTR", value: "3.8%", change: "+2.9%", trending: "up" as const },
     ]
   };
@@ -98,7 +100,7 @@ const BeforeAfterSlider = () => {
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="relative overflow-hidden select-none bg-card rounded-lg min-h-[350px]"
       onMouseMove={handleMouseMove}
@@ -109,12 +111,12 @@ const BeforeAfterSlider = () => {
     >
       {/* Dynamic Label in Center */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-        <div 
+        <div
           className={`font-semibold text-sm uppercase tracking-wide transition-colors duration-300 ${
             sliderPosition < 50 ? "text-destructive" : "text-accent"
           }`}
         >
-          {sliderPosition < 50 ? "Före" : "Efter"}
+          {sliderPosition < 50 ? t('before_after.before') : t('before_after.after')}
         </div>
       </div>
 
@@ -127,7 +129,7 @@ const BeforeAfterSlider = () => {
           </div>
           <div>
             <h2 className="text-2xl font-bold">Instagram</h2>
-            <p className="text-sm text-muted-foreground">Senaste 30 dagarna</p>
+            <p className="text-sm text-muted-foreground">{t('before_after.period')}</p>
           </div>
         </div>
 
@@ -149,7 +151,7 @@ const BeforeAfterSlider = () => {
       </div>
 
       {/* After Stats Card - Revealed by slider */}
-      <div 
+      <div
         className="absolute inset-0 p-6 bg-card"
         style={{
           clipPath: `inset(0 ${100 - sliderPosition}% 0 0)`,
@@ -162,7 +164,7 @@ const BeforeAfterSlider = () => {
           </div>
           <div>
             <h2 className="text-2xl font-bold">Instagram</h2>
-            <p className="text-sm text-muted-foreground">Senaste 30 dagarna</p>
+            <p className="text-sm text-muted-foreground">{t('before_after.period')}</p>
           </div>
         </div>
 
@@ -190,9 +192,9 @@ const BeforeAfterSlider = () => {
       >
         {/* Vertical line extending from top to bottom */}
         <div className="absolute top-0 bottom-12 left-1/2 -translate-x-1/2 w-1 bg-primary shadow-glow pointer-events-none"></div>
-        
+
         {/* Handle circle at bottom - draggable */}
-        <div 
+        <div
           className="absolute bottom-12 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-primary shadow-elegant flex items-center justify-center cursor-ew-resize"
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
@@ -206,7 +208,7 @@ const BeforeAfterSlider = () => {
 
       {/* Helper Text */}
       <div className="absolute bottom-4 left-0 right-0 text-center text-muted-foreground text-sm pointer-events-none z-20">
-        Dra slidern för att se förbättringen
+        {t('before_after.drag_hint')}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -59,6 +60,7 @@ const VideoCard = ({ video }: { video: TikTokVideo }) => {
 };
 
 const TikTokProfileSection = () => {
+  const { t } = useTranslation();
   const { user, stats, videos, pagination, scopeInfo, loading, loadingMore, error, limited_access, scope_message, refetch, loadMoreVideos } = useTikTokData();
 
   if (loading) {
@@ -73,7 +75,7 @@ const TikTokProfileSection = () => {
     return (
       <div className="rounded-xl bg-card shadow-sm p-6 text-center">
         <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-destructive" />
-        <p className="text-sm font-medium text-foreground mb-1">Kunde inte ladda TikTok-data</p>
+        <p className="text-sm font-medium text-foreground mb-1">{t('toasts.could_not_fetch_tiktok')}</p>
         <p className="text-xs text-muted-foreground mb-3">{error.message}</p>
         <Button variant="outline" size="sm" onClick={refetch}>Forsok igen</Button>
       </div>
@@ -191,7 +193,7 @@ const TikTokProfileSection = () => {
             </div>
           ) : (
             <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground">Inga publika videor hittades</p>
+              <p className="text-sm text-muted-foreground">{t('common.no_public_videos')}</p>
             </div>
           )
         ) : (

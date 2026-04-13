@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,14 +26,15 @@ interface MetaData {
   facebook: FacebookData | null;
 }
 
-export const useMetaData = () => {
+export const useMetaData = ({ enabled = true }: { enabled?: boolean } = {}) => {
   const [data, setData] = useState<MetaData>({
     instagram: null,
     facebook: null,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchMetaData = async () => {
     try {
@@ -78,7 +80,7 @@ export const useMetaData = () => {
       // Only show toast if it's not a "no connections" error
       if (!error.message.includes('No Instagram or Facebook connections')) {
         toast({
-          title: 'Kunde inte hämta Meta-data',
+          title: t('toasts.could_not_fetch_meta'),
           description: error.message,
           variant: 'destructive',
         });
@@ -89,8 +91,9 @@ export const useMetaData = () => {
   };
 
   useEffect(() => {
+    if (!enabled) return;
     fetchMetaData();
-  }, []);
+  }, [enabled]);
 
   return {
     ...data,

@@ -8,6 +8,7 @@ import { useProfileCompleteness } from '@/hooks/useProfileCompleteness';
 import { IncompleteProfileModal } from '@/components/IncompleteProfileModal';
 import ModelTierSelector from '@/components/ai/ModelTierSelector';
 import { type ModelTier } from '@/lib/modelTiers';
+import { useTranslation } from 'react-i18next';
 
 interface AIToolPageLayoutProps {
   title: string;
@@ -21,6 +22,7 @@ interface AIToolPageLayoutProps {
 
 const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children, modelTier, onModelTierChange }: AIToolPageLayoutProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { isProfileComplete, missingFields, showModal, setShowModal } = useProfileCompleteness();
 
   return (
@@ -64,12 +66,12 @@ const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children, 
               onClick={() => setShowModal(true)}
             >
               <div className="bg-card border rounded-xl p-6 text-center shadow-lg max-w-sm mx-4">
-                <p className="font-semibold text-lg mb-2">Företagsinformation saknas</p>
+                <p className="font-semibold text-lg mb-2">{t('ai_tool_layout.company_missing_title')}</p>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Fyll i obligatorisk företagsinformation för att använda AI-verktyg.
+                  {t('ai_tool_layout.company_missing_desc')}
                 </p>
                 <Button variant="gradient" onClick={() => setShowModal(true)}>
-                  Fyll i information
+                  {t('ai_tool_layout.company_fill_btn')}
                 </Button>
               </div>
             </div>

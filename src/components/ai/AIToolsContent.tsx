@@ -7,62 +7,28 @@ import {
   Calendar, 
   Lightbulb, 
   Target,
-  Sparkles,
+  Wand2,
   ArrowRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAIProfile } from "@/hooks/useAIProfile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const tools = [
-  {
-    icon: FileText,
-    title: "Caption-generator",
-    description: "Skapa engagerande captions för dina inlägg",
-    color: "from-orange-500 to-red-500",
-    route: "/ai/caption"
-  },
-  {
-    icon: Hash,
-    title: "Hashtag-förslag",
-    description: "Få relevanta hashtags för ökad räckvidd",
-    color: "from-blue-500 to-cyan-500",
-    route: "/ai/hashtags"
-  },
-  {
-    icon: Image,
-    title: "Content-idéer",
-    description: "Brainstorma nya innehållsidéer",
-    color: "from-purple-500 to-pink-500",
-    route: "/ai/content-ideas"
-  },
-  {
-    icon: Calendar,
-    title: "Veckoplanering",
-    description: "Planera din innehållskalender",
-    color: "from-green-500 to-emerald-500",
-    route: "/ai/weekly-plan"
-  },
-  {
-    icon: Target,
-    title: "Kampanjstrategi",
-    description: "Bygg en strategi för din nästa kampanj",
-    color: "from-amber-500 to-orange-500",
-    route: "/ai/campaign"
-  },
-  {
-    icon: Lightbulb,
-    title: "UF-tips",
-    description: "Få råd specifikt för UF-företag",
-    color: "from-indigo-500 to-purple-500",
-    route: "/ai/uf-tips"
-  },
-];
-
 const AIToolsContent = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const tools = [
+    { icon: FileText, title: t('tools.caption_title'), description: t('tools.caption_desc'), color: "from-orange-500 to-red-500", route: "/ai/caption" },
+    { icon: Hash, title: t('tools.hashtag_title'), description: t('tools.hashtag_desc'), color: "from-blue-500 to-cyan-500", route: "/ai/hashtags" },
+    { icon: Image, title: t('tools.content_title'), description: t('tools.content_desc'), color: "from-purple-500 to-pink-500", route: "/ai/content-ideas" },
+    { icon: Calendar, title: t('tools.weekly_title'), description: t('tools.weekly_desc'), color: "from-green-500 to-emerald-500", route: "/ai/weekly-plan" },
+    { icon: Target, title: t('tools.campaign_title'), description: t('tools.campaign_desc'), color: "from-amber-500 to-orange-500", route: "/ai/campaign" },
+    { icon: Lightbulb, title: t('tools.uf_title'), description: t('tools.uf_desc'), color: "from-indigo-500 to-purple-500", route: "/ai/uf-tips" },
+  ];
   const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
 
   const filledFields = aiProfile ? [
@@ -102,7 +68,7 @@ const AIToolsContent = () => {
               </div>
               <CardTitle className="text-lg flex items-center justify-between dashboard-heading-dark">
                 {tool.title}
-                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-white" />
+                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-foreground" />
               </CardTitle>
               <CardDescription className="dashboard-subheading-dark">{tool.description}</CardDescription>
             </CardHeader>
@@ -115,7 +81,7 @@ const AIToolsContent = () => {
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-white" />
+              <Wand2 className="w-6 h-6 text-white" />
             </div>
             <div>
               <h3 className="font-semibold mb-1 dashboard-heading-dark">AI-profil viktigt!</h3>

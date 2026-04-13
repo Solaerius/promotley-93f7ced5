@@ -1,3 +1,4 @@
+// Admin pages are Swedish-only (internal use). i18n not applied here.
 import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
