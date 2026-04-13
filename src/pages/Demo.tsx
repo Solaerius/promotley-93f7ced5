@@ -11,7 +11,7 @@ import {
   TrendingUp, Users, Calendar, Zap, BarChart3, MessageSquare,
   ArrowRight, Wand2, Radar, Hash, Film, MessageCircle, Star,
   Leaf, Handshake, CalendarDays, Share2, Send, Lock, LogIn,
-  LayoutDashboard, User, Wand2, FileText, Image, Target, Lightbulb,
+  LayoutDashboard, User, FileText, Image, Target, Lightbulb,
   ThumbsUp,
 } from 'lucide-react';
 import {
