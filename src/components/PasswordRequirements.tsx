@@ -43,6 +43,9 @@ const PasswordRequirements = ({ password }: PasswordRequirementsProps) => {
           <span>{req.text}</span>
         </div>
       ))}
+      <p className="text-xs text-muted-foreground pt-1">
+        Obs: vanliga eller tidigare läckta lösenord blockeras också. Använd ett helt unikt lösenord, gärna 16+ tecken eller en lång lösenordsfras.
+      </p>
     </div>
   );
 };
