@@ -41,12 +41,13 @@ serve(async (req) => {
       );
     }
 
+    // Use service role client to validate the user token (same pattern as init-meta-oauth)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
-      console.error('User authentication failed:', userError);
+      console.error('User authentication failed:', JSON.stringify(userError));
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         {

@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const MAIL_FROM = Deno.env.get("MAIL_FROM") || "Promotely UF <support@promotley.se>";
-const APP_ORIGIN = Deno.env.get("APP_ORIGIN") || "https://promotley.lovable.app";
+const APP_ORIGIN = Deno.env.get("APP_ORIGIN") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 

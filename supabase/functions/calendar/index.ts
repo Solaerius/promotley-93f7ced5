@@ -1,9 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-
-const URL = Deno.env.get('SUPABASE_URL')!;
-const ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
-const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,28 +6,32 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
 };
 
-serve(async (req) => {
+const VALID_EVENT_TYPES = ['inlagg', 'uf_marknad', 'event', 'deadline', 'ovrigt'];
+const VALID_PLATFORMS = ['instagram', 'tiktok', 'facebook'];
+
+Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     // Extract and validate JWT
-    const authHeader = req.headers.get('Authorization') ?? '';
-    const jwt = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-    
-    if (!jwt) {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized: missing_jwt' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // 1) Validate JWT with service role client
-    const adminClient = createClient(URL, SERVICE, { auth: { persistSession: false } });
-    const { data: { user }, error: userError } = await adminClient.auth.getUser(jwt);
-    
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
     if (userError || !user) {
       console.error('JWT validation failed:', userError);
       return new Response(
@@ -42,6 +41,7 @@ serve(async (req) => {
     }
 
     // Rate limiting
+    const adminClient = supabase;
     const { data: rateLimitOk } = await adminClient.rpc('check_rate_limit', {
       _user_id: user.id,
       _endpoint: 'calendar'
@@ -53,18 +53,15 @@ serve(async (req) => {
       );
     }
 
-    // 2) DB client with anon key + forwarded JWT for RLS
-    const db = createClient(URL, ANON, {
-      global: { headers: { Authorization: `Bearer ${jwt}` } },
-      auth: { persistSession: false }
-    });
+    // DB client (service role — all queries filter by user_id)
+    const db = supabase;
 
     // Helper functions
     const ok = (data: any, status = 200) => new Response(
       JSON.stringify(data),
       { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-    
+
     const bad = (msg: string, status = 400) => ok({ error: msg }, status);
 
     // Helper: fetch list of posts
@@ -92,7 +89,6 @@ serve(async (req) => {
     try {
       body = await req.json();
     } catch {
-      // Body parsing failed - that's OK, we'll default to 'list'
       body = null;
     }
 
@@ -126,11 +122,12 @@ serve(async (req) => {
           return bad(error.message, 500);
         }
 
-        // Create digest
+        // Create digest including event_type
         const digest = (data || []).map(post => ({
           id: post.id,
           date: post.date,
-          channel: post.platform,
+          event_type: post.event_type ?? 'inlagg',
+          channel: post.platform ?? null,
           title: post.title,
           tags: post.description?.substring(0, 50) || ''
         }));
@@ -143,14 +140,18 @@ serve(async (req) => {
       }
 
       case 'create': {
-        const { title, description, platform, date } = dataIn ?? {};
+        const { title, description, event_type, platform, date } = dataIn ?? {};
 
-        if (!title || !platform || !date) {
-          return bad('Missing required fields: title, platform, date');
+        if (!title || !event_type || !date) {
+          return bad('Missing required fields: title, event_type, date');
         }
 
-        if (!['instagram', 'tiktok', 'facebook'].includes(String(platform))) {
-          return bad('Invalid platform. Must be: instagram, tiktok, or facebook');
+        if (!VALID_EVENT_TYPES.includes(String(event_type))) {
+          return bad(`Invalid event_type. Must be one of: ${VALID_EVENT_TYPES.join(', ')}`);
+        }
+
+        if (platform && !VALID_PLATFORMS.includes(String(platform))) {
+          return bad(`Invalid platform. Must be one of: ${VALID_PLATFORMS.join(', ')}`);
         }
 
         const { data, error } = await db
@@ -159,7 +160,8 @@ serve(async (req) => {
             user_id: user.id,
             title,
             description: description ?? '',
-            platform,
+            event_type,
+            platform: platform ?? null,
             date
           })
           .select()
@@ -186,15 +188,21 @@ serve(async (req) => {
 
         for (const post of posts) {
           const title = post?.title;
-          const platform = post?.channel;
+          const event_type = post?.event_type ?? 'inlagg';
+          const platform = post?.channel ?? post?.platform ?? null;
           const date = post?.date;
 
-          if (!title || !platform || !date) {
+          if (!title || !date) {
             skipped.push({ reason: 'missing_fields', post });
             continue;
           }
 
-          if (!['instagram', 'tiktok', 'facebook'].includes(String(platform))) {
+          if (!VALID_EVENT_TYPES.includes(String(event_type))) {
+            skipped.push({ reason: 'invalid_event_type', post });
+            continue;
+          }
+
+          if (platform && !VALID_PLATFORMS.includes(String(platform))) {
             skipped.push({ reason: 'invalid_platform', post });
             continue;
           }
@@ -204,7 +212,7 @@ serve(async (req) => {
             .from('calendar_posts')
             .select('id')
             .eq('user_id', user.id)
-            .eq('platform', platform)
+            .eq('event_type', event_type)
             .eq('date', date)
             .eq('title', title)
             .maybeSingle();
@@ -220,7 +228,8 @@ serve(async (req) => {
               user_id: user.id,
               title,
               description: post?.content ?? '',
-              platform,
+              event_type,
+              platform: platform ?? null,
               date
             })
             .select()
@@ -245,8 +254,12 @@ serve(async (req) => {
           return bad('Missing id');
         }
 
-        if (patch.platform && !['instagram', 'tiktok', 'facebook'].includes(String(patch.platform))) {
-          return bad('Invalid platform');
+        if (patch.event_type && !VALID_EVENT_TYPES.includes(String(patch.event_type))) {
+          return bad(`Invalid event_type. Must be one of: ${VALID_EVENT_TYPES.join(', ')}`);
+        }
+
+        if (patch.platform && !VALID_PLATFORMS.includes(String(patch.platform))) {
+          return bad(`Invalid platform. Must be one of: ${VALID_PLATFORMS.join(', ')}`);
         }
 
         if (patch.date && !/^\d{4}-\d{2}-\d{2}$/.test(patch.date)) {

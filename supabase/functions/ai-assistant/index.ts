@@ -79,20 +79,20 @@ function sanitizeUserMessage(message: string): { sanitized: string; flagged: boo
 
 // Model tier configuration with model pools for AI Council routing
 const MODEL_TIER_CONFIG: Record<string, { defaultModel: string; modelPool: string[]; multiplier: number }> = {
-  fast: { 
-    defaultModel: 'google/gemini-2.5-flash-lite', 
-    modelPool: ['google/gemini-2.5-flash-lite', 'openai/gpt-5-nano'],
-    multiplier: 0.5 
+  fast: {
+    defaultModel: 'gpt-4o-mini',
+    modelPool: ['gpt-4o-mini'],
+    multiplier: 0.5
   },
-  standard: { 
-    defaultModel: 'google/gemini-3-flash-preview', 
-    modelPool: ['google/gemini-3-flash-preview', 'google/gemini-2.5-flash', 'openai/gpt-5-mini'],
-    multiplier: 1 
+  standard: {
+    defaultModel: 'gpt-4o',
+    modelPool: ['gpt-4o', 'gpt-4o-mini'],
+    multiplier: 1
   },
-  premium: { 
-    defaultModel: 'google/gemini-2.5-pro', 
-    modelPool: ['google/gemini-2.5-pro', 'google/gemini-3-pro-preview', 'openai/gpt-5', 'openai/gpt-5.2'],
-    multiplier: 2 
+  premium: {
+    defaultModel: 'gpt-4o',
+    modelPool: ['gpt-4o'],
+    multiplier: 2
   },
 };
 
@@ -134,7 +134,7 @@ User context:
 
 Respond with ONLY the model name, nothing else.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -275,17 +275,17 @@ serve(async (req) => {
 
     console.log('📍 Action:', action, 'Path:', url.pathname);
 
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     
-    if (!lovableApiKey) {
-      console.error('❌ LOVABLE_API_KEY not found');
+    if (!openaiApiKey) {
+      console.error('❌ OPENAI_API_KEY not found');
       return new Response(
         JSON.stringify({ error: 'AI not connected', placeholder: true }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('✅ Lovable AI Gateway key found');
+    console.log('✅ OpenAI key found');
 
     // Helper function to get user stats with caching
     const getUserStats = async (userId: string, platform?: string) => {
@@ -527,10 +527,10 @@ Skapa minst 10-15 inlägg spridda jämnt över tidsperioden. Variera kanaler (in
         // Use premium model for marketing plans regardless of tier selection
         const planModel = modelTier === 'fast' ? 'google/gemini-2.5-flash' : 'google/gemini-2.5-pro';
         
-        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${lovableApiKey}`,
+            'Authorization': `Bearer ${openaiApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -721,7 +721,7 @@ ${items.map((k: any) => `### ${k.title}\nFULL INNEHÅLL:\n${k.content}`).join('\
       else if (lowerMsg.includes('caption') || lowerMsg.includes('text') || lowerMsg.includes('skriv')) taskTypeHint = 'creative';
       else if (lowerMsg.includes('hashtag') || lowerMsg.includes('idé')) taskTypeHint = 'creative';
       
-      const aiModel = await routeRequest(message, modelTier, lovableApiKey, {
+      const aiModel = await routeRequest(message, modelTier, openaiApiKey, {
         hasProfile: !!userContext.profile,
         taskType: taskTypeHint,
       });
@@ -872,7 +872,7 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
         }
       ];
 
-      console.log('Calling Lovable AI Gateway...');
+      console.log('Calling OpenAI...');
 
       // Call OpenAI API with tool calling support
       // Use dynamic model based on user plan
@@ -888,10 +888,10 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
         requestBody.tool_choice = 'auto';
       }
 
-      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${lovableApiKey}`,
+          'Authorization': `Bearer ${openaiApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
@@ -1106,10 +1106,10 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
             }
           ];
 
-          const followUpResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${lovableApiKey}`,
+              'Authorization': `Bearer ${openaiApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -1246,10 +1246,10 @@ Returnera ENDAST ett JSON-objekt (ingen annan text före eller efter) med följa
 
 Skapa minst 10-15 inlägg spridda jämnt över tidsperioden. Variera kanaler (instagram, tiktok, facebook). Alla datum måste vara mellan ${now.toISOString().split('T')[0]} och ${endDate.toISOString().split('T')[0]}. Gör innehållet relevant för UF-företag.`;
 
-      const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${lovableApiKey}`,
+          'Authorization': `Bearer ${openaiApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

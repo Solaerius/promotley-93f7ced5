@@ -9,7 +9,7 @@ const corsHeaders = {
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const MAIL_FROM = Deno.env.get("MAIL_FROM") || "Promotely UF <support@promotley.se>";
 const MAIL_REPLY_TO = Deno.env.get("MAIL_REPLY_TO") || "Promotely UF <support@promotley.se>";
-const APP_ORIGIN = Deno.env.get("APP_ORIGIN") || "https://promotley.lovable.app";
+const APP_ORIGIN = Deno.env.get("APP_ORIGIN") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -163,11 +163,19 @@ serve(async (req) => {
   }
 
   try {
-    // Validate API key exists
+    // Validate required secrets
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY not configured");
       return new Response(
         JSON.stringify({ error: "email_service_not_configured" }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!APP_ORIGIN) {
+      console.error("APP_ORIGIN not configured — verification link will be broken");
+      return new Response(
+        JSON.stringify({ error: "app_origin_not_configured" }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
