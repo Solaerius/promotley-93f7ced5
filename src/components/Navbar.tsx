@@ -51,6 +51,8 @@ const Navbar = ({ logoStripRef }: NavbarProps) => {
     if (scrolled) setMobileOpen(false);
   }, [scrolled]);
 
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
   const pillVariants = {
     full: {
       maxWidth: "100%",
@@ -64,7 +66,7 @@ const Navbar = ({ logoStripRef }: NavbarProps) => {
       maxWidth: "100%",
       borderRadius: 0,
       marginTop: 0,
-      backgroundColor: "rgba(245,245,248,0.97)",
+      backgroundColor: isDark ? "rgba(20,10,15,0.97)" : "rgba(245,245,248,0.97)",
       borderColor: "rgba(0,0,0,0)",
       boxShadow: "none",
     },
@@ -72,9 +74,9 @@ const Navbar = ({ logoStripRef }: NavbarProps) => {
       maxWidth: 720,
       borderRadius: 9999,
       marginTop: 12,
-      backgroundColor: "rgba(245,245,248,0.88)",
-      borderColor: "rgba(200,200,210,0.5)",
-      boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+      backgroundColor: isDark ? "rgba(20,10,15,0.88)" : "rgba(245,245,248,0.88)",
+      borderColor: isDark ? "rgba(60,40,50,0.5)" : "rgba(200,200,210,0.5)",
+      boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.4)" : "0 8px 32px rgba(0,0,0,0.15)",
     },
   };
 
