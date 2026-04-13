@@ -28,11 +28,14 @@ const AdminStripeOrders = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const { data, loading, error } = useSupabaseQuery(
-    () =>
-      supabase
-        .from("stripe_subscriptions")
-        .select("*, users!user_id(email)")
-        .order("created_at", { ascending: false }),
+    async () => {
+      const { data, error } = await supabase
+        .from("stripe_subscriptions" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
     []
   );
 

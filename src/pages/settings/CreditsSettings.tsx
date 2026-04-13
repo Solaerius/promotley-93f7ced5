@@ -52,7 +52,7 @@ export function CreditsSettingsInner() {
     const checkStripeSubscription = async () => {
       if (!user?.id) return;
       const { data } = await supabase
-        .from("stripe_subscriptions")
+        .from('stripe_subscriptions' as any)
         .select("id")
         .eq("user_id", user.id)
         .eq("status", "active")
