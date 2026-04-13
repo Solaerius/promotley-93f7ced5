@@ -51,6 +51,7 @@
     --gradient-diagonal: linear-gradient(135deg, hsl(344 55% 12%) 0%, hsl(331 65% 28%) 40%, hsl(9 85% 48%) 100%);
     --gradient-warm: linear-gradient(135deg, hsl(9 84% 52% / 0.12) 0%, hsl(331 65% 35% / 0.08) 100%);
     --gradient-text: linear-gradient(135deg, hsl(10 84% 62%) 0%, hsl(326 60% 55%) 50%, hsl(347 45% 40%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(210 40% 98%) 0%, hsl(214 32% 95%) 50%, hsl(210 40% 96%) 100%);
     
     /* Shadows (+30% deeper) */
     --shadow-xs: 0 1px 3px hsl(344 45% 10% / 0.08);
@@ -111,6 +112,7 @@
     --gradient-diagonal: linear-gradient(135deg, hsl(347 40% 10%) 0%, hsl(326 55% 25%) 40%, hsl(10 75% 45%) 100%);
     --gradient-warm: linear-gradient(135deg, hsl(10 84% 58% / 0.15) 0%, hsl(326 60% 42% / 0.1) 100%);
     --gradient-text: linear-gradient(135deg, hsl(10 84% 62%) 0%, hsl(326 60% 55%) 50%, hsl(347 45% 40%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(347 40% 5%) 0%, hsl(347 30% 13%) 50%, hsl(347 35% 8%) 100%);
     --accent-brand: 10 84% 65%;
     --brand-wine: 347 45% 14%;
     --gradient-hero-bg: 347 40% 5%;
@@ -198,6 +200,24 @@
   .divider { @apply h-px w-full bg-gradient-to-r from-transparent via-border to-transparent; }
   .input-field { @apply w-full px-4 py-3 rounded-xl bg-background border-2 text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30; border-color: var(--outline-subtle); box-shadow: var(--shadow-input); }
   .input-field:focus { border-color: var(--outline-subtle-focus); box-shadow: var(--shadow-input-focus); }
+
+  /* Liquid glass — glasmorfism used by v2 components */
+  .liquid-glass {
+    @apply rounded-2xl border border-border/30 shadow-sm;
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .liquid-glass-light {
+    @apply rounded-2xl border border-border/20 shadow-xs;
+    background: hsl(var(--card) / 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Dashboard text helpers */
+  .dashboard-heading-dark { color: hsl(var(--foreground)); }
+  .dashboard-subheading-dark { color: hsl(var(--muted-foreground)); }
 
   /* Ambient glow orbs used in Hero section */
   .blur-orb {
