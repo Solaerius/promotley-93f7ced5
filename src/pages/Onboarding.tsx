@@ -162,7 +162,7 @@ export default function Onboarding() {
         .from("ai_profiles")
         .upsert(
           [{
-            user_id: user.id as any,
+            user_id: user.id,
             foretagsnamn: formData.foretagsnamn,
             branch: formData.branch,
             stad: formData.stad,
@@ -176,7 +176,7 @@ export default function Onboarding() {
             tonalitet: formData.tonalitet || null,
             allman_info: formData.allman_info || null,
             onboarding_completed: true,
-          },
+          }],
           { onConflict: "user_id" }
         );
 
