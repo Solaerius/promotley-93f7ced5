@@ -51,7 +51,15 @@ const Navbar = ({ logoStripRef }: NavbarProps) => {
     if (scrolled) setMobileOpen(false);
   }, [scrolled]);
 
-  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const [isDark, setIsDark] = useState(() => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   const pillVariants = {
     full: {
