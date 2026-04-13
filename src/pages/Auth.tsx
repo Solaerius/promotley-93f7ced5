@@ -202,6 +202,8 @@ const Auth = () => {
           errorMessage = "Ett konto med denna e-post finns redan.";
         } else if (result.error.message.includes("Email not confirmed")) {
           errorMessage = "Bekräfta din e-post innan du loggar in.";
+        } else if (result.error.message.includes("weak") || result.error.message.includes("pwned") || result.error.code === "weak_password") {
+          errorMessage = "Lösenordet är för vanligt och har läckt i dataintrång. Välj ett starkare lösenord.";
         }
 
         toast({
@@ -300,7 +302,7 @@ const Auth = () => {
       }
 
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
       });
 
       if (error) {
