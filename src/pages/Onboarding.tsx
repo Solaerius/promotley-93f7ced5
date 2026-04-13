@@ -161,7 +161,7 @@ export default function Onboarding() {
       const { error: profileError } = await supabase
         .from("ai_profiles")
         .upsert(
-          {
+          [{
             user_id: user.id as any,
             foretagsnamn: formData.foretagsnamn,
             branch: formData.branch,
