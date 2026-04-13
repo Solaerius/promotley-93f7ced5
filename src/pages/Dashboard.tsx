@@ -403,9 +403,9 @@ const Dashboard = () => {
                     .slice(0, 3)
                     .map((video) => (
                       <div key={video.id} className="flex items-center gap-3 rounded-xl p-2.5 bg-surface-raised border border-border/50">
-                        {video.cover_image_url ? (
+                        {(video as any).cover_image_url ? (
                           <img
-                            src={video.cover_image_url}
+                            src={(video as any).cover_image_url}
                             alt=""
                             className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
                           />
@@ -421,8 +421,8 @@ const Dashboard = () => {
                             {formatNumber(video.comments)}
                           </span>
                         </div>
-                        {video.share_url && (
-                          <a href={video.share_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+                        {(video as any).share_url && (
+                          <a href={(video as any).share_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
                             <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-foreground transition-colors" />
                           </a>
                         )}
@@ -454,8 +454,8 @@ const Dashboard = () => {
                     </h2>
                   </div>
                   <div className="flex gap-3">
-                    {topVideo.cover_image_url ? (
-                      <img src={topVideo.cover_image_url} alt="" className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                    {(topVideo as any).cover_image_url ? (
+                      <img src={(topVideo as any).cover_image_url} alt="" className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
                     ) : (
                       <div className="w-16 h-16 rounded-xl bg-muted flex-shrink-0" />
                     )}

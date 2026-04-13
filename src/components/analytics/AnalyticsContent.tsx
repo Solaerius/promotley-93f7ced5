@@ -125,8 +125,8 @@ const HookDatabaseSection = ({ videos, t }: { videos: any[]; t: (key: string) =>
           <div className="space-y-2">
             {topVideos.map((v) => (
               <div key={v.id} className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/40">
-                {v.cover_image_url ? (
-                  <img src={v.cover_image_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                {(v as any).cover_image_url ? (
+                  <img src={(v as any).cover_image_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
                 ) : (
                   <div className="w-8 h-8 rounded bg-muted flex-shrink-0" />
                 )}
@@ -534,8 +534,8 @@ const AnalyticsContent = () => {
                     <tr key={v.id} className={`border-t border-border/40 ${i % 2 === 0 ? '' : 'bg-muted/20'}`}>
                       <td className="px-3 py-2.5 max-w-[180px]">
                         <div className="flex items-center gap-2">
-                          {v.cover_image_url ? (
-                            <img src={v.cover_image_url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
+                          {(v as any).cover_image_url ? (
+                            <img src={(v as any).cover_image_url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
                           ) : (
                             <div className="w-7 h-7 rounded bg-muted flex-shrink-0" />
                           )}

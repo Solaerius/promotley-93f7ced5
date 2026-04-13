@@ -162,7 +162,7 @@ export default function Onboarding() {
         .from("ai_profiles")
         .upsert(
           {
-            user_id: user.id,
+            user_id: user.id as any,
             foretagsnamn: formData.foretagsnamn,
             branch: formData.branch,
             stad: formData.stad,

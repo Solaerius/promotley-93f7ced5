@@ -24,7 +24,7 @@ const Tutorial = () => {
   const handleRestartTutorial = async () => {
     if (user?.id) {
       await supabase
-        .from("profiles")
+        .from("ai_profiles")
         .update({ tutorial_seen: false })
         .eq("user_id", user.id);
     }
