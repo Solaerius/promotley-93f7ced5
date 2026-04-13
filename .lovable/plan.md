@@ -1,137 +1,41 @@
 
 
-# Total Dashboard & App Redesign -- Linear/Vercel-stil
+# Plan: Replace App with V2 -- Single Continuous Phase
 
-## Design System
+## Summary
 
-- **Stil**: Linear/Vercel -- extremt clean, svartvitt, minimal färg
-- **Kort**: Inga borders, mjuka skuggor (`shadow-sm` / `shadow-md`)
-- **Typografi**: Kompakt, tight, Inter-vikt
-- **Bakgrund**: Ren vit (light) / ren svart-grå (dark), ingen gradient, inga orbs
-- **Färg**: Primärfärg bara för accenter (knappar, badges), allt annat neutral
-- **Animationer**: Enkel opacity-fade, inget staggerat
+Extract the v2 ZIP, audit its contents, replace the entire frontend, merge database schemas, adapt all Supabase client imports, install dependencies, and verify the build -- all in one continuous execution.
 
----
+## What stays untouched (auto-managed by Lovable Cloud)
+- `.env` -- auto-generated, never edit
+- `src/integrations/supabase/client.ts` -- auto-generated, never edit
+- `src/integrations/supabase/types.ts` -- auto-generated, never edit
+- All 69 existing database migrations
+- All 15 configured secrets (RESEND_API_KEY, TIKTOK keys, META keys, OPENAI_API_KEY, etc.)
 
-## 1. Sidebar (`AppSidebar.tsx`) -- Rework
+## Single-phase execution order
 
-**Aktiv markering**: Solid bakgrundsfärg + `shadow-sm` på aktiv knapp (tydlig kontrast)
+1. **Extract ZIP** to `/tmp/promotley-v2/` and list full file tree
+2. **Audit v2 structure**: identify Supabase client path, table names, edge functions, dependencies, env var references
+3. **Compare v2 schema vs current schema**: identify new tables needed, column changes, new functions/triggers
+4. **Create database migrations** for any new tables or schema changes v2 requires (using migration tool)
+5. **Delete all current `src/` files** except `src/integrations/supabase/client.ts` and `src/integrations/supabase/types.ts`
+6. **Copy all v2 `src/` files** into place
+7. **Rewrite every Supabase import** in v2 code from whatever path v2 uses to `import { supabase } from "@/integrations/supabase/client"`
+8. **Remove any hardcoded v2 Supabase URL/key references** (`fjasyvhooplekorfubxa.supabase.co`) -- these must come from the auto-managed `.env`
+9. **Replace root config files** with v2 versions: `package.json`, `vite.config.ts`, `tailwind.config.ts`, `index.html`, `tsconfig*.json`, `components.json`, `postcss.config.js`
+10. **Replace `public/`** folder with v2 assets
+11. **Merge edge functions**: add new v2 functions to `supabase/functions/`, update existing ones if v2 has newer versions, keep current functions v2 doesn't touch
+12. **Install dependencies** (`bun install`)
+13. **Build and fix errors** -- resolve any TypeScript/import issues from the client swap
+14. **Verify app loads** without runtime errors
 
-**Dark mode toggle**: Egen knapp i sidebar (alltid synlig), ej i dropdown
+## Risk mitigation
+- All history is preserved in Lovable's revert system
+- Database data is untouched -- only schema additions
+- Secrets persist automatically
+- If v2 needs new secrets not in the current 15, I will use `add_secret` to request them
 
-**Footer**: Avatar + namn + snabbknappar (Inställningar, Logga ut) direkt synliga
-
-**Logo**: Byt från `<img>` till SVG/text som renderas direkt (fixar flicker)
-
-**Krediter**: Behåll i profil-dropdown (tunn bar)
-
-**Ta bort**: "Flytta navbar"-knappen (den ger inget värde med sidebar)
-
----
-
-## 2. DashboardLayout (`DashboardLayout.tsx`) -- Cleanup
-
-- Ta bort gradient-bakgrund, byt till `bg-background` (ren vit/svart)
-- Behåll content header med notis-klocka + SidebarTrigger
-- Ta bort `motion` wrapper runt main (onödig re-render vid navigering, orsakar flicker)
-
----
-
-## 3. Dashboard (`Dashboard.tsx`) -- Feed/Aktivitet-fokus
-
-Ny layout:
-```text
-┌─────────────────────────────────────┐
-│ Välkommen tillbaka, [namn]          │
-│ Kompakt rad med nyckeltal           │
-├─────────────────────────────────────┤
-│ Aktivitets-feed:                    │
-│  - Senaste AI-användning            │
-│  - Planerade inlägg (närmaste)      │
-│  - Kontostatus (TikTok ansluten)    │
-│  - Tips/AI-insikter                 │
-├─────────────────────────────────────┤
-│ Plattformar (alla, med status)      │
-│  TikTok ✓  Instagram [snart]  ...   │
-├─────────────────────────────────────┤
-│ Genvägar (3 kompakta knappar)       │
-│ Subtil uppgraderings-banner         │
-└─────────────────────────────────────┘
-```
-
-- Nyckeltal: 4 siffror utan kort-border, bara text + ikon + mjuk skugga
-- Connections: Alla plattformar visas, "Kommer snart" badge på de som ej funkar, TikTok-klick -> `/account?tab=app`
-- Feed-sektion: Visa senaste 5 händelser (planerade inlägg, AI-användning, anslutningar)
-
----
-
-## 4. AI-sidan (`AIPage.tsx`) -- Verktygs-grid
-
-- Ta bort tab-systemet
-- Visa alla verktyg i ett rent grid (2x3 eller 3x2)
-- Varje verktyg: ikon + titel + kort beskrivning, klick -> dedikerad sida
-- Chat-knapp separat (redan i sidebar)
-- AI-analys och Säljradar som egna kort i gridet
-- Renare header utan `dashboard-heading-dark` klasser
-
----
-
-## 5. Statistik (`Analytics.tsx`) -- Minimalistisk rework
-
-- Kompakta nyckeltal överst (följare, views, likes, engagemang) utan tunga kort
-- Plattforms-breakdown under, rena siffror utan stora `Card`-wrappers
-- Diagram: enklare, mindre, neutral färgpalett
-- Ta bort den stora "AI-analys"-bannern (den hör hemma på AI-sidan)
-- Om inga konton: minimal empty state, direkt-länk till `Konto > App`
-
----
-
-## 6. Konto & Inställningar (`AccountPage.tsx`) -- Sidebar + innehåll
-
-Byt från tabs till sidebar-layout:
-```text
-┌──────────┬──────────────────────────┐
-│ Profil   │ [Profilinnehåll]         │
-│ AI-profil│                          │
-│ Krediter │                          │
-│ ─────── │                          │
-│ Org.     │                          │
-│ ─────── │                          │
-│ Kopplingar│                         │
-│ Tema     │                          │
-│ ─────── │                          │
-│ Radera   │                          │
-└──────────┴──────────────────────────┘
-```
-
-- Vänster-meny med sektioner
-- Innehåll till höger renderas baserat på vald sektion
-- Varje sektion renare: mindre padding, inga tunga kort, mjuka skuggor
-- Sociala kopplingar: TikTok fungerar, övriga "Kommer snart"
-- På mobil: meny kollapsar till dropdown eller horisontella tabs
-
----
-
-## 7. Kalender (`Calendar.tsx`) -- Cleanup
-
-- Ta bort `liquid-glass-light` klasser
-- Renare kalender-grid med mjuka skuggor
-- Kompaktare header
-
----
-
-## 8. CSS cleanup (`index.css`)
-
-- Ta bort/deprecera `liquid-glass`, `dashboard-heading-dark`, `dashboard-subheading-dark`, `bg-gradient-hero`, `bg-gradient-primary` klasser
-- Standardisera alla sidor till samma neutral stil
-
----
-
-## Implementationsordning (3 faser)
-
-**Fas 1**: Sidebar rework + DashboardLayout cleanup + Logo fix + Dashboard ny layout
-**Fas 2**: AI-sidan grid + Statistik rework + Kalender cleanup
-**Fas 3**: Konto sidebar-layout + CSS cleanup
-
-Varje fas ändrar 3-4 filer. Totalt ~10 filer berörs.
+## What I need to proceed
+Nothing -- once approved I will extract the ZIP and execute everything continuously.
 
