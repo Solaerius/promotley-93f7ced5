@@ -1,94 +1,72 @@
 
 
-# Plan: Dual-themed (light/dark) e-postmallar via Lovable Email
+# Plan: Synka engelska lokalisering + ta bort hardkodad svenska + ny README
 
 ## Sammanfattning
-Alla 6 autentiseringsmejl (signup, recovery, magic-link, invite, email-change, reauthentication) ska finnas i **two variants** -- light mode och dark mode -- som matchar landningssidans exakta utseende i respektive tema. Vilket mejl som skickas beror pa vilket tema anvandaren hade aktiverat vid tillfallet.
+Projektet har ~300+ hardkodade svenska strängar spridda över ~24 källfiler (hooks, pages, components) som inte går genom i18n-systemet. Dessa måste extraheras till `en.json`/`sv.json` och ersättas med `t()`-anrop. README ska skrivas om helt.
 
-## Hur temaval propageras
+## 1. Extrahera hardkodad svenska till locale-filer
 
-### Signup (registrering)
-Nar anvandaren registrerar sig, laggs deras aktiva tema (`document.documentElement.classList.contains('dark') ? 'dark' : 'light'`) in i `user_metadata.theme_preference` via `supabase.auth.signUp({ options: { data: { theme_preference: 'dark' } } })`.
+Följande filer har hardkodade svenska strängar som ska flyttas till båda locale-filerna:
 
-### Ovriga mejl (recovery, magic-link, email-change, reauthentication)
-Nar anvandaren begarer losenordsaterstellning, magic link, eller e-postbyte, uppdateras `user_metadata.theme_preference` fore begaran via `supabase.auth.updateUser({ data: { theme_preference } })`. Manga av dessa formularen ar synliga pa sidan med temat, sa vi laser temat fran DOM:en.
+**Hooks (6 filer):**
+- `useCalendar.ts` — "Ogiltig kanal", "Ogiltig händelsetyp", "Ogiltigt datum"
+- `useSalesRadarWatches.ts` — "Otillräckliga krediter", "Bevakning tillagd/borttagen"
+- `useSalesRadar.ts` — "Otillräckliga krediter"
+- `useAIAnalysis.ts` — "Genererar analys...", "Otillräckliga krediter"
+- `useConversations.ts`, `useMarketingPlan.ts` — eventuella strängar
 
-### Fallback
-Om `theme_preference` saknas i metadata → default till `light`.
+**Pages (12+ filer):**
+- `Auth.tsx` — "Fel vid inloggning", "Något gick fel"
+- `CheckoutRedirect.tsx` — "Ogiltig betalningslänk", "Något gick fel vid betalningen"
+- `AdminChat.tsx` — "Kunde inte skicka meddelande", "Chatt avslutad", "Skriv ditt svar..."
+- `AdminBanManagement.tsx` — "Kunde inte ladda/bannlysa"
+- `AdminEmailBroadcast.tsx` — "Ogiltig e-postadress", "Du måste vara inloggad", "Skriv ditt mejlinnehåll"
+- `AdminSwishOrders.tsx` — "Du har inte behörighet", "Kunde inte hämta/godkänna"
+- `AdminNotificationSettings.tsx` — "Fel", "Kunde inte spara"
+- `AdminPromotions.tsx` — "Skapad", "Borttagen", "Kopierad!"
+- `AdminUserManagement.tsx` — diverse admin-strängar
+- `Calendar.tsx` — "Marknadsföringsplan" (konversationsnamn + AI-prompt)
+- Övriga admin-sidor
 
-## Designfargerna (fran screenshots och index.css)
+**Components (6+ filer):**
+- `BackToTop.tsx` — aria-label "Tillbaka till toppen"
+- `Footer.tsx` — 'hej@promotley.se' (OK som-is men toast uses t())
+- Övriga med enstaka strängar
 
-### Light mode
-- **Body-bakgrund:** `#F9FAFB` (ljus gra, nestan vit)
-- **Kort-bakgrund:** `#FFFFFF`
-- **Rubrikfarg:** `#1E293B` (mork slate)
-- **Brodtext:** `#64748B` (slate-gray)
-- **Knappar:** gradient `#EE593D → #952A5E`
-- **Lankar:** `#952A5E`
-- **Border:** `#E2E8F0`
-- **Navbar-bakgrund:** vit med subtil shadow
+## 2. Lägg till nya nycklar i båda locale-filerna
 
-### Dark mode
-- **Body-bakgrund:** `#120A0E` (mork wine, `hsl(347 40% 5%)`)
-- **Kort-bakgrund:** `#1A1014` (wine-dark, `hsl(347 35% 8%)`)
-- **Rubrikfarg:** `#F5F5F5` (off-white)
-- **Brodtext:** `#8B9AB8` (muted blue-gray)
-- **Knappar:** samma gradient `#EE593D → #952A5E`
-- **Lankar:** `#D94F8C` (ljusare magenta, `hsl(326 60% 55%)`)
-- **Border:** `#2A1A22` (`hsl(347 30% 18%)`)
-- **Hero-bakgrund:** mork rosa-rod gradient tonad
+Varje hardkodad sträng blir en ny nyckel under lämplig sektion (t.ex. `admin.*`, `errors.*`, `calendar.*`). Båda `sv.json` och `en.json` uppdateras samtidigt.
 
-## Steg
+Uppskattning: ~80-100 nya nycklar.
 
-### 1. Aktivera Lovable Email
-Slå on det inbyggda e-postsystemet igen (stängdes av tidigare).
+## 3. Skriv om README.md
 
-### 2. Scaffolda auth-email-templates
-Anvand det inbyggda verktyget for att skapa korrekt infrastruktur for `auth-email-hook`.
+Helt ny README utan omnämnande av Lovable eller Claude. Innehåll:
+- Vad Promotley UF är och gör
+- Hur plattformen fungerar (koppling → AI-analys → strategi)
+- Teknisk stack (React, TypeScript, Tailwind, Vite)
+- Lokal utveckling (clone, install, dev)
+- Projektstruktur (kort)
+- Licens/kontakt
 
-### 3. Overskriva alla 6 mallar med dual-theme-stod
-Varje mall far en `theme` prop (`'light' | 'dark'`). Baserat pa denna renderas ratt fargschema. En gemensam `getStyles(theme)` funktion returnerar ratt CSS-objekt.
+## 4. Spara regel i projektminne
 
-Mallarna matchar landningssidans estetik:
-- Poppins typsnitt
-- Gradient-knappar (behalles i bada teman)
-- Rundade horn (20px kort, 16px knappar)
-- Ratt bakgrunds- och textfarger per tema
-- Subtil shadow pa kortet
-- Logga i headern
-- Footer med Integritetspolicy + Villkor + support-mejl
+Ny memory-fil: `mem://localization/no-hardcoded-strings` med regeln att ALLA användarvänliga strängar måste gå genom `t()` och finnas i båda locale-filerna.
 
-### 4. Uppdatera auth-email-hook
-Hook:en laser `user.user_metadata.theme_preference` och skickar det som prop till varje mall. Fallback till `'light'` om saknas.
+## Ordning
+1. Skapa memory-regeln (så den alltid gäller framöver)
+2. Uppdatera `en.json` och `sv.json` med nya nycklar
+3. Refaktorera alla ~24 filer att använda `t()` istället för hardkodade strängar
+4. Skriv om `README.md`
 
-### 5. Uppdatera useAuth.tsx — skicka tema vid signup
-Lagg till `theme_preference` i `data`-objektet vid `signUp`:
-```tsx
-data: {
-  company_name: companyName,
-  theme_preference: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
-}
-```
+## Tekniska detaljer
 
-### 6. Uppdatera Auth.tsx — skicka tema vid recovery/magic-link
-Fore `supabase.auth.resetPasswordForEmail()` (om anvandaren ar inloggad) eller som metadata i begaran, uppdatera theme_preference.
-
-For password reset (anvandaren ar ej inloggad), kan vi inte uppdatera metadata. Dà anvands senast sparad `theme_preference` fran signup, eller fallback light.
-
-### 7. Ta bort send-verification
-- Radera `supabase/functions/send-verification/` mappen
-- Ta bort den deployade funktionen
-- Ta bort `supabase.functions.invoke("send-verification")` fran `Auth.tsx`
-
-### 8. Deploya auth-email-hook
-Deploya den uppdaterade funktionen for att aktivera de nya mallarna.
-
-## Filer som skapas/andras
-- `supabase/functions/auth-email-hook/index.ts` — omskriven (via scaffold + anpassning)
-- `supabase/functions/_shared/email-templates/*.tsx` — alla 6 filer, dual-theme
-- `src/hooks/useAuth.tsx` — lagg till `theme_preference` i signup metadata
-- `src/pages/Auth.tsx` — ta bort send-verification invoke
-
-## Filer som raderas
-- `supabase/functions/send-verification/index.ts`
+Filer som ändras:
+- `src/locales/en.json` — ~80-100 nya nycklar
+- `src/locales/sv.json` — ~80-100 nya nycklar
+- ~24 källfiler i `src/` — byta hardkodade strängar till `t()`
+- `README.md` — helt ny
+- `mem://localization/no-hardcoded-strings` — ny regel
+- `mem://index.md` — uppdaterad med referens
 
