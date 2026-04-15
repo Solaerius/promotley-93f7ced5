@@ -103,6 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           company_name: companyName,
           invite_code: inviteCode || undefined,
           promo_code: promoCode || undefined,
+          theme_preference: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
         }
       }
     });
