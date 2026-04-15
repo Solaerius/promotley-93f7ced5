@@ -254,13 +254,11 @@ export const useOrganization = () => {
     }
 
     try {
-      // First check organization invite code
-      const { data: org } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("invite_code", code.toUpperCase())
-        .eq("invite_link_enabled", true)
-        .single();
+      // First check organization invite code via secure RPC
+      const { data: orgResults } = await supabase
+        .rpc("lookup_org_by_invite_code", { _invite_code: code.toUpperCase() });
+
+      const org = orgResults && orgResults.length > 0 ? orgResults[0] : null;
 
       if (org) {
         // Join directly via org invite code
