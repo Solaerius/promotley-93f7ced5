@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Send, MessageCircle, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 interface ChatMessage {
   id: string;
@@ -28,6 +29,7 @@ interface ChatSession {
 }
 
 const AdminChat = () => {
+  const { t } = useTranslation();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -201,8 +203,8 @@ const AdminChat = () => {
     if (error) {
       console.error("Error sending message:", error);
       toast({
-        title: "Fel",
-        description: "Kunde inte skicka meddelande",
+        title: t('admin.error_title'),
+        description: t('admin.could_not_send'),
         variant: "destructive",
       });
     } else {
@@ -233,6 +235,34 @@ const AdminChat = () => {
       .eq("session_id", selectedSession)
       .maybeSingle();
 
+    const closeAndBroadcast = async (error: any) => {
+      if (error) {
+        console.error("Error closing chat:", error);
+        toast({
+          title: t('admin.error_title'),
+          description: t('admin.could_not_end_chat'),
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t('admin.chat_ended'),
+          description: t('admin.chat_ended_desc'),
+        });
+        
+        // Broadcast closure to user's chat widget
+        const broadcastChannel = supabase.channel(`live_chat_${selectedSession}`);
+        await broadcastChannel.send({
+          type: 'broadcast',
+          event: 'chat_closed',
+          payload: { session_id: selectedSession },
+        });
+        supabase.removeChannel(broadcastChannel);
+        
+        setSelectedSession(null);
+        loadSessions();
+      }
+    };
+
     if (existingSession) {
       // Update existing session
       const { error } = await supabase
@@ -244,31 +274,7 @@ const AdminChat = () => {
         })
         .eq("session_id", selectedSession);
 
-      if (error) {
-        console.error("Error closing chat:", error);
-        toast({
-          title: "Fel",
-          description: "Kunde inte avsluta chatten",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Chatt avslutad",
-          description: "Chatten har markerats som avslutad",
-        });
-        
-        // Broadcast closure to user's chat widget
-        const broadcastChannel = supabase.channel(`live_chat_${selectedSession}`);
-        await broadcastChannel.send({
-          type: 'broadcast',
-          event: 'chat_closed',
-          payload: { session_id: selectedSession },
-        });
-        supabase.removeChannel(broadcastChannel);
-        
-        setSelectedSession(null);
-        loadSessions();
-      }
+      await closeAndBroadcast(error);
     } else {
       // Create new session record and close it
       const { error } = await supabase
@@ -280,31 +286,7 @@ const AdminChat = () => {
           closed_by: user.id,
         });
 
-      if (error) {
-        console.error("Error creating closed session:", error);
-        toast({
-          title: "Fel",
-          description: "Kunde inte avsluta chatten",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Chatt avslutad",
-          description: "Chatten har markerats som avslutad",
-        });
-        
-        // Broadcast closure to user's chat widget
-        const broadcastChannel = supabase.channel(`live_chat_${selectedSession}`);
-        await broadcastChannel.send({
-          type: 'broadcast',
-          event: 'chat_closed',
-          payload: { session_id: selectedSession },
-        });
-        supabase.removeChannel(broadcastChannel);
-        
-        setSelectedSession(null);
-        loadSessions();
-      }
+      await closeAndBroadcast(error);
     }
 
     setIsLoading(false);
@@ -316,9 +298,9 @@ const AdminChat = () => {
         {/* Sessions List */}
         <Card className="w-80 flex flex-col">
           <div className="p-4 border-b space-y-3">
-            <h2 className="text-xl font-bold">Live Chattar</h2>
+            <h2 className="text-xl font-bold">{t('admin.live_chats')}</h2>
             <p className="text-sm text-muted-foreground">
-              {sessions.length} {showClosed ? "sessioner" : "aktiva sessioner"}
+              {sessions.length} {showClosed ? t('admin.sessions_count') : t('admin.active_sessions')}
             </p>
             <Button
               variant="outline"
@@ -329,7 +311,7 @@ const AdminChat = () => {
               }}
               className="w-full"
             >
-              {showClosed ? "Visa endast aktiva" : "Visa alla chattar"}
+              {showClosed ? t('admin.show_active_only') : t('admin.show_all_chats')}
             </Button>
           </div>
           <ScrollArea className="flex-1">
@@ -347,11 +329,11 @@ const AdminChat = () => {
                   <div className="flex items-center gap-2 mb-1">
                     <MessageCircle className="w-4 h-4" />
                     <span className="font-semibold text-sm">
-                      Chatt {session.session_id.slice(0, 8)}
+                      {t('admin.chat_prefix')} {session.session_id.slice(0, 8)}
                     </span>
                     {session.status === "closed" && (
                       <span className="ml-auto bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs">
-                        Avslutad
+                        {t('admin.closed_label')}
                       </span>
                     )}
                     {session.unread_count > 0 && session.status === "active" && (
@@ -370,7 +352,7 @@ const AdminChat = () => {
               ))}
               {sessions.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">
-                  Inga chattar än
+                  {t('admin.no_chats')}
                 </p>
               )}
             </div>
@@ -388,7 +370,7 @@ const AdminChat = () => {
                       Session {selectedSession.slice(0, 8)}
                     </h3>
                     <p className="text-xs opacity-80">
-                      {messages.length} meddelanden
+                      {messages.length} {t('admin.messages_count')}
                     </p>
                   </div>
                   <Button
@@ -399,7 +381,7 @@ const AdminChat = () => {
                     className="text-primary-foreground hover:bg-primary-foreground/20"
                   >
                     <X className="w-4 h-4 mr-2" />
-                    Avsluta chatt
+                    {t('admin.end_chat')}
                   </Button>
                 </div>
               </div>
@@ -452,7 +434,7 @@ const AdminChat = () => {
                     onKeyPress={(e) =>
                       e.key === "Enter" && !isLoading && handleSend()
                     }
-                    placeholder="Skriv ditt svar..."
+                    placeholder={t('admin.write_reply')}
                     disabled={isLoading}
                   />
                   <Button
@@ -470,7 +452,7 @@ const AdminChat = () => {
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
                 <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Välj en session för att börja chatta</p>
+                <p>{t('admin.select_session')}</p>
               </div>
             </div>
           )}
