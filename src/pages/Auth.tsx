@@ -210,7 +210,11 @@ const Auth = () => {
           variant: "destructive",
         });
       } else if (!isLogin) {
-        // Sign out the user immediately - they must verify email first
+        // Navigate to verify-email FIRST, before signing out
+        // (signOut triggers onAuthStateChange which can interfere with navigation)
+        navigate("/verify-email", { state: { email }, replace: true });
+
+        // Sign out the user - they must verify email first
         await supabase.auth.signOut();
         
         // Send verification email with mode: signup to trigger email_confirm: false
@@ -226,9 +230,6 @@ const Auth = () => {
           title: "Konto skapat!",
           description: "Kolla din inkorg och klicka på länken för att verifiera din e-post.",
         });
-        
-        // Redirect to verify-email with email in state
-        navigate("/verify-email", { state: { email } });
       }
     } catch (error) {
       toast({
