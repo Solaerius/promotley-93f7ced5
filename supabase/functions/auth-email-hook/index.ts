@@ -229,6 +229,9 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
+  // Resolve theme from user metadata
+  const theme = resolveTheme(payload.data)
+
   // Build template props from payload.data (HookData structure)
   const templateProps = {
     siteName: SITE_NAME,
@@ -238,6 +241,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
+    theme,
   }
 
   // Render React Email to HTML and plain text
