@@ -525,7 +525,6 @@ const Auth = () => {
               <span className="text-sm mt-2 block">
                 {t('auth_extra.banned_contact')}
               </span>
-              </span>
             </AlertDescription>
           </Alert>
         )}
