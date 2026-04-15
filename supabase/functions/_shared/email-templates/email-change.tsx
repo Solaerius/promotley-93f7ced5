@@ -8,17 +8,23 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
+  Img,
   Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+import { getStyles, LOGO_URL, SITE_URL, type Theme } from './_styles.ts'
 
 interface EmailChangeEmailProps {
   siteName: string
   email: string
   newEmail: string
   confirmationUrl: string
+  theme?: Theme
 }
 
 export const EmailChangeEmail = ({
@@ -26,62 +32,84 @@ export const EmailChangeEmail = ({
   email,
   newEmail,
   confirmationUrl,
-}: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
-        <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
-          <Link href={`mailto:${email}`} style={link}>
-            {email}
-          </Link>{' '}
-          to{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>
-            {newEmail}
-          </Link>
-          .
-        </Text>
-        <Text style={text}>
-          Click the button below to confirm this change:
-        </Text>
-        <Button style={button} href={confirmationUrl}>
-          Confirm Email Change
-        </Button>
-        <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
-)
+  theme = 'light',
+}: EmailChangeEmailProps) => {
+  const s = getStyles(theme)
+  return (
+    <Html lang="sv" dir="ltr">
+      <Head />
+      <Preview>Bekrafta din nya e-postadress</Preview>
+      <Body style={s.main}>
+        <Container style={s.card}>
+          <Section style={s.headerBand}>
+            <table cellPadding="0" cellSpacing="0" style={{ width: '100%' }}>
+              <tr>
+                <td style={{ paddingLeft: '32px', paddingTop: '20px', paddingBottom: '20px' }}>
+                  <table cellPadding="0" cellSpacing="0">
+                    <tr>
+                      <td style={{ verticalAlign: 'middle' }}>
+                        <Link href={SITE_URL}>
+                          <Img src={LOGO_URL} alt={siteName} width="40" height="40" style={{ display: 'block' }} />
+                        </Link>
+                      </td>
+                      <td style={{ verticalAlign: 'middle', paddingLeft: '12px' }}>
+                        <Link href={SITE_URL} style={{ textDecoration: 'none' }}>
+                          <Text style={s.brandName}>Promotley UF</Text>
+                        </Link>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </Section>
+
+          <Section style={s.content}>
+            <Heading style={s.h1}>Bekrafta e-postbyte</Heading>
+            <Text style={s.text}>
+              Du har begarat att byta e-postadress fran{' '}
+              <Link href={`mailto:${email}`} style={s.link}>{email}</Link>
+              {' '}till{' '}
+              <Link href={`mailto:${newEmail}`} style={s.link}>{newEmail}</Link>.
+            </Text>
+            <Text style={s.text}>
+              Klicka pa knappen nedan for att bekrafta bytet:
+            </Text>
+
+            <Section style={s.buttonContainer}>
+              <Button style={s.button} href={confirmationUrl}>
+                Bekrafta e-postbyte
+              </Button>
+            </Section>
+
+            <Text style={s.muted}>
+              Knappen fungerar inte? Tryck pa lanken nedan:
+            </Text>
+            <Link href={confirmationUrl} style={s.fallbackLink}>Tryck har</Link>
+          </Section>
+
+          <Hr style={s.divider} />
+          <Section style={s.footer}>
+            <Img src={LOGO_URL} alt={siteName} width="80" height="auto" style={s.footerLogo} />
+            <Text style={s.footerLinks}>
+              <Link href={`${SITE_URL}/privacy-policy`} style={s.footerLink}>Integritetspolicy</Link>
+              {' · '}
+              <Link href={`${SITE_URL}/terms-of-service`} style={s.footerLink}>Villkor</Link>
+            </Text>
+            <Text style={s.footerContact}>
+              <Link href="mailto:support@promotley.se" style={s.footerLink}>support@promotley.se</Link>
+            </Text>
+            <Text style={s.footerAddress}>
+              © {new Date().getFullYear()} Promotley · Stockholm, Sverige
+            </Text>
+            <Text style={s.footerDisclaimer}>
+              Begarde du inte detta? Sakra ditt konto direkt via kontoinstellningarna.
+            </Text>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export default EmailChangeEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
