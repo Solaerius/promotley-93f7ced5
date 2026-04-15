@@ -29,6 +29,8 @@ export function getStyles(theme: Theme) {
     headerBand: {
       backgroundColor: isLight ? '#FFFFFF' : '#1A1014',
       borderBottom: `1px solid ${isLight ? '#E2E8F0' : '#2A1A22'}`,
+      padding: '24px 32px',
+      textAlign: 'center' as const,
     },
     brandName: {
       fontSize: '18px',
@@ -98,9 +100,8 @@ export function getStyles(theme: Theme) {
       margin: '0 32px',
     },
     footer: { padding: '24px 32px 32px', textAlign: 'center' as const },
-    footerLogo: { margin: '0 auto 12px', display: 'block' as const, opacity: '0.5' },
-    footerLinks: {
-      fontSize: '13px',
+    footerText: {
+      fontSize: '12px',
       color: isLight ? '#94A3B8' : '#6B7A94',
       margin: '0 0 8px',
       lineHeight: '1.5',
@@ -108,23 +109,6 @@ export function getStyles(theme: Theme) {
     footerLink: {
       color: isLight ? '#952A5E' : '#D94F8C',
       textDecoration: 'none',
-    },
-    footerContact: {
-      fontSize: '13px',
-      color: isLight ? '#94A3B8' : '#6B7A94',
-      margin: '0 0 8px',
-      lineHeight: '1.5',
-    },
-    footerAddress: {
-      fontSize: '11px',
-      color: isLight ? '#B8C0CC' : '#4A5568',
-      margin: '0 0 8px',
-    },
-    footerDisclaimer: {
-      fontSize: '11px',
-      color: isLight ? '#CBD5E1' : '#3D4555',
-      margin: '0',
-      fontStyle: 'italic' as const,
     },
   }
 }
