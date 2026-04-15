@@ -60,7 +60,7 @@ const AdminDashboard = () => {
         setNotificationStatus({
           discord: !!s.discord_webhook_url,
           email: !!s.notification_email,
-          sms: !!(s.twilio_account_sid && s.twilio_auth_token),
+          sms: false, // Twilio credentials managed via environment secrets
         });
       }
 

@@ -7,25 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Mail, MessageSquare, Phone, Save } from "lucide-react";
+import { Bell, Mail, MessageSquare, Save } from "lucide-react";
 
 interface NotificationSettings {
   discord_webhook_url: string;
   notification_email: string;
-  twilio_account_sid: string;
-  twilio_auth_token: string;
-  twilio_phone_number: string;
-  recipient_phone_number: string;
 }
 
 const AdminNotificationSettings = () => {
   const [settings, setSettings] = useState<NotificationSettings>({
     discord_webhook_url: "",
     notification_email: "",
-    twilio_account_sid: "",
-    twilio_auth_token: "",
-    twilio_phone_number: "",
-    recipient_phone_number: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -48,10 +40,6 @@ const AdminNotificationSettings = () => {
       setSettings({
         discord_webhook_url: data.discord_webhook_url || "",
         notification_email: data.notification_email || "",
-        twilio_account_sid: data.twilio_account_sid || "",
-        twilio_auth_token: data.twilio_auth_token || "",
-        twilio_phone_number: data.twilio_phone_number || "",
-        recipient_phone_number: data.recipient_phone_number || "",
       });
     }
     setIsLoading(false);
@@ -65,10 +53,6 @@ const AdminNotificationSettings = () => {
       .update({
         discord_webhook_url: settings.discord_webhook_url || null,
         notification_email: settings.notification_email || null,
-        twilio_account_sid: settings.twilio_account_sid || null,
-        twilio_auth_token: settings.twilio_auth_token || null,
-        twilio_phone_number: settings.twilio_phone_number || null,
-        recipient_phone_number: settings.recipient_phone_number || null,
       })
       .eq("id", "00000000-0000-0000-0000-000000000000");
 
@@ -161,75 +145,6 @@ const AdminNotificationSettings = () => {
                 placeholder="team@promotely.se"
               />
             </div>
-          </div>
-        </Card>
-
-        {/* SMS (Twilio) */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Phone className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-semibold">SMS (Twilio) - Valfritt</h2>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="twilio_sid">Account SID</Label>
-              <Input
-                id="twilio_sid"
-                value={settings.twilio_account_sid}
-                onChange={(e) =>
-                  handleChange("twilio_account_sid", e.target.value)
-                }
-                placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              />
-            </div>
-            <div>
-              <Label htmlFor="twilio_token">Auth Token</Label>
-              <Input
-                id="twilio_token"
-                type="password"
-                value={settings.twilio_auth_token}
-                onChange={(e) =>
-                  handleChange("twilio_auth_token", e.target.value)
-                }
-                placeholder="••••••••••••••••••••••••••••••••"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="twilio_phone">Twilio Phone Number</Label>
-                <Input
-                  id="twilio_phone"
-                  value={settings.twilio_phone_number}
-                  onChange={(e) =>
-                    handleChange("twilio_phone_number", e.target.value)
-                  }
-                  placeholder="+46..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="recipient_phone">Mottagar-nummer</Label>
-                <Input
-                  id="recipient_phone"
-                  value={settings.recipient_phone_number}
-                  onChange={(e) =>
-                    handleChange("recipient_phone_number", e.target.value)
-                  }
-                  placeholder="+46..."
-                />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Skapa ett konto på{" "}
-              <a
-                href="https://www.twilio.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                twilio.com
-              </a>{" "}
-              för SMS-notifikationer
-            </p>
           </div>
         </Card>
 
