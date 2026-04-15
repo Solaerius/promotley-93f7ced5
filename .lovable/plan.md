@@ -1,48 +1,63 @@
-# Plan: Nytt verifieringsflöde efter registrering
 
-## Sammanfattning
 
-Ändra flödet efter registrering så att:
+# Plan: Verifieringsflöde direkt på registreringssidan
 
-1. **Efter signup** → användaren skickas till `/verify-email` som visar "Verifiera din mejl" med ett snurrande hjul (spinner) — indikerar att vi väntar
-2. **Verifieringslänken i mejlet** → tar användaren till `/auth/callback` som verifierar mejlen och sedan visar en enkel sida med knappen "Gå till inloggningen" (ingen auto-redirect)
-3. **Originalfliken** (`/verify-email`) → pollar automatiskt och uppdateras till "Verifierad!" när mejlen bekräftats
+## Vad användaren vill
+
+Efter att man klickar "Skapa konto" ska **samma sida** (`/auth`) byta ut formuläret mot en enkel verifieringsvy — ingen navigering till `/verify-email`. Flödet:
+
+1. Användaren fyller i mejl + lösenord → klickar "Skapa konto"
+2. Formuläret försvinner, ersätts av: **"Kolla din mejl och verifiera"** + snurrande spinner
+3. Sidan pollar automatiskt. När mejlen verifieras → spinnern blir en **grön checkmark**
+4. En **"Fortsätt med registreringen"**-knapp animeras fram (eller går från grå till färg)
+5. Knappen tar användaren vidare till onboarding/dashboard
+
+På **AuthCallback-sidan** (dit verifieringslänken leder):
+- Visa "E-post verifierad!" med grön bock
+- Knapp: "Fortsätt med registreringen" → navigerar till `/onboarding`
+- Text: "Du kan också gå tillbaka till den ursprungliga fliken — den uppdateras automatiskt"
 
 ## Vad som ändras
 
-### 1. `src/pages/VerifyEmail.tsx` — Lägg till spinner
+### 1. `src/pages/Auth.tsx`
+- Lägg till nytt state: `verificationPending` (boolean) + `emailVerified` (boolean)
+- Efter lyckad signup → sätt `verificationPending = true` istället för `navigate("/verify-email")`
+- Behåll `signOut()` + skicka verifieringsmejl som idag
+- **Rendera villkorligt**: om `verificationPending` är true, visa verifieringsvyn istället för formuläret (inom samma layout med vänsterpanel kvar)
+- Verifieringsvyn:
+  - Spinner (`animate-spin`) som byts till `CheckCircle2` (grön) när `emailVerified` = true
+  - Text: "Kolla din mejl och verifiera ditt konto"
+  - Polling var 3:e sekund: försök `signInWithPassword` med sparad mejl+lösenord, kolla `email_confirmed_at`
+  - När verifierad: visa "Fortsätt med registreringen"-knapp med fade-in animation
+- Lägg till "Tillbaka"-knapp för att gå tillbaka till formuläret
 
-- Lägg till en synlig spinner (animate-spin) bredvid eller under "Verifiera din e-post"-texten för att visuellt indikera att sidan väntar
-- Behåll den befintliga polling-logiken (var 3:e sekund) som redan finns — den uppdaterar automatiskt till "Verifierad!" när mejlen bekräftas
-- När `verified` blir true → visa nuvarande success-vy (grön bock + "Omdirigeras...")
+### 2. `src/pages/AuthCallback.tsx`
+- Ändra success-knapptext från "Gå till inloggningen" till "Fortsätt med registreringen"
+- Navigera till `/onboarding` istället för `/auth` (eller kolla profil som redan görs för OAuth)
+- Behåll text om att gå tillbaka till ursprungliga fliken
 
-### 2. `src/pages/AuthCallback.tsx` — Visa "Gå till inloggningen" istället för auto-redirect
-
-- Vid email-verifiering (icke-OAuth, icke-recovery): istället för att auto-navigera till dashboard/onboarding efter 2 sekunder, visa en statisk success-sida med:
-  - Grön bock-ikon
-  - Text: "E-post verifierad!"  
-  - En knapp: "Gå till inloggningen" som navigerar till `/auth`
-- Behåll all befintlig logik för OAuth, recovery, invite-codes och promo-codes — de påverkas inte
-- Ta bort `setTimeout` + auto-navigate för den icke-OAuth email-verifierings-pathen  
-  
-Lägg även till en eller gå tillbaka till orignala sidan text på den sidan för att hänvisa användaren att de har flera olika sätt att fortsätta med registreringen.
-
-### 3. `src/pages/Auth.tsx` — Ingen ändring behövs
-
-Signup-flödet navigerar redan till `/verify-email` med email i state (rad 231). Inget behöver ändras här.
+### 3. Ta bort onödig navigering till `/verify-email`
+- Rad 215 i Auth.tsx: ta bort `navigate("/verify-email", ...)` — ersätts av lokalt state
 
 ## Tekniska detaljer
 
-**VerifyEmail.tsx** — Lägg till spinner-element i den icke-verifierade vyn:
+**Polling-strategi i Auth.tsx:**
+Eftersom användaren är utloggad efter signup kan vi inte använda `getSession()`. Istället pollar vi med `signInWithPassword(email, password)` — om det lyckas OCH `email_confirmed_at` finns → verifierad. Vi sparar lösenordet tillfälligt i state (aldrig i storage).
 
-```tsx
-// Under Mail-ikonen, lägg till:
-<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mt-4" />
-<p className="text-sm text-muted-foreground">Väntar på verifiering...</p>
+```text
+┌─────────────┐     signup OK      ┌──────────────────┐
+│  Formulär   │ ──────────────►    │  Verifieringsvy  │
+│  (mejl+lös) │                    │  spinner + poll   │
+└─────────────┘                    └────────┬─────────┘
+                                            │ verified
+                                            ▼
+                                   ┌──────────────────┐
+                                   │  Grön checkmark  │
+                                   │  + "Fortsätt"    │
+                                   └──────────────────┘
 ```
 
-**AuthCallback.tsx** — Ändra success-pathen (rad 152-162):
+**Animations:**
+- Spinner → checkmark: CSS transition med scale
+- Knapp: `opacity-0 → opacity-100` + `translate-y` transition
 
-- Sätt `setStatus("success")` men ta bort `setTimeout(() => navigate(...))`  
-- Lägg till en "Gå till inloggningen"-knapp i success-vyns `CardContent`
-- Knappen kör `navigate("/auth")`
