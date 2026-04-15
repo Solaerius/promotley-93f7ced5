@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { authSchema } from "@/lib/validations";
 import logo from "@/assets/logo.png";
-import { Eye, EyeOff, ArrowLeft, Ban } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Ban, CheckCircle2, Mail, Loader2 } from "lucide-react";
 import AppleIcon from "@/components/icons/AppleIcon";
 import PasswordRequirements from "@/components/PasswordRequirements";
 import { Alert, AlertDescription } from "@/components/ui/alert";
