@@ -407,6 +407,74 @@ const Auth = () => {
       {/* Right form panel */}
       <div className="flex-1 lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-background">
         <div className="w-full max-w-md">
+
+        {verificationPending ? (
+          /* ── Verification pending view ── */
+          <div className="text-center space-y-6">
+            <Link to="/" className="flex items-center justify-center gap-2 font-bold text-2xl mb-8">
+              <img src={logo} alt="Promotley Logo" className="w-12 h-12" />
+              <span>Promotley</span>
+            </Link>
+
+            <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+              {!emailVerified ? (
+                <>
+                  <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+                  <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                </>
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center animate-in zoom-in-50 duration-500">
+                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold mb-2">
+                {emailVerified ? "E-post verifierad!" : "Kolla din mejl"}
+              </h2>
+              <p className="text-muted-foreground">
+                {emailVerified
+                  ? "Ditt konto är aktiverat. Du kan nu fortsätta."
+                  : `Vi har skickat ett verifieringsmejl till ${email}. Klicka på länken i mejlet för att verifiera ditt konto.`}
+              </p>
+            </div>
+
+            {emailVerified ? (
+              <Button
+                variant="gradient"
+                size="lg"
+                className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
+                onClick={handleContinueAfterVerification}
+              >
+                Fortsätt med registreringen
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full opacity-50 cursor-not-allowed"
+                disabled
+              >
+                Väntar på verifiering...
+              </Button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setVerificationPending(false);
+                setEmailVerified(false);
+                setSavedPassword("");
+              }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Tillbaka till formuläret
+            </button>
+          </div>
+        ) : (
+          /* ── Normal form view ── */
+          <>
         {/* Back button */}
         <Link to="/">
           <Button variant="ghost" size="sm" className="mb-4">
