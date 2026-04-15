@@ -1,100 +1,30 @@
 /// <reference types="npm:@types/react@18.3.1" />
-
 import * as React from 'npm:react@18.3.1'
+import { Body, Button, Container, Head, Heading, Html, Link, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { getStyles, SITE_URL, type Theme } from './_styles.ts'
 
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Section,
-  Text,
-} from 'npm:@react-email/components@0.0.22'
+interface RecoveryEmailProps { siteName: string; confirmationUrl: string; theme?: Theme }
 
-import { getStyles, LOGO_URL, SITE_URL, type Theme } from './_styles.ts'
-
-interface RecoveryEmailProps {
-  siteName: string
-  confirmationUrl: string
-  theme?: Theme
-}
-
-export const RecoveryEmail = ({
-  siteName,
-  confirmationUrl,
-  theme = 'light',
-}: RecoveryEmailProps) => {
+export const RecoveryEmail = ({ siteName, confirmationUrl, theme = 'light' }: RecoveryEmailProps) => {
   const s = getStyles(theme)
   return (
     <Html lang="sv" dir="ltr">
-      <Head />
-      <Preview>Aterstall ditt losenord</Preview>
+      <Head><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" /></Head>
+      <Preview>Återställ ditt lösenord för {siteName}</Preview>
       <Body style={s.main}>
         <Container style={s.card}>
-          <Section style={s.headerBand}>
-            <table cellPadding="0" cellSpacing="0" style={{ width: '100%' }}>
-              <tr>
-                <td style={{ paddingLeft: '32px', paddingTop: '20px', paddingBottom: '20px' }}>
-                  <table cellPadding="0" cellSpacing="0">
-                    <tr>
-                      <td style={{ verticalAlign: 'middle' }}>
-                        <Link href={SITE_URL}>
-                          <Img src={LOGO_URL} alt={siteName} width="40" height="40" style={{ display: 'block' }} />
-                        </Link>
-                      </td>
-                      <td style={{ verticalAlign: 'middle', paddingLeft: '12px' }}>
-                        <Link href={SITE_URL} style={{ textDecoration: 'none' }}>
-                          <Text style={s.brandName}>Promotley UF</Text>
-                        </Link>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </Section>
-
+          <Section style={s.headerBand}><Text style={s.brandName}>promotley</Text></Section>
           <Section style={s.content}>
-            <Heading style={s.h1}>Aterstall ditt losenord</Heading>
-            <Text style={s.text}>
-              Det hander alla — glomda losenord ar inget att stressa over. Klicka pa knappen nedan sa fixar vi ett nytt at dig direkt.
-            </Text>
-
-            <Section style={s.buttonContainer}>
-              <Button style={s.button} href={confirmationUrl}>
-                Valj nytt losenord
-              </Button>
-            </Section>
-
-            <Text style={s.muted}>
-              Knappen fungerar inte? Tryck pa lanken nedan:
-            </Text>
-            <Link href={confirmationUrl} style={s.fallbackLink}>Tryck har</Link>
+            <Heading style={s.h1}>Återställ lösenord 🔒</Heading>
+            <Text style={s.text}>Vi fick en begäran om att återställa ditt lösenord för {siteName}. Klicka på knappen nedan för att välja ett nytt lösenord.</Text>
+            <Section style={s.buttonContainer}><Button style={s.button} href={confirmationUrl}>Återställ lösenord</Button></Section>
+            <Text style={s.muted}>Om knappen inte fungerar, kopiera och klistra in denna länk:</Text>
+            <Text style={s.muted}><Link href={confirmationUrl} style={s.fallbackLink}>{confirmationUrl}</Link></Text>
           </Section>
-
           <Hr style={s.divider} />
           <Section style={s.footer}>
-            <Img src={LOGO_URL} alt={siteName} width="80" height="auto" style={s.footerLogo} />
-            <Text style={s.footerLinks}>
-              <Link href={`${SITE_URL}/privacy-policy`} style={s.footerLink}>Integritetspolicy</Link>
-              {' · '}
-              <Link href={`${SITE_URL}/terms-of-service`} style={s.footerLink}>Villkor</Link>
-            </Text>
-            <Text style={s.footerContact}>
-              <Link href="mailto:support@promotley.se" style={s.footerLink}>support@promotley.se</Link>
-            </Text>
-            <Text style={s.footerAddress}>
-              © {new Date().getFullYear()} Promotley · Stockholm, Sverige
-            </Text>
-            <Text style={s.footerDisclaimer}>
-              Begarde du inte detta? Ignorera mejlet — ditt losenord andras inte.
-            </Text>
+            <Text style={s.footerText}><Link href={`${SITE_URL}/privacy`} style={s.footerLink}>Integritetspolicy</Link> · <Link href={`${SITE_URL}/terms`} style={s.footerLink}>Villkor</Link></Text>
+            <Text style={s.footerText}>Om du inte begärde detta kan du ignorera mejlet. Ditt lösenord ändras inte.</Text>
           </Section>
         </Container>
       </Body>
