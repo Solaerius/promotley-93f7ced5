@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'Bekräfta din e-post',
+  invite: 'Du har blivit inbjuden',
+  magiclink: 'Din inloggningslänk',
+  recovery: 'Återställ ditt lösenord',
+  email_change: 'Bekräfta din nya e-post',
+  reauthentication: 'Din verifieringskod',
 }
 
 // Template mapping
@@ -54,29 +54,41 @@ const SAMPLE_DATA: Record<string, object> = {
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
+    theme: 'light',
   },
   magiclink: {
     siteName: SITE_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
+    theme: 'light',
   },
   recovery: {
     siteName: SITE_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
+    theme: 'light',
   },
   invite: {
     siteName: SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     confirmationUrl: SAMPLE_PROJECT_URL,
+    theme: 'light',
   },
   email_change: {
     siteName: SITE_NAME,
     email: SAMPLE_EMAIL,
     newEmail: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
+    theme: 'light',
   },
   reauthentication: {
     token: '123456',
+    theme: 'light',
   },
+}
+
+// Helper: resolve theme from user metadata
+function resolveTheme(userData: any): 'light' | 'dark' {
+  const pref = userData?.user_metadata?.theme_preference
+  return pref === 'dark' ? 'dark' : 'light'
 }
 
 // Preview endpoint handler - returns rendered HTML without sending email
