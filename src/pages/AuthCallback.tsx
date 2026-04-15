@@ -163,18 +163,6 @@ export default function AuthCallback() {
 
             if (user?.email_confirmed_at) {
               setStatus("success");
-              toast({
-                title: "E-post verifierad!",
-                description: "Ditt konto är nu aktiverat.",
-              });
-              setTimeout(async () => {
-                const { data: profile } = await supabase
-                  .from('ai_profiles')
-                  .select('onboarding_completed')
-                  .eq('user_id', user.id)
-                  .single();
-                navigate(profile?.onboarding_completed ? '/dashboard' : '/onboarding', { replace: true });
-              }, 2000);
             } else {
               // Still not verified, redirect to verify page
               navigate("/verify-email", { replace: true });
