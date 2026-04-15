@@ -83,7 +83,46 @@ const Auth = () => {
     }
   };
 
-  // Handle OAuth callback and redirect if logged in
+  // Polling for email verification
+  useEffect(() => {
+    if (!verificationPending || emailVerified) return;
+    
+    pollingRef.current = setInterval(async () => {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password: savedPassword,
+        });
+        if (!error && data?.user?.email_confirmed_at) {
+          setEmailVerified(true);
+          if (pollingRef.current) clearInterval(pollingRef.current);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 3000);
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [verificationPending, emailVerified, email, savedPassword]);
+
+  const handleContinueAfterVerification = async () => {
+    // User is already signed in from the polling success
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from('ai_profiles')
+        .select('onboarding_completed')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      navigate(profile?.onboarding_completed ? '/dashboard' : '/onboarding', { replace: true });
+    } else {
+      navigate("/auth?mode=login", { replace: true });
+    }
+  };
+
+  
   useEffect(() => {
     const handleOAuthCallback = async () => {
       // Check both hash fragments and query params
@@ -214,14 +253,13 @@ const Auth = () => {
           variant: "destructive",
         });
       } else if (!isLogin) {
-        // Navigate to verify-email FIRST, before signing out
-        // (signOut triggers onAuthStateChange which can interfere with navigation)
-        navigate("/verify-email", { state: { email }, replace: true });
+        // Store password for polling, then show verification UI in-place
+        setSavedPassword(password);
 
         // Sign out the user - they must verify email first
         await supabase.auth.signOut();
         
-        // Send verification email with mode: signup to trigger email_confirm: false
+        // Send verification email
         try {
           await supabase.functions.invoke("send-verification", {
             body: { email, mode: "signup" },
@@ -229,6 +267,8 @@ const Auth = () => {
         } catch (emailError) {
           console.warn("Failed to send verification email:", emailError);
         }
+        
+        setVerificationPending(true);
         
         toast({
           title: "Konto skapat!",
