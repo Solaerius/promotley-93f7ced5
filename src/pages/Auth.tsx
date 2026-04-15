@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { authSchema } from "@/lib/validations";
 import logo from "@/assets/logo.png";
-import { Eye, EyeOff, ArrowLeft, Ban } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Ban, CheckCircle2, Mail, Loader2 } from "lucide-react";
 import AppleIcon from "@/components/icons/AppleIcon";
 import PasswordRequirements from "@/components/PasswordRequirements";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -50,6 +50,10 @@ const Auth = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const [banReason, setBanReason] = useState("");
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [savedPassword, setSavedPassword] = useState("");
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -79,7 +83,46 @@ const Auth = () => {
     }
   };
 
-  // Handle OAuth callback and redirect if logged in
+  // Polling for email verification
+  useEffect(() => {
+    if (!verificationPending || emailVerified) return;
+    
+    pollingRef.current = setInterval(async () => {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password: savedPassword,
+        });
+        if (!error && data?.user?.email_confirmed_at) {
+          setEmailVerified(true);
+          if (pollingRef.current) clearInterval(pollingRef.current);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 3000);
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [verificationPending, emailVerified, email, savedPassword]);
+
+  const handleContinueAfterVerification = async () => {
+    // User is already signed in from the polling success
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from('ai_profiles')
+        .select('onboarding_completed')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      navigate(profile?.onboarding_completed ? '/dashboard' : '/onboarding', { replace: true });
+    } else {
+      navigate("/auth?mode=login", { replace: true });
+    }
+  };
+
+  
   useEffect(() => {
     const handleOAuthCallback = async () => {
       // Check both hash fragments and query params
@@ -210,14 +253,13 @@ const Auth = () => {
           variant: "destructive",
         });
       } else if (!isLogin) {
-        // Navigate to verify-email FIRST, before signing out
-        // (signOut triggers onAuthStateChange which can interfere with navigation)
-        navigate("/verify-email", { state: { email }, replace: true });
+        // Store password for polling, then show verification UI in-place
+        setSavedPassword(password);
 
         // Sign out the user - they must verify email first
         await supabase.auth.signOut();
         
-        // Send verification email with mode: signup to trigger email_confirm: false
+        // Send verification email
         try {
           await supabase.functions.invoke("send-verification", {
             body: { email, mode: "signup" },
@@ -225,6 +267,8 @@ const Auth = () => {
         } catch (emailError) {
           console.warn("Failed to send verification email:", emailError);
         }
+        
+        setVerificationPending(true);
         
         toast({
           title: "Konto skapat!",
@@ -363,6 +407,74 @@ const Auth = () => {
       {/* Right form panel */}
       <div className="flex-1 lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-background">
         <div className="w-full max-w-md">
+
+        {verificationPending ? (
+          /* ── Verification pending view ── */
+          <div className="text-center space-y-6">
+            <Link to="/" className="flex items-center justify-center gap-2 font-bold text-2xl mb-8">
+              <img src={logo} alt="Promotley Logo" className="w-12 h-12" />
+              <span>Promotley</span>
+            </Link>
+
+            <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+              {!emailVerified ? (
+                <>
+                  <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+                  <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                </>
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center animate-in zoom-in-50 duration-500">
+                  <CheckCircle2 className="w-10 h-10 text-accent" />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold mb-2">
+                {emailVerified ? "E-post verifierad!" : "Kolla din mejl"}
+              </h2>
+              <p className="text-muted-foreground">
+                {emailVerified
+                  ? "Ditt konto är aktiverat. Du kan nu fortsätta."
+                  : `Vi har skickat ett verifieringsmejl till ${email}. Klicka på länken i mejlet för att verifiera ditt konto.`}
+              </p>
+            </div>
+
+            {emailVerified ? (
+              <Button
+                variant="gradient"
+                size="lg"
+                className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
+                onClick={handleContinueAfterVerification}
+              >
+                Fortsätt med registreringen
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full opacity-50 cursor-not-allowed"
+                disabled
+              >
+                Väntar på verifiering...
+              </Button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setVerificationPending(false);
+                setEmailVerified(false);
+                setSavedPassword("");
+              }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Tillbaka till formuläret
+            </button>
+          </div>
+        ) : (
+          /* ── Normal form view ── */
+          <>
         {/* Back button */}
         <Link to="/">
           <Button variant="ghost" size="sm" className="mb-4">
@@ -684,6 +796,9 @@ const Auth = () => {
             )}
           </button>
         </div>
+
+        </>
+        )}
 
         </div>
       </div>

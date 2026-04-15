@@ -244,10 +244,22 @@ export default function AuthCallback() {
         {status === "success" && (
           <CardContent className="space-y-3">
             <Button 
-              onClick={() => navigate("/auth")}
+              onClick={async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                  const { data: profile } = await supabase
+                    .from('ai_profiles')
+                    .select('onboarding_completed')
+                    .eq('user_id', session.user.id)
+                    .maybeSingle();
+                  navigate(profile?.onboarding_completed ? '/dashboard' : '/onboarding', { replace: true });
+                } else {
+                  navigate("/auth", { replace: true });
+                }
+              }}
               className="w-full"
             >
-              Gå till inloggningen
+              Fortsätt med registreringen
             </Button>
             <p className="text-xs text-center text-muted-foreground">
               Du kan också gå tillbaka till den ursprungliga fliken — den uppdateras automatiskt.
