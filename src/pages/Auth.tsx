@@ -423,8 +423,8 @@ const Auth = () => {
                   <Loader2 className="w-10 h-10 text-primary animate-spin" />
                 </>
               ) : (
-                <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center animate-in zoom-in-50 duration-500">
-                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+                <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center animate-in zoom-in-50 duration-500">
+                  <CheckCircle2 className="w-10 h-10 text-accent" />
                 </div>
               )}
             </div>
