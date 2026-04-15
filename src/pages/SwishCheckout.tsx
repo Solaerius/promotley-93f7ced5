@@ -130,7 +130,7 @@ const SwishCheckout = () => {
 
       const { error } = await supabase.from("swish_orders").insert({
         order_id: orderId,
-        user_id: user?.id || null,
+        user_id: user?.id,
         email: formData.email,
         name: formData.name,
         company_name: formData.companyName || null,
