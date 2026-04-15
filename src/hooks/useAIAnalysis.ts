@@ -81,8 +81,8 @@ export const useAIAnalysis = () => {
       }
 
       toast({
-        title: 'Genererar analys...',
-        description: 'Detta kan ta upp till 30 sekunder.',
+        title: t('analysis_hooks.generating'),
+        description: t('analysis_hooks.generating_desc'),
       });
 
       const { data, error } = await supabase.functions.invoke('generate-ai-analysis', {
@@ -93,11 +93,10 @@ export const useAIAnalysis = () => {
       });
 
       if (error) {
-        // Check for 402 status (insufficient credits)
         if (error.message?.includes('402') || error.message?.includes('INSUFFICIENT_CREDITS')) {
           toast({
-            title: 'Otillräckliga krediter',
-            description: 'Du har inte tillräckligt med krediter för att generera en AI-analys.',
+            title: t('analysis_hooks.insufficient_credits'),
+            description: t('analysis_hooks.insufficient_credits_desc'),
             variant: 'destructive',
           });
           throw new Error('INSUFFICIENT_CREDITS');
@@ -106,11 +105,10 @@ export const useAIAnalysis = () => {
       }
 
       if (!data.success) {
-        // Check if it's a credit error
         if (data.error === 'INSUFFICIENT_CREDITS' || data.message?.includes('kredit')) {
           toast({
-            title: 'Otillräckliga krediter',
-            description: data.message || 'Du har inte tillräckligt med krediter.',
+            title: t('analysis_hooks.insufficient_credits'),
+            description: data.message || t('analysis_hooks.insufficient_credits_desc'),
             variant: 'destructive',
           });
           throw new Error('INSUFFICIENT_CREDITS');
@@ -119,8 +117,8 @@ export const useAIAnalysis = () => {
       }
 
       toast({
-        title: 'Analys genererad!',
-        description: 'Din AI-analys är nu klar.',
+        title: t('analysis_hooks.analysis_complete'),
+        description: t('analysis_hooks.analysis_complete_desc'),
       });
 
       // Trigger credit update

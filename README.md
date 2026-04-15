@@ -1,73 +1,64 @@
-# Welcome to your Lovable project
+# Promotley UF
 
-## Project info
+**AI-driven marknadsföring för UF-företag och startups**
 
-**URL**: https://lovable.dev/projects/354005d2-4f0f-4853-877b-58daabf303b8
+Promotley är en plattform som hjälper unga entreprenörer att växa på sociala medier genom att koppla sina konton (TikTok, Instagram, Facebook) och få AI-genererade strategier, innehållsförslag och analyser baserade på riktiga data.
 
-## How can I edit this code?
+## Funktioner
 
-There are several ways of editing your application.
+- **AI-chatt & verktyg** — Caption-generator, hashtag-förslag, kampanjstrategi, veckoplanering och UF-tips, allt drivet av AI
+- **Social media-integration** — Koppla TikTok, Instagram och Facebook för att hämta statistik och engagemangsdata
+- **Innehållskalender** — Planera och schemalägg inlägg visuellt, eller låt AI:n fylla kalendern åt dig
+- **AI-analys** — Få djupgående analyser av dina sociala medier med konkreta rekommendationer
+- **Säljradar** — Hitta leads, trender och affärsmöjligheter anpassade för ditt företag
+- **Organisationer** — Samarbeta i team med rollbaserad åtkomst och delade krediter
+- **Flerspråkigt** — Fullt stöd för svenska och engelska
 
-**Use Lovable**
+## Teknisk stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/354005d2-4f0f-4853-877b-58daabf303b8) and start prompting.
+- **Frontend:** React 18, TypeScript 5, Vite 5, Tailwind CSS v3
+- **UI-komponenter:** shadcn/ui
+- **Internationalisering:** i18next med react-i18next
+- **Backend:** Edge Functions, PostgreSQL med Row Level Security
+- **Autentisering:** E-post/lösenord, Google OAuth, Apple Sign-In
+- **Betalningar:** Stripe (prenumerationer), Swish (manuell godkännande)
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Lokal utveckling
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Klona repositoryt
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Gå till projektmappen
+cd promotley
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Installera beroenden
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Starta utvecklingsservern
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Projektstruktur
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+src/
+├── components/     # Återanvändbara UI-komponenter
+├── hooks/          # Custom React hooks
+├── lib/            # Hjälpfunktioner och konfiguration
+├── locales/        # Språkfiler (sv.json, en.json)
+├── pages/          # Sidkomponenter (routing)
+└── integrations/   # Backend-klient och typer
 
-**Use GitHub Codespaces**
+supabase/
+├── functions/      # Edge Functions (API-endpoints)
+└── migrations/     # Databasmigreringar
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Kontakt
 
-## What technologies are used for this project?
+- **Allmänt:** uf@promotley.se
+- **Support:** support@promotley.se
+- **Webb:** [promotley.lovable.app](https://promotley.lovable.app)
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/354005d2-4f0f-4853-877b-58daabf303b8) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+© 2025 Promotley UF. Alla rättigheter förbehållna.
