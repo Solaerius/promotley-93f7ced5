@@ -12,6 +12,31 @@ serve(async (req) => {
   }
 
   try {
+    // Require authenticated user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(
+      authHeader.replace("Bearer ", "")
+    );
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     const { orderId, productName, amount, customerName, customerEmail } = await req.json();
 
     // Validate required fields
@@ -22,13 +47,14 @@ serve(async (req) => {
       });
     }
 
-    const supabaseClient = createClient(
+    // Use service role client for DB operations
+    const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     // Fetch Discord webhook URL from notification_settings
-    const { data: settings, error: settingsError } = await supabaseClient
+    const { data: settings, error: settingsError } = await serviceClient
       .from("notification_settings")
       .select("discord_webhook_url")
       .single();
@@ -55,37 +81,15 @@ serve(async (req) => {
             embeds: [{
               title: "💳 Ny Swish-betalning väntar på verifiering!",
               description: `[Öppna Admin-panel för att verifiera](https://promotley.se/admin/swish)`,
-              color: 0x22c55e, // Green color
+              color: 0x22c55e,
               fields: [
-                { 
-                  name: "📦 Produkt", 
-                  value: productName, 
-                  inline: true 
-                },
-                { 
-                  name: "💰 Belopp", 
-                  value: `${amount} kr`, 
-                  inline: true 
-                },
-                { 
-                  name: "🆔 Order-ID", 
-                  value: `\`${orderId}\``, 
-                  inline: false 
-                },
-                { 
-                  name: "👤 Kund", 
-                  value: customerName || "Ej angivet", 
-                  inline: true 
-                },
-                { 
-                  name: "📧 E-post", 
-                  value: customerEmail || "Ej angivet", 
-                  inline: true 
-                },
+                { name: "📦 Produkt", value: productName, inline: true },
+                { name: "💰 Belopp", value: `${amount} kr`, inline: true },
+                { name: "🆔 Order-ID", value: `\`${orderId}\``, inline: false },
+                { name: "👤 Kund", value: customerName || "Ej angivet", inline: true },
+                { name: "📧 E-post", value: customerEmail || "Ej angivet", inline: true },
               ],
-              footer: { 
-                text: "Promotely UF – Swish-betalning" 
-              },
+              footer: { text: "Promotely UF – Swish-betalning" },
               timestamp: new Date().toISOString(),
             }],
           }),
@@ -100,16 +104,13 @@ serve(async (req) => {
       console.log("No Discord webhook configured");
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      discordSent 
-    }), {
+    return new Response(JSON.stringify({ success: true, discordSent }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error) {
     console.error("Error in notify-swish-order:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
