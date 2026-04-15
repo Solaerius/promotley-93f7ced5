@@ -50,6 +50,10 @@ const Auth = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const [banReason, setBanReason] = useState("");
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [savedPassword, setSavedPassword] = useState("");
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
