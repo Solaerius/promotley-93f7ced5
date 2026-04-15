@@ -150,11 +150,11 @@ const Auth = () => {
           
           if (error) {
             console.error('Session error:', error);
-            toast({
-              title: "Inloggning misslyckades",
-              description: t('toasts.google_session_error'),
-              variant: "destructive",
-            });
+          toast({
+            title: t('auth_extra.login_failed_title'),
+            description: t('toasts.google_session_error'),
+            variant: "destructive",
+          });
             return true;
           }
           
@@ -169,11 +169,11 @@ const Auth = () => {
           if (success || attempts >= maxAttempts) {
             clearInterval(interval);
             if (attempts >= maxAttempts) {
-              toast({
-                title: "Timeout",
-                description: t('toasts.google_session_error'),
-                variant: "destructive",
-              });
+            toast({
+              title: t('auth_extra.timeout'),
+              description: t('toasts.google_session_error'),
+              variant: "destructive",
+            });
             }
           }
         }, 500); // Check every 500ms
@@ -200,7 +200,7 @@ const Auth = () => {
       const banStatus = await checkBanStatus(email);
       if (banStatus.banned) {
         setIsBanned(true);
-        setBanReason(banStatus.reason || "Brott mot användarvillkor");
+        setBanReason(banStatus.reason || t('auth_extra.ban_default_reason'));
         setIsSubmitting(false);
         return;
       }
@@ -208,12 +208,12 @@ const Auth = () => {
       // Check all required fields for signup
       if (!isLogin) {
         if (!email || !password || !confirmPassword) {
-          setErrors({ confirmPassword: "Alla fält måste fyllas i" });
+          setErrors({ confirmPassword: t('auth_extra.all_fields_required') });
           setIsSubmitting(false);
           return;
         }
         if (password !== confirmPassword) {
-          setErrors({ confirmPassword: "Lösenorden matchar inte" });
+          setErrors({ confirmPassword: t('errors.passwords_no_match') });
           setIsSubmitting(false);
           return;
         }
@@ -244,18 +244,18 @@ const Auth = () => {
 
       if (result.error) {
         // Handle specific error messages
-        let errorMessage = "Ett fel uppstod. Försök igen.";
+        let errorMessage = t('auth_extra.generic_error');
         
         if (result.error.message.includes("Invalid login credentials")) {
           errorMessage = t('errors.invalid_credentials');
         } else if (result.error.message.includes("User already registered")) {
-          errorMessage = "Ett konto med denna e-post finns redan.";
+          errorMessage = t('auth_extra.user_already_registered');
         } else if (result.error.message.includes("Email not confirmed")) {
-          errorMessage = "Bekräfta din e-post innan du loggar in.";
+          errorMessage = t('auth_extra.confirm_email_first');
          }
 
         toast({
-          title: isLogin ? "Inloggning misslyckades" : "Registrering misslyckades",
+          title: isLogin ? t('auth_extra.login_failed_title') : t('auth_extra.register_failed_title'),
           description: errorMessage,
           variant: "destructive",
         });
@@ -271,8 +271,8 @@ const Auth = () => {
         setVerificationPending(true);
         
         toast({
-          title: "Konto skapat!",
-          description: "Kolla din inkorg och klicka på länken för att verifiera din e-post.",
+          title: t('auth_extra.account_created_title'),
+          description: t('auth_extra.account_created_desc'),
         });
       }
     } catch (error) {
@@ -302,8 +302,8 @@ const Auth = () => {
       }
     } catch (error) {
       toast({
-        title: "Fel vid inloggning",
-        description: "Något gick fel. Försök igen.",
+        title: t('auth_extra.login_error_title'),
+        description: t('auth_extra.login_error_desc'),
         variant: "destructive",
       });
     }
@@ -325,8 +325,8 @@ const Auth = () => {
       }
     } catch (error) {
       toast({
-        title: "Fel vid inloggning",
-        description: "Något gick fel. Försök igen.",
+        title: t('auth_extra.login_error_title'),
+        description: t('auth_extra.login_error_desc'),
         variant: "destructive",
       });
     }
@@ -337,8 +337,8 @@ const Auth = () => {
     try {
       if (!resetEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail)) {
         toast({
-          title: "Ogiltig e-post",
-          description: "Ange en giltig e-postadress",
+          title: t('auth_extra.invalid_email_title'),
+          description: t('auth_extra.invalid_email_desc'),
           variant: "destructive",
         });
         return;
@@ -357,7 +357,7 @@ const Auth = () => {
       } else {
         toast({
           title: t('toasts.email_sent'),
-          description: "Kolla din inkorg för att återställa ditt lösenord",
+          description: t('auth_extra.reset_check_inbox'),
         });
         setIsResetDialogOpen(false);
         setResetEmail("");
@@ -431,12 +431,12 @@ const Auth = () => {
 
             <div>
               <h2 className="text-2xl font-bold mb-2">
-                {emailVerified ? "E-post verifierad!" : "Kolla din mejl"}
+                {emailVerified ? t('auth_extra.email_verified_title') : t('auth_extra.check_email_title')}
               </h2>
               <p className="text-muted-foreground">
                 {emailVerified
-                  ? "Ditt konto är aktiverat. Du kan nu fortsätta."
-                  : `Vi har skickat ett verifieringsmejl till ${email}. Klicka på länken i mejlet för att verifiera ditt konto.`}
+                  ? t('auth_extra.account_activated')
+                  : t('auth_extra.verification_sent', { email })}
               </p>
             </div>
 
@@ -447,7 +447,7 @@ const Auth = () => {
                 className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
                 onClick={handleContinueAfterVerification}
               >
-                Fortsätt med registreringen
+                {t('auth_extra.continue_registration')}
               </Button>
             ) : (
               <Button
@@ -456,7 +456,7 @@ const Auth = () => {
                 className="w-full opacity-50 cursor-not-allowed"
                 disabled
               >
-                Väntar på verifiering...
+                {t('auth_extra.waiting_verification')}
               </Button>
             )}
 
@@ -469,7 +469,7 @@ const Auth = () => {
               }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              ← Tillbaka till formuläret
+              {t('auth_extra.back_to_form')}
             </button>
           </div>
         ) : (
@@ -508,7 +508,7 @@ const Auth = () => {
           <Alert className="mb-6 bg-gradient-primary/10 border-primary/20">
             <Info className="h-4 w-4" />
             <AlertDescription>
-              <strong>Skapa ett konto</strong> för att testa demon och få din personliga AI-strategi
+              <strong>{t('auth_extra.create_account_label')}</strong> {t('auth_extra.demo_notice')}
             </AlertDescription>
           </Alert>
         )}
@@ -518,12 +518,13 @@ const Auth = () => {
           <Alert className="mb-6 border-destructive bg-destructive/10">
             <Ban className="h-4 w-4 text-destructive" />
             <AlertDescription className="text-destructive">
-              <strong>Ditt konto har blivit spärrat.</strong>
+              <strong>{t('auth_extra.banned_title')}</strong>
               <br />
-              <span className="text-sm">Anledning: {banReason}</span>
+              <span className="text-sm">{t('auth_extra.banned_reason', { reason: banReason })}</span>
               <br />
               <span className="text-sm mt-2 block">
-                Kontakta <a href="mailto:support@promotley.se" className="underline">support@promotley.se</a> om du anser att detta är fel.
+                {t('auth_extra.banned_contact')}
+              </span>
               </span>
             </AlertDescription>
           </Alert>
@@ -586,14 +587,14 @@ const Auth = () => {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Återställ lösenord</DialogTitle>
-                      <DialogDescription>
-                        Ange din e-postadress så skickar vi en länk för att återställa ditt lösenord
+                    <DialogTitle>{t('auth_extra.reset_password_title')}</DialogTitle>
+                    <DialogDescription>
+                      {t('auth_extra.reset_password_desc')}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 pt-4">
                       <div className="space-y-2">
-                        <Label htmlFor="resetEmail">E-post</Label>
+                        <Label htmlFor="resetEmail">{t('auth_extra.reset_email_label')}</Label>
                         <Input
                           id="resetEmail"
                           type="email"
@@ -608,7 +609,7 @@ const Auth = () => {
                         variant="gradient"
                         className="w-full"
                       >
-                        {isResetting ? "Skickar..." : "Skicka återställningslänk"}
+                        {isResetting ? t('auth_extra.sending') : t('auth_extra.send_reset_link')}
                       </Button>
                     </div>
                   </DialogContent>
@@ -719,7 +720,7 @@ const Auth = () => {
             size="lg"
             disabled={isSubmitting || (!isLogin && !acceptedTerms)}
           >
-            {isSubmitting ? "Laddar..." : isLogin ? t('auth.submit_login') : t('auth.submit_register')}
+            {isSubmitting ? t('auth_extra.loading') : isLogin ? t('auth.submit_login') : t('auth.submit_register')}
           </Button>
         </form>
 

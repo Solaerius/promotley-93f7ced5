@@ -61,7 +61,7 @@ export const useSalesRadarWatches = () => {
 
       if (userError) throw userError;
       if ((userData?.credits_left ?? 0) < 1) {
-        toast({ title: 'Otillräckliga krediter', description: 'Bevakning kostar 1 kredit.', variant: 'destructive' });
+        toast({ title: t('watch_hooks.insufficient_credits'), description: t('watch_hooks.insufficient_credits_desc'), variant: 'destructive' });
         return false;
       }
 
@@ -79,7 +79,7 @@ export const useSalesRadarWatches = () => {
 
       creditUpdateEvent.dispatchEvent(new Event('creditsChanged'));
       trackEvent('watch_created', { item_type: itemType, item_title: itemTitle });
-      toast({ title: 'Bevakning tillagd', description: `"${itemTitle}" bevakas nu. (1 kredit)` });
+      toast({ title: t('watch_hooks.watch_added'), description: t('watch_hooks.watch_added_desc', { title: itemTitle }) });
       await fetchWatches();
       return true;
     } catch (err) {
@@ -93,7 +93,7 @@ export const useSalesRadarWatches = () => {
     try {
       const { error } = await (supabase.from('sales_radar_watches') as any).delete().eq('id', watchId);
       if (error) throw error;
-      toast({ title: 'Bevakning borttagen' });
+      toast({ title: t('watch_hooks.watch_removed') });
       await fetchWatches();
     } catch (err) {
       console.error('Error removing watch:', err);
