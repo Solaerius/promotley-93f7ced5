@@ -375,9 +375,7 @@ export const useOrganization = () => {
       const { error: emailError } = await supabase.functions.invoke('send-org-invite', {
         body: {
           email: email.toLowerCase(),
-          organizationName: activeOrganization.name,
           inviteCode: invite.invite_code,
-          inviterEmail: user.email
         }
       });
 
