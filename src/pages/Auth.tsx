@@ -205,11 +205,18 @@ const Auth = () => {
         return;
       }
 
-      // Check password confirmation for signup
-      if (!isLogin && password !== confirmPassword) {
-        setErrors({ confirmPassword: "Lösenorden matchar inte" });
-        setIsSubmitting(false);
-        return;
+      // Check all required fields for signup
+      if (!isLogin) {
+        if (!email || !password || !confirmPassword) {
+          setErrors({ confirmPassword: "Alla fält måste fyllas i" });
+          setIsSubmitting(false);
+          return;
+        }
+        if (password !== confirmPassword) {
+          setErrors({ confirmPassword: "Lösenorden matchar inte" });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       // Validate input
