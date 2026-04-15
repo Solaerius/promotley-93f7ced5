@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { ArrowUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const BackToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const toggleVisibility = () => {
