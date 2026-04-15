@@ -266,15 +266,7 @@ const Auth = () => {
         // Sign out the user - they must verify email first
         await supabase.auth.signOut();
         
-        // Send verification email
-        try {
-          await supabase.functions.invoke("send-verification", {
-            body: { email, mode: "signup" },
-          });
-        } catch (emailError) {
-          console.warn("Failed to send verification email:", emailError);
-        }
-        
+        // Verification email is sent automatically by the auth system
         setVerificationPending(true);
         
         toast({
