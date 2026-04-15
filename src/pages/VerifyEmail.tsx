@@ -113,37 +113,26 @@ export default function VerifyEmail() {
 
     setIsResending(true);
     try {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-
-      const response = await supabase.functions.invoke("send-verification", {
-        headers: currentSession?.access_token
-          ? { Authorization: `Bearer ${currentSession.access_token}` }
-          : {},
-        body: { email },
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
       });
 
-      if (response.error) {
-        throw new Error(response.error.message || "Failed to send");
-      }
+      if (error) {
+        if (error.message?.includes('rate') || error.status === 429) {
+          const retryAfter = 60;
+          setCountdown(retryAfter);
+          localStorage.setItem("verifyEmailCountdown", String(retryAfter));
+          localStorage.setItem("verifyEmailCountdownTime", String(Date.now()));
 
-      const data = response.data;
-
-      if (data.error === "rate_limited") {
-        const retryAfter = data.retry_after || 60;
-        setCountdown(retryAfter);
-        localStorage.setItem("verifyEmailCountdown", String(retryAfter));
-        localStorage.setItem("verifyEmailCountdownTime", String(Date.now()));
-
-        toast({
-          title: "Vänta lite",
-          description: `Du kan skicka en ny länk om ${retryAfter} sekunder.`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
+          toast({
+            title: "Vänta lite",
+            description: `Du kan skicka en ny länk om ${retryAfter} sekunder.`,
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
       }
 
       // Start 60s countdown
