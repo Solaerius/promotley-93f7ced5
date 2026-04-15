@@ -1783,6 +1783,14 @@ export type Database = {
         }
         Returns: string
       }
+      lookup_org_by_invite_code: {
+        Args: { _invite_code: string }
+        Returns: {
+          id: string
+          logo_url: string
+          name: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
