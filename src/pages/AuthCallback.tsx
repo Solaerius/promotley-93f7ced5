@@ -151,15 +151,6 @@ export default function AuthCallback() {
 
             // Non-OAuth (email verification) success path
             setStatus("success");
-            toast({ title: "E-post verifierad!", description: "Ditt konto är nu aktiverat." });
-            setTimeout(async () => {
-              const { data: profile } = await supabase
-                .from('ai_profiles')
-                .select('onboarding_completed')
-                .eq('user_id', session.user.id)
-                .single();
-              navigate(profile?.onboarding_completed ? '/dashboard' : '/onboarding', { replace: true });
-            }, 2000);
           } else {
             // Refresh user to get latest confirmation status
             const { data: { user }, error: refreshError } = await supabase.auth.getUser();
@@ -172,18 +163,6 @@ export default function AuthCallback() {
 
             if (user?.email_confirmed_at) {
               setStatus("success");
-              toast({
-                title: "E-post verifierad!",
-                description: "Ditt konto är nu aktiverat.",
-              });
-              setTimeout(async () => {
-                const { data: profile } = await supabase
-                  .from('ai_profiles')
-                  .select('onboarding_completed')
-                  .eq('user_id', user.id)
-                  .single();
-                navigate(profile?.onboarding_completed ? '/dashboard' : '/onboarding', { replace: true });
-              }, 2000);
             } else {
               // Still not verified, redirect to verify page
               navigate("/verify-email", { replace: true });
@@ -237,7 +216,7 @@ export default function AuthCallback() {
                 <CheckCircle2 className="w-8 h-8 text-green-500" />
               </div>
               <CardTitle className="text-xl text-green-600">E-post verifierad!</CardTitle>
-              <CardDescription>Ditt konto är nu aktiverat. Du omdirigeras...</CardDescription>
+              <CardDescription>Ditt konto är nu aktiverat.</CardDescription>
             </>
           )}
 
@@ -261,6 +240,20 @@ export default function AuthCallback() {
             </>
           )}
         </CardHeader>
+
+        {status === "success" && (
+          <CardContent className="space-y-3">
+            <Button 
+              onClick={() => navigate("/auth")}
+              className="w-full"
+            >
+              Gå till inloggningen
+            </Button>
+            <p className="text-xs text-center text-muted-foreground">
+              Du kan också gå tillbaka till den ursprungliga fliken — den uppdateras automatiskt.
+            </p>
+          </CardContent>
+        )}
 
         {(status === "expired" || status === "error") && (
           <CardContent className="space-y-3">

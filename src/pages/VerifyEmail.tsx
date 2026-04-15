@@ -239,6 +239,10 @@ export default function VerifyEmail() {
                 {t('verify.description')}{" "}
                 <span className="font-medium text-foreground">{maskedEmail}</span>
               </CardDescription>
+              <div className="flex flex-col items-center gap-2 pt-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                <p className="text-sm text-muted-foreground">Väntar på verifiering...</p>
+              </div>
             </CardHeader>
 
             <CardContent className="space-y-6">
