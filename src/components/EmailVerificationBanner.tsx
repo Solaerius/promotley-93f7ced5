@@ -33,22 +33,27 @@ export function EmailVerificationBanner() {
 
     setIsResending(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: user.email,
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke("send-verification", {
+        headers: session?.access_token 
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {},
+        body: { email: user.email },
       });
 
-      if (error) {
-        if (error.message?.includes('rate') || error.status === 429) {
-          setCountdown(60);
-          toast({
-            title: t('banner.toast_rate_limited_title'),
-            description: t('banner.toast_rate_limited_description', { seconds: 60 }),
-            variant: "destructive",
-          });
-          return;
-        }
-        throw error;
+      if (response.data?.error === "rate_limited") {
+        setCountdown(response.data.retry_after || 60);
+        toast({
+          title: t('banner.toast_rate_limited_title'),
+          description: t('banner.toast_rate_limited_description', { seconds: response.data.retry_after || 60 }),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (response.error || response.data?.error) {
+        throw new Error(response.data?.error || "Failed");
       }
 
       setCountdown(60);
