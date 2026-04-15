@@ -106,18 +106,18 @@ export const useCalendar = () => {
       const event_type = (postData.event_type || 'inlagg').toLowerCase();
       const validTypes = ['inlagg', 'uf_marknad', 'event', 'deadline', 'ovrigt'];
       if (!validTypes.includes(event_type)) {
-        throw new Error('Ogiltig händelsetyp');
+        throw new Error(t('calendar_hooks.invalid_event_type'));
       }
 
       const platform = postData.platform ? postData.platform.toLowerCase() : null;
       if (platform && !['instagram', 'tiktok', 'facebook'].includes(platform)) {
-        throw new Error('Ogiltig kanal');
+        throw new Error(t('calendar_hooks.invalid_channel'));
       }
 
       // Normalize date to YYYY-MM-DD
       const date = new Date(postData.date);
       if (isNaN(date.valueOf())) {
-        throw new Error('Ogiltigt datum');
+        throw new Error(t('calendar_hooks.invalid_date'));
       }
       const isoDate = date.toISOString().slice(0, 10);
 
@@ -135,8 +135,8 @@ export const useCalendar = () => {
       });
 
       toast({
-        title: "Inlägg skapat",
-        description: "Ditt inlägg har lagts till i kalendern.",
+        title: t('calendar_hooks.post_created'),
+        description: t('calendar_hooks.post_created_desc'),
       });
 
       await fetchPosts();
@@ -196,7 +196,7 @@ export const useCalendar = () => {
         const event_type = postData.event_type.toLowerCase();
         const validTypes = ['inlagg', 'uf_marknad', 'event', 'deadline', 'ovrigt'];
         if (!validTypes.includes(event_type)) {
-          throw new Error('Ogiltig händelsetyp');
+          throw new Error(t('calendar_hooks.invalid_event_type'));
         }
         patch.event_type = event_type;
       }
@@ -204,7 +204,7 @@ export const useCalendar = () => {
       if (postData.platform !== undefined) {
         const platform = postData.platform ? postData.platform.toLowerCase() : null;
         if (platform && !['instagram', 'tiktok', 'facebook'].includes(platform)) {
-          throw new Error('Ogiltig kanal');
+          throw new Error(t('calendar_hooks.invalid_channel'));
         }
         patch.platform = platform;
       }
@@ -212,7 +212,7 @@ export const useCalendar = () => {
       if (postData.date) {
         const d = new Date(postData.date);
         if (isNaN(d.valueOf())) {
-          throw new Error('Ogiltigt datum');
+          throw new Error(t('calendar_hooks.invalid_date'));
         }
         patch.date = d.toISOString().slice(0, 10);
       }
@@ -223,8 +223,8 @@ export const useCalendar = () => {
       });
 
       toast({
-        title: "Inlägg uppdaterat",
-        description: "Ditt inlägg har uppdaterats.",
+        title: t('calendar_hooks.post_updated'),
+        description: t('calendar_hooks.post_updated_desc'),
       });
 
       await fetchPosts();
@@ -246,8 +246,8 @@ export const useCalendar = () => {
       await invokeCalendar({ action: 'delete', data: { id } });
 
       toast({
-        title: "Inlägg raderat",
-        description: "Ditt inlägg har tagits bort.",
+        title: t('calendar_hooks.post_deleted'),
+        description: t('calendar_hooks.post_deleted_desc'),
       });
 
       await fetchPosts();

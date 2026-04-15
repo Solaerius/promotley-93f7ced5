@@ -71,8 +71,8 @@ export const useSalesRadar = () => {
       if (!session) throw new Error('Not authenticated');
 
       toast({
-        title: 'Skannar möjligheter...',
-        description: 'Säljradarn analyserar din bransch och profil.',
+        title: t('radar_hooks.scanning'),
+        description: t('radar_hooks.scanning_desc'),
       });
 
       const { data, error } = await supabase.functions.invoke('sales-radar', {
@@ -84,7 +84,7 @@ export const useSalesRadar = () => {
 
       if (error) {
         if (error.message?.includes('402') || error.message?.includes('INSUFFICIENT_CREDITS')) {
-          toast({ title: 'Otillräckliga krediter', variant: 'destructive' });
+          toast({ title: t('radar_hooks.insufficient_credits'), variant: 'destructive' });
           throw new Error('INSUFFICIENT_CREDITS');
         }
         throw error;
@@ -98,8 +98,8 @@ export const useSalesRadar = () => {
       }
 
       toast({
-        title: 'Säljradar klar!',
-        description: 'Nya möjligheter har hittats.',
+        title: t('radar_hooks.scan_complete'),
+        description: t('radar_hooks.scan_complete_desc'),
       });
 
       creditUpdateEvent.dispatchEvent(new Event('creditsChanged'));

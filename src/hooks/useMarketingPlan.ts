@@ -166,8 +166,8 @@ export const useMarketingPlan = () => {
       });
 
       toast({
-        title: "Plan implementerad!",
-        description: `${result.created?.length || 0} inlägg skapade, ${result.skipped?.length || 0} hoppades över.`,
+        title: t('plan_hooks.plan_implemented'),
+        description: t('plan_hooks.plan_implemented_desc', { created: result.created?.length || 0, skipped: result.skipped?.length || 0 }),
       });
 
       return result;

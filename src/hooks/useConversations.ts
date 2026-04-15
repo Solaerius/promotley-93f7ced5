@@ -52,7 +52,7 @@ export const useConversations = () => {
         .from('ai_conversations')
         .insert({
           user_id: session.user.id,
-          title: title || 'Ny konversation',
+          title: title || t('conv_hooks.new_conversation'),
         })
         .select()
         .single();
