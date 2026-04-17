@@ -47,6 +47,7 @@ const CampaignStrategy = () => {
       description={t('campaign.description')}
       icon={Target}
       gradient="from-amber-500 to-orange-500"
+      requiredFeature="marketing_plans"
     >
       {/* Loading progress bar */}
       {loading && (

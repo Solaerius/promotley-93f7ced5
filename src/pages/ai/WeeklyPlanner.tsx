@@ -55,6 +55,7 @@ const WeeklyPlanner = () => {
       description={t('weekly.description')}
       icon={Calendar}
       gradient="from-green-500 to-emerald-500"
+      requiredFeature="weekly_planner"
     >
       {/* Loading progress bar */}
       {loading && (
