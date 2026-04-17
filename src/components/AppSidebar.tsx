@@ -17,6 +17,7 @@ import {
   Moon,
   Sun,
   BookOpen,
+  ListChecks,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +61,7 @@ export function AppSidebar() {
     { title: t('nav.tools'),         href: "/ai",               icon: Wand2 },
     { title: t('nav.chat'),          href: "/ai/chat",          icon: MessageSquare },
     { title: t('nav.calendar'),      href: "/calendar",         icon: CalendarDays },
+    { title: t('nav.posts', 'Inlägg'), href: "/posts",          icon: ListChecks },
     { title: t('nav.guide'),         href: "/tutorial",         icon: BookOpen },
     { title: t('nav.settings_page'), href: "/settings",         icon: Settings2 },
   ];
