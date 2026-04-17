@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LucideIcon } from 'lucide-react';
+import { ArrowLeft, LucideIcon, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CreditsDisplay from '@/components/CreditsDisplay';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
@@ -9,6 +9,9 @@ import { IncompleteProfileModal } from '@/components/IncompleteProfileModal';
 import ModelTierSelector from '@/components/ai/ModelTierSelector';
 import { type ModelTier } from '@/lib/modelTiers';
 import { useTranslation } from 'react-i18next';
+import { useFeatureAccess } from '@/hooks/useFeatureAccess';
+import { UpgradeModal } from '@/components/UpgradeModal';
+import { type FeatureKey } from '@/lib/planConfig';
 
 interface AIToolPageLayoutProps {
   title: string;
@@ -18,12 +21,26 @@ interface AIToolPageLayoutProps {
   children: ReactNode;
   modelTier?: ModelTier;
   onModelTierChange?: (tier: ModelTier) => void;
+  requiredFeature?: FeatureKey;
 }
 
-const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children, modelTier, onModelTierChange }: AIToolPageLayoutProps) => {
+const AIToolPageLayout = ({
+  title,
+  description,
+  icon: Icon,
+  gradient,
+  children,
+  modelTier,
+  onModelTierChange,
+  requiredFeature,
+}: AIToolPageLayoutProps) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isProfileComplete, missingFields, showModal, setShowModal } = useProfileCompleteness();
+  const access = useFeatureAccess(requiredFeature ?? 'ai_chat');
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  const planLocked = !!requiredFeature && !access.loading && !access.allowed;
 
   return (
     <DashboardLayout hideFooter>
@@ -55,8 +72,37 @@ const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children, 
           </div>
         </div>
 
-        {/* Content - disabled overlay if profile incomplete */}
-        {!isProfileComplete ? (
+        {/* Plan-locked overlay (highest priority) */}
+        {planLocked ? (
+          <div className="relative">
+            <div className="opacity-40 pointer-events-none select-none blur-[1px]">
+              {children}
+            </div>
+            <div
+              className="absolute inset-0 flex items-center justify-center cursor-pointer"
+              onClick={() => setUpgradeOpen(true)}
+            >
+              <div className="bg-card border rounded-xl p-6 text-center shadow-lg max-w-sm mx-4">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <Lock className="w-5 h-5 text-primary" />
+                </div>
+                <p className="font-semibold text-lg mb-1">
+                  {t('plan_gating.locked_title', { plan: access.requiredPlanName })}
+                </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {t('plan_gating.locked_desc', {
+                    feature: title,
+                    required: access.requiredPlanName,
+                    current: access.currentPlanName,
+                  })}
+                </p>
+                <Button variant="gradient" onClick={() => setUpgradeOpen(true)}>
+                  {t('plan_gating.upgrade_btn')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : !isProfileComplete ? (
           <div className="relative">
             <div className="opacity-50 pointer-events-none select-none">
               {children}
@@ -86,6 +132,16 @@ const AIToolPageLayout = ({ title, description, icon: Icon, gradient, children, 
         onOpenChange={setShowModal}
         missingFields={missingFields}
       />
+
+      {requiredFeature && (
+        <UpgradeModal
+          open={upgradeOpen}
+          onOpenChange={setUpgradeOpen}
+          featureName={title}
+          requiredPlanName={access.requiredPlanName}
+          currentPlanName={access.currentPlanName}
+        />
+      )}
     </DashboardLayout>
   );
 };
