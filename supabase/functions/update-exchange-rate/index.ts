@@ -19,16 +19,29 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Försök gratis API först
+    // Försök Frankfurter (ECB-data, gratis, ingen nyckel)
     let rate: number | null = null;
     try {
-      const resp = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=SEK');
+      const resp = await fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=SEK');
       if (resp.ok) {
         const data = await resp.json();
         rate = data.rates?.SEK;
       }
     } catch (err) {
-      console.warn('exchangerate.host failed:', err);
+      console.warn('frankfurter failed:', err);
+    }
+
+    // Fallback 2: open.er-api.com
+    if (!rate) {
+      try {
+        const resp = await fetch('https://open.er-api.com/v6/latest/USD');
+        if (resp.ok) {
+          const data = await resp.json();
+          rate = data.rates?.SEK;
+        }
+      } catch (err) {
+        console.warn('open.er-api.com failed:', err);
+      }
     }
 
     // Fallback om API är nere
