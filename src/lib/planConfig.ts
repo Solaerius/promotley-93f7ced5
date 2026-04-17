@@ -1,174 +1,239 @@
 /**
- * Plan Configuration for Promotley UF
- * Single source of truth for AI model mappings and credit policies
+ * Plan Configuration for Promotley
+ * Single source of truth for plan limits, AI model defaults, and feature gating.
  *
- * IMPORTANT: Credit values (50/100/200) are duplicated in
+ * IMPORTANT: Credit values are duplicated in
  * supabase/functions/stripe-webhook -- update both when changing.
  */
 
-export type PlanType = 'starter' | 'growth' | 'pro';
+export type PlanType = 'free_trial' | 'starter' | 'growth' | 'max' | 'pro' | 'pro_xl' | 'pro_unlimited';
+
+export type FeatureKey =
+  | 'ai_chat'
+  | 'content_ideas_basic'
+  | 'content_ideas_advanced'
+  | 'content_ideas_premium'
+  | 'caption_generator'
+  | 'hashtag_suggestions'
+  | 'uf_tips'
+  | 'weekly_planner'
+  | 'marketing_plans'
+  | 'sales_radar'
+  | 'ai_analysis_basic'
+  | 'ai_analysis_deep'
+  | 'ai_analysis_premium'
+  | 'manual_scheduling'
+  | 'calendar'
+  | 'tiktok_connection'
+  | 'meta_connection'
+  | 'team_organizations';
+
+export interface PlanLimits {
+  caption_per_month: number;            // -1 = unlimited
+  marketing_plans_per_month: number;
+  sales_radar_per_month: number;
+  manual_schedules_per_month: number;
+  team_organizations: number;
+}
 
 export interface PlanConfig {
-  model: string;
-  credits: number;
-  features: string[];
+  id: PlanType;
   displayName: string;
-  price: number;
-  tier: 'starter' | 'growth' | 'pro';
+  price: number;             // SEK / month
+  credits: number;
+  dailyCreditCap: number;    // 0 = no daily cap
+  tier: number;              // 0..3 — used for "is higher" comparisons
   isActive: boolean;
+  limits: PlanLimits;
+  features: FeatureKey[];
 }
 
-/**
- * CONFIG.MODEL_BY_TIER - Single source of truth
- * This mapping MUST be enforced server-side
- * Starter → GPT-4o Mini, Growth → GPT-4.1 Mini, Pro → GPT-4o
- */
-export const MODEL_BY_TIER = {
-  starter: 'gpt-4o-mini',
-  growth: 'gpt-4.1-mini-2025-04-14', 
-  pro: 'gpt-4.1-mini-2025-04-14'
-} as const;
+const UNLIMITED = -1;
 
-/**
- * Premium model for Pro tier (used for deep analysis and marketing plans)
- */
-export const PREMIUM_MODEL_BY_TIER = {
-  pro: 'gpt-4o'
-} as const;
+const FREE: PlanConfig = {
+  id: 'free_trial',
+  displayName: 'Free',
+  price: 0,
+  credits: 30,
+  dailyCreditCap: 5,
+  tier: 0,
+  isActive: true,
+  limits: {
+    caption_per_month: 3,
+    marketing_plans_per_month: 0,
+    sales_radar_per_month: 0,
+    manual_schedules_per_month: 3,
+    team_organizations: 1,
+  },
+  features: [
+    'ai_chat',
+    'content_ideas_basic',
+    'caption_generator',
+    'hashtag_suggestions',
+    'uf_tips',
+    'manual_scheduling',
+    'calendar',
+    'tiktok_connection',
+    'meta_connection',
+  ],
+};
 
-/**
- * Credit cost per AI request by tier
- */
-export const CREDIT_COST_BY_TIER = {
-  starter: 2,
-  growth: 1,
-  pro: 1
-} as const;
+const STARTER: PlanConfig = {
+  id: 'starter',
+  displayName: 'Starter',
+  price: 49,
+  credits: 250,
+  dailyCreditCap: 0,
+  tier: 1,
+  isActive: true,
+  limits: {
+    caption_per_month: UNLIMITED,
+    marketing_plans_per_month: 1,
+    sales_radar_per_month: 0,
+    manual_schedules_per_month: 10,
+    team_organizations: 1,
+  },
+  features: [
+    'ai_chat',
+    'content_ideas_basic',
+    'caption_generator',
+    'hashtag_suggestions',
+    'uf_tips',
+    'weekly_planner',
+    'marketing_plans',
+    'ai_analysis_basic',
+    'manual_scheduling',
+    'calendar',
+    'tiktok_connection',
+    'meta_connection',
+  ],
+};
 
-/**
- * Get plan configuration based on plan type
- * Maps database plan values to AI model settings
- */
-export function getPlanConfig(plan: PlanType): PlanConfig {
-  switch (plan) {
-    case 'starter':
-      return {
-        model: MODEL_BY_TIER.starter,
-        credits: 50,
-        features: ['basic_strategy', 'tips'],
-        displayName: 'Starter',
-        price: 29,
-        tier: 'starter',
-        isActive: true
-      };
+const GROWTH: PlanConfig = {
+  id: 'growth',
+  displayName: 'Growth',
+  price: 159,
+  credits: 950,
+  dailyCreditCap: 0,
+  tier: 2,
+  isActive: true,
+  limits: {
+    caption_per_month: UNLIMITED,
+    marketing_plans_per_month: 5,
+    sales_radar_per_month: 10,
+    manual_schedules_per_month: UNLIMITED,
+    team_organizations: 3,
+  },
+  features: [
+    'ai_chat',
+    'content_ideas_basic',
+    'content_ideas_advanced',
+    'caption_generator',
+    'hashtag_suggestions',
+    'uf_tips',
+    'weekly_planner',
+    'marketing_plans',
+    'sales_radar',
+    'ai_analysis_basic',
+    'ai_analysis_deep',
+    'manual_scheduling',
+    'calendar',
+    'tiktok_connection',
+    'meta_connection',
+    'team_organizations',
+  ],
+};
 
-    case 'growth':
-      return {
-        model: MODEL_BY_TIER.growth,
-        credits: 100,
-        features: ['calendar', 'ideas', 'analysis'],
-        displayName: 'Growth',
-        price: 49,
-        tier: 'growth',
-        isActive: true
-      };
+const MAX_PLAN: PlanConfig = {
+  id: 'max',
+  displayName: 'Max',
+  price: 299,
+  credits: 2000,
+  dailyCreditCap: 0,
+  tier: 3,
+  isActive: true,
+  limits: {
+    caption_per_month: UNLIMITED,
+    marketing_plans_per_month: UNLIMITED,
+    sales_radar_per_month: UNLIMITED,
+    manual_schedules_per_month: UNLIMITED,
+    team_organizations: UNLIMITED,
+  },
+  features: [
+    'ai_chat',
+    'content_ideas_basic',
+    'content_ideas_advanced',
+    'content_ideas_premium',
+    'caption_generator',
+    'hashtag_suggestions',
+    'uf_tips',
+    'weekly_planner',
+    'marketing_plans',
+    'sales_radar',
+    'ai_analysis_basic',
+    'ai_analysis_deep',
+    'ai_analysis_premium',
+    'manual_scheduling',
+    'calendar',
+    'tiktok_connection',
+    'meta_connection',
+    'team_organizations',
+  ],
+};
 
-    case 'pro':
-      return {
-        model: MODEL_BY_TIER.pro,
-        credits: 200,
-        features: ['advanced', 'creative', 'competitors', 'reports', 'premium_analysis', 'premium_plans'],
-        displayName: 'Pro',
-        price: 99,
-        tier: 'pro',
-        isActive: true
-      };
+// Legacy plans → mapped to closest new plan, but keep their original id.
+const PRO_LEGACY: PlanConfig = { ...GROWTH, id: 'pro' };
+const PRO_XL_LEGACY: PlanConfig = { ...MAX_PLAN, id: 'pro_xl' };
+const PRO_UNLIMITED_LEGACY: PlanConfig = { ...MAX_PLAN, id: 'pro_unlimited' };
 
-    default:
-      return {
-        model: MODEL_BY_TIER.starter,
-        credits: 50,
-        features: ['basic_strategy', 'tips'],
-        displayName: 'Starter',
-        price: 29,
-        tier: 'starter',
-        isActive: false
-      };
+export const PLAN_CONFIGS: Record<PlanType, PlanConfig> = {
+  free_trial: FREE,
+  starter: STARTER,
+  growth: GROWTH,
+  max: MAX_PLAN,
+  pro: PRO_LEGACY,
+  pro_xl: PRO_XL_LEGACY,
+  pro_unlimited: PRO_UNLIMITED_LEGACY,
+};
+
+/** Plans shown on the public pricing page (in display order). */
+export const PUBLIC_PLANS: PlanConfig[] = [FREE, STARTER, GROWTH, MAX_PLAN];
+
+export function getPlanConfig(plan: PlanType | string | null | undefined): PlanConfig {
+  if (!plan) return FREE;
+  return PLAN_CONFIGS[plan as PlanType] ?? FREE;
+}
+
+export function planHasFeature(plan: PlanType | string | null | undefined, feature: FeatureKey): boolean {
+  return getPlanConfig(plan).features.includes(feature);
+}
+
+/** Lowest plan that includes the given feature (used for upgrade prompts). */
+export function minPlanForFeature(feature: FeatureKey): PlanConfig {
+  for (const p of PUBLIC_PLANS) {
+    if (p.features.includes(feature)) return p;
   }
+  return MAX_PLAN;
+}
+
+export function isHigherPlan(a: PlanType | string, b: PlanType | string): boolean {
+  return getPlanConfig(a).tier > getPlanConfig(b).tier;
 }
 
 /**
- * Verify that the requested model matches the tier's allowed model
- * Returns true if valid, throws error if policy violation detected
+ * Backwards-compatible shim used by older code paths.
+ * Real model selection happens in the AI router.
  */
-export function enforceModelPolicy(tier: string, requestedModel?: string): string {
-  const allowedModel = MODEL_BY_TIER[tier as keyof typeof MODEL_BY_TIER] || MODEL_BY_TIER.starter;
-  
-  if (requestedModel && requestedModel !== allowedModel) {
-    console.error('POLICY_VIOLATION: Model mismatch', {
-      tier,
-      requested: requestedModel,
-      allowed: allowedModel,
-      timestamp: new Date().toISOString()
-    });
-    // Return allowed model, ignore client override
-    return allowedModel;
-  }
-  
-  return allowedModel;
+export function enforceModelPolicy(_tier: string, _requestedModel?: string): string {
+  return 'google/gemini-2.5-flash';
 }
 
-/**
- * Check if user has valid plan with AI access
- */
-export function hasAIAccess(plan: PlanType, creditsLeft: number): { 
-  allowed: boolean; 
-  reason?: string;
-  tier: string;
-} {
+export function hasAIAccess(
+  plan: PlanType | string,
+  creditsLeft: number
+): { allowed: boolean; reason?: string; tier: string } {
   const config = getPlanConfig(plan);
-  
-  if (!config.isActive) {
-    return {
-      allowed: false,
-      reason: 'no_active_plan',
-      tier: config.tier
-    };
-  }
-  
-  if (creditsLeft <= 0) {
-    return {
-      allowed: false,
-      reason: 'insufficient_credits',
-      tier: config.tier
-    };
-  }
-  
-  return {
-    allowed: true,
-    tier: config.tier
-  };
-}
-
-/**
- * Check if user has credits remaining
- */
-export function hasCreditsRemaining(creditsUsed: number, maxCredits: number): boolean {
-  return creditsUsed < maxCredits;
-}
-
-/**
- * Calculate credits remaining
- */
-export function getCreditsRemaining(creditsUsed: number, maxCredits: number): number {
-  return Math.max(0, maxCredits - creditsUsed);
-}
-
-/**
- * Check if renewal date has passed
- */
-export function shouldResetCredits(renewalDate: string): boolean {
-  const now = new Date();
-  const renewal = new Date(renewalDate);
-  return now >= renewal;
+  if (!config.isActive) return { allowed: false, reason: 'no_active_plan', tier: config.id };
+  if (creditsLeft <= 0) return { allowed: false, reason: 'insufficient_credits', tier: config.id };
+  return { allowed: true, tier: config.id };
 }
