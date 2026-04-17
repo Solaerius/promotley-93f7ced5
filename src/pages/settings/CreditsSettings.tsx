@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
+import CreditsHistory from "@/components/account/CreditsHistory";
 
 export function CreditsSettingsInner() {
   const { t } = useTranslation();
@@ -235,6 +236,14 @@ export function CreditsSettingsInner() {
               onSuccess={() => refetchCredits()}
             />
           </div>
+        </div>
+
+        <div className="rounded-xl bg-card shadow-sm p-4 space-y-3">
+          <h3 className="text-sm font-semibold">{t("credits.history_title", "Användningshistorik")}</h3>
+          <p className="text-xs text-muted-foreground">
+            {t("credits.history_desc", "De senaste 50 AI-anropen och hur många krediter de kostade.")}
+          </p>
+          <CreditsHistory />
         </div>
       </div>
 
