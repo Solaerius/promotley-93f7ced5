@@ -1,4 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { routeAIRequest, logRouting } from "../_shared/ai-router.ts";
+import { buildSkillsPrompt } from "../_shared/ai-skills/index.ts";
+import { callAI, usdToCredits } from "../_shared/ai-providers.ts";
+import { logCreditTransaction } from "../_shared/credit-tracking.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,7 +17,6 @@ const securityHeaders = {
 
 const PROMPT_INJECTION_PATTERNS = [
   /ignore\s+(all\s+)?previous\s+instructions?/i,
-  /ignore\s+the\s+above/i,
   /disregard\s+(all\s+)?previous/i,
   /new\s+instructions?:\s*/i,
   /system\s*:\s*/i,
@@ -26,41 +29,6 @@ const PROMPT_INJECTION_PATTERNS = [
 function checkForInjection(text: string): boolean {
   if (!text || typeof text !== 'string') return false;
   return PROMPT_INJECTION_PATTERNS.some(pattern => pattern.test(text));
-}
-
-// AI Council: model pools per tier
-const MODEL_POOLS: Record<string, { defaultModel: string; pool: string[] }> = {
-  fast: { defaultModel: 'gpt-4o-mini', pool: ['gpt-4o-mini'] },
-  standard: { defaultModel: 'gpt-4o', pool: ['gpt-4o', 'gpt-4o-mini'] },
-  premium: { defaultModel: 'gpt-4o', pool: ['gpt-4o'] },
-};
-
-async function routeModel(message: string, tier: string, apiKey: string): Promise<string> {
-  const config = MODEL_POOLS[tier] || MODEL_POOLS.standard;
-  if (config.pool.length <= 1) return config.pool[0];
-
-  try {
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: `Pick the best model for this task from: ${config.pool.join(', ')}. This is a content suggestion generation task. Respond with ONLY the model name.` },
-          { role: 'user', content: message.slice(0, 300) }
-        ],
-        temperature: 0, max_tokens: 50,
-      }),
-    });
-    if (!resp.ok) return config.defaultModel;
-    const data = await resp.json();
-    const recommended = data.choices?.[0]?.message?.content?.trim();
-    if (recommended && config.pool.includes(recommended)) {
-      console.log(`🧭 AI Council routed to: ${recommended}`);
-      return recommended;
-    }
-    return config.defaultModel;
-  } catch { return config.defaultModel; }
 }
 
 interface SuggestionRequest {
@@ -77,14 +45,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
-    const userAgent = req.headers.get('user-agent') || 'unknown';
-    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    
+    const hasAnthropicKey = !!Deno.env.get('ANTHROPIC_API_KEY');
+
     if (!openaiApiKey) {
       return new Response(JSON.stringify({ error: 'AI not configured' }), {
         status: 503, headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
@@ -111,7 +77,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Rate limits
+    if (!user.email_confirmed_at) {
+      return new Response(JSON.stringify({ error: 'email_not_verified', message: 'Verifiera din e-post först' }), {
+        status: 403, headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Rate limit
     const { data: rateLimitOk } = await supabaseAdmin.rpc('check_rate_limit', {
       _user_id: user.id, _endpoint: 'generate-suggestion'
     });
@@ -121,10 +93,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // User data
     const { data: userData } = await supabase
       .from("users")
-      .select("plan, credits_left, company_name, industry, keywords")
+      .select("plan, credits_left, company_name, industry, keywords, active_organization_id")
       .eq("id", user.id)
       .single();
 
@@ -137,14 +108,12 @@ Deno.serve(async (req) => {
     const body: SuggestionRequest = await req.json();
     const { platform, brand, keywords, recentMetrics, model_tier } = body;
 
-    // Validate platform
     if (!platform || !['instagram', 'tiktok', 'facebook'].includes(platform.toLowerCase())) {
       return new Response(JSON.stringify({ error: "Ogiltig plattform" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Check injection
     const fieldsToCheck = [brand, ...(keywords || []), recentMetrics].filter(Boolean);
     for (const field of fieldsToCheck) {
       if (checkForInjection(field as string)) {
@@ -154,106 +123,84 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fetch AI profile + knowledge base for context injection
+    // Hämta AI-profil + organization-profil för rikare kontext
     const { data: aiProfile } = await supabaseAdmin
-      .from('ai_profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
+      .from('ai_profiles').select('*').eq('user_id', user.id).maybeSingle();
+
+    let orgProfile: any = null;
+    if (userData.active_organization_id) {
+      const { data } = await supabaseAdmin
+        .from('organization_profiles').select('*')
+        .eq('organization_id', userData.active_organization_id).maybeSingle();
+      orgProfile = data;
+    }
 
     const { data: allKnowledge } = await supabaseAdmin
-      .from('ai_knowledge')
-      .select('title, content, category');
+      .from('ai_knowledge').select('title, content, category');
 
     const knowledgeContext = allKnowledge && allKnowledge.length > 0
       ? allKnowledge.map(k => `[${k.category}] ${k.title}: ${k.content}`).join('\n\n')
       : '';
 
-    const profileContext = aiProfile ? `
-Företagsprofil:
-- Företagsnamn: ${aiProfile.foretagsnamn || userData.company_name || 'Ej angivet'}
-- Bransch: ${aiProfile.branch || userData.industry || 'Ej angiven'}
-- Målgrupp: ${aiProfile.malgrupp || 'Ej angiven'}
-- Produkt: ${aiProfile.produkt_beskrivning || 'Ej angiven'}
-- Tonalitet: ${aiProfile.tonalitet || 'Professionell'}
-- Målsättning: ${aiProfile.malsattning || 'Ej angiven'}
-- Nyckelord: ${aiProfile.nyckelord?.join(', ') || 'Inga'}` : '';
+    // SMART AI ROUTER
+    const tier = (model_tier as 'fast' | 'standard' | 'premium') || 'standard';
+    const route = await routeAIRequest({
+      functionName: 'generate-suggestion',
+      taskType: 'suggestion',
+      userMessage: `Plattform: ${platform}, bransch: ${aiProfile?.branch || userData.industry || ''}`,
+      tier,
+      hasProfile: !!aiProfile,
+      contextSize: knowledgeContext.length > 5000 ? 'large' : 'medium',
+    }, openaiApiKey, hasAnthropicKey);
 
-    const companyName = brand || aiProfile?.foretagsnamn || userData.company_name || "företaget";
-    const industry = aiProfile?.branch || userData.industry || "din bransch";
-    const keywordsList = keywords || aiProfile?.nyckelord || userData.keywords || [];
+    const skillsPrompt = buildSkillsPrompt(route.skills);
 
-    const systemPrompt = `Du är en svensk social media-strateg som hjälper UF-företag. Svara ENDAST i JSON med följande struktur:
+    const companyName = brand || aiProfile?.foretagsnamn || orgProfile?.industry || userData.company_name || "företaget";
+    const industry = aiProfile?.branch || orgProfile?.industry || userData.industry || "din bransch";
+    const keywordsList = keywords || aiProfile?.nyckelord || orgProfile?.keywords || userData.keywords || [];
+    const targetAudience = aiProfile?.malgrupp || orgProfile?.target_audience || '';
+    const tone = aiProfile?.tonalitet || orgProfile?.tone || 'Professionell';
+
+    const systemPrompt = `Du är en svensk social media-strateg som hjälper UF-företag.
+
+${skillsPrompt}
+
+KUNSKAPSBAS:
+${knowledgeContext}
+
+Svara ENDAST i giltig JSON med denna struktur:
 {
-  "idea": "En konkret innehållsidé (ren text)",
-  "caption": "Färdig caption i ren text (INGA emojis, INGEN Markdown)",
-  "hashtags": ["#hashtag1", "#hashtag2", ...],
+  "idea": "Konkret innehållsidé (ren text)",
+  "caption": "Färdig caption på svenska (ren text, inga emojis, inga markdown)",
+  "hashtags": ["#hashtag1", "#hashtag2"],
   "best_time": "Bästa posttid (ex: Torsdag 18:00)"
-}
-
-${profileContext}
-
-${knowledgeContext ? `KUNSKAPSBAS:\n${knowledgeContext}` : ''}
-
-KRITISKT: Caption-fältet får ENDAST innehålla ren text. Svara ALLTID på svenska.`;
+}`;
 
     const userPrompt = `Företag: ${companyName}
 Bransch: ${industry}
+Målgrupp: ${targetAudience}
+Tonalitet: ${tone}
 Nyckelord: ${keywordsList.join(", ")}
 Plattform: ${platform}
 Senaste data: ${recentMetrics || "inga tidigare metrics"}
 
 Ge 1 konkret idé för ett ${platform}-inlägg med engagerande idé, färdig caption, 8 hashtags och bästa posttid.`;
 
-    // AI Council routing
-    const tier = model_tier || 'standard';
-    const aiModel = await routeModel(userPrompt, tier, openaiApiKey);
-    console.log(`🤖 Using model: ${aiModel} (tier: ${tier})`);
-
-    const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: aiModel,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-      }),
+    const aiResult = await callAI({
+      modelId: route.model,
+      systemPrompt,
+      userPrompt,
+      temperature: 0.7,
+      maxTokens: 700,
+      jsonMode: true,
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI Gateway error:", aiResponse.status, errorText);
-      if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      return new Response(JSON.stringify({ error: "AI API-fel" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const aiData = await aiResponse.json();
-    const content = aiData.choices[0].message?.content || "{}";
-    
     let suggestion;
     try {
-      const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleaned = aiResult.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       suggestion = JSON.parse(cleaned);
     } catch {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = aiResult.text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try { suggestion = JSON.parse(jsonMatch[0]); } catch { suggestion = null; }
       }
@@ -264,18 +211,45 @@ Ge 1 konkret idé för ett ${platform}-inlägg med engagerande idé, färdig cap
       }
     }
 
-    // Save suggestion
+    // Beräkna krediter dynamiskt utifrån verklig USD-kostnad
+    const credits = await usdToCredits(supabaseAdmin, aiResult.usage.costUsd);
+
+    // Spara suggestion + dra krediter
     await supabase.from("suggestions").insert({
       user_id: user.id, platform,
-      idea: suggestion.idea || "", caption: suggestion.caption || "",
-      hashtags: suggestion.hashtags || [], best_time: suggestion.best_time || "",
-      credits_spent: 1,
+      organization_id: userData.active_organization_id,
+      idea: suggestion.idea || "",
+      caption: suggestion.caption || "",
+      hashtags: suggestion.hashtags || [],
+      best_time: suggestion.best_time || "",
+      credits_spent: credits,
     });
 
-    // Deduct credits
-    await supabase.from("users").update({ credits_left: userData.credits_left - 1 }).eq("id", user.id);
+    await supabase.from("users")
+      .update({ credits_left: userData.credits_left - credits })
+      .eq("id", user.id);
 
-    return new Response(JSON.stringify(suggestion), {
+    // Logga transaktion + routning
+    await logCreditTransaction(supabaseAdmin, {
+      userId: user.id,
+      functionName: 'generate-suggestion',
+      creditsUsed: credits,
+      costUsd: aiResult.usage.costUsd,
+      model: route.model,
+      organizationId: userData.active_organization_id,
+      metadata: { platform, tier, skills: route.skills },
+    });
+
+    await logRouting(supabaseAdmin, {
+      userId: user.id,
+      functionName: 'generate-suggestion',
+      selectedModel: route.model,
+      skills: route.skills,
+      reasoning: route.reasoning,
+      actualCredits: credits,
+    });
+
+    return new Response(JSON.stringify({ ...suggestion, _meta: { model: route.model, credits } }), {
       headers: { ...corsHeaders, ...securityHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
