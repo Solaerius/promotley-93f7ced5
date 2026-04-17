@@ -605,6 +605,14 @@ Klicka på "Implementera planen" nedan för att lägga till alla inlägg i din k
             .eq('id', user.id);
           console.log('💸 Plan credits deducted:', estimatedCost, 'remaining:', newCredits);
 
+          // Log credit transaction
+          await supabaseClient.from('credit_transactions').insert({
+            user_id: user.id,
+            function_name: 'ai-assistant/marketing-plan',
+            credits_used: estimatedCost,
+            metadata: { type: 'marketing_plan' },
+          });
+
           return new Response(
             JSON.stringify({ 
               response: explanation, 
@@ -1141,6 +1149,15 @@ Kom ihåg: Du är här för att hjälpa UF-företagare att växa sina företag s
         .update({ credits_left: newCredits })
         .eq('id', user.id);
       console.log('💸 Credits deducted:', estimatedCost, 'remaining:', newCredits);
+
+      // Log credit transaction for history
+      await supabaseClient.from('credit_transactions').insert({
+        user_id: user.id,
+        function_name: 'ai-assistant/chat',
+        credits_used: estimatedCost,
+        model: aiModel,
+        metadata: { task_type: taskTypeHint, tier: modelTier },
+      });
 
       return new Response(
         JSON.stringify({ response: assistantMessage, credits_used: estimatedCost }),
