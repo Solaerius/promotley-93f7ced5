@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 import { routeAIRequest, logRouting } from '../_shared/ai-router.ts';
 import { callAI, usdToCredits } from '../_shared/ai-providers.ts';
-import { buildSkillsBlock } from '../_shared/ai-skills/index.ts';
+import { buildSkillsPrompt } from '../_shared/ai-skills/index.ts';
 import { logCreditTransaction } from '../_shared/credit-tracking.ts';
 
 const corsHeaders = {
@@ -119,7 +119,7 @@ serve(async (req) => {
       contextSize: 'large',
     }, openaiApiKey, !!anthropicApiKey);
 
-    const skillsBlock = buildSkillsBlock(routing.skills);
+    const skillsBlock = buildSkillsPrompt(routing.skills);
 
     const systemPrompt = `Du är Promotley UF:s AI-expert och marknadsföringsrådgivare.
 
