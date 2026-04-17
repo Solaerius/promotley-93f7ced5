@@ -1974,6 +1974,15 @@ export type Database = {
         }
         Returns: string
       }
+      lookup_invite_by_code: {
+        Args: { _invite_code: string }
+        Returns: {
+          expires_at: string
+          id: string
+          organization_id: string
+          organization_name: string
+        }[]
+      }
       lookup_org_by_invite_code: {
         Args: { _invite_code: string }
         Returns: {
