@@ -17,21 +17,26 @@ import {
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAIProfile } from "@/hooks/useAIProfile";
+import { useUserCredits } from "@/hooks/useUserCredits";
+import { planHasFeature, minPlanForFeature, type FeatureKey } from "@/lib/planConfig";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const AIPage = () => {
   const { t } = useTranslation();
+  const { credits } = useUserCredits();
 
-  const tools = [
-    { icon: FileText, title: t('tools.caption_title'), description: t('tools.caption_desc'), route: "/ai/caption" },
-    { icon: Hash, title: t('tools.hashtag_title'), description: t('tools.hashtag_desc'), route: "/ai/hashtags" },
-    { icon: Image, title: t('tools.content_title'), description: t('tools.content_desc'), route: "/ai/content-ideas" },
-    { icon: Calendar, title: t('tools.weekly_title'), description: t('tools.weekly_desc'), route: "/ai/weekly-plan" },
-    { icon: Target, title: t('tools.campaign_title'), description: t('tools.campaign_desc'), route: "/ai/campaign" },
-    { icon: Lightbulb, title: t('tools.uf_title'), description: t('tools.uf_desc'), route: "/ai/uf-tips" },
-    { icon: BarChart3, title: t('tools.analysis_title'), description: t('tools.analysis_desc'), route: "/ai-dashboard" },
-    { icon: Radar, title: t('tools.radar_title'), description: t('tools.radar_desc'), route: "/ai?tab=radar", isInternal: true },
+  const tools: Array<{ icon: any; title: string; description: string; route: string; feature: FeatureKey }> = [
+    { icon: FileText, title: t('tools.caption_title'), description: t('tools.caption_desc'), route: "/ai/caption", feature: 'caption_generator' },
+    { icon: Hash, title: t('tools.hashtag_title'), description: t('tools.hashtag_desc'), route: "/ai/hashtags", feature: 'hashtag_suggestions' },
+    { icon: Image, title: t('tools.content_title'), description: t('tools.content_desc'), route: "/ai/content-ideas", feature: 'content_ideas_basic' },
+    { icon: Calendar, title: t('tools.weekly_title'), description: t('tools.weekly_desc'), route: "/ai/weekly-plan", feature: 'weekly_planner' },
+    { icon: Target, title: t('tools.campaign_title'), description: t('tools.campaign_desc'), route: "/ai/campaign", feature: 'marketing_plans' },
+    { icon: Lightbulb, title: t('tools.uf_title'), description: t('tools.uf_desc'), route: "/ai/uf-tips", feature: 'uf_tips' },
+    { icon: BarChart3, title: t('tools.analysis_title'), description: t('tools.analysis_desc'), route: "/ai-dashboard", feature: 'ai_analysis_basic' },
+    { icon: Radar, title: t('tools.radar_title'), description: t('tools.radar_desc'), route: "/ai?tab=radar", feature: 'sales_radar' },
   ];
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -80,16 +85,24 @@ const AIPage = () => {
         <div data-tour="ai-tabs" className={`grid grid-cols-1 sm:grid-cols-2 gap-2.5 ${isBlocked ? "opacity-50 pointer-events-none" : ""}`}>
           {tools.map((tool, index) => {
             const Icon = tool.icon;
+            const locked = !planHasFeature(credits?.plan, tool.feature);
+            const requiredPlan = locked ? minPlanForFeature(tool.feature).displayName : '';
             return (
               <button
                 key={tool.title}
                 onClick={() => navigate(tool.route)}
-                className="flex items-start gap-4 p-4 rounded-2xl bg-card border border-border/40 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 text-left group cursor-pointer"
+                className="relative flex items-start gap-4 p-4 rounded-2xl bg-card border border-border/40 hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 text-left group cursor-pointer"
               >
+                {locked && (
+                  <Badge variant="outline" className="absolute top-2 right-2 text-[10px] gap-1 bg-background/80">
+                    <Lock className="w-2.5 h-2.5" />
+                    {requiredPlan}
+                  </Badge>
+                )}
                 <span className="text-[11px] font-bold font-mono text-muted-foreground/50 mt-1 w-5 shrink-0">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10 shrink-0">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10 shrink-0 ${locked ? 'opacity-60' : ''}`}>
                   <Icon className="w-4.5 h-4.5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
