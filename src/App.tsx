@@ -23,6 +23,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
 const Calendar = lazy(() => import("./pages/Calendar"));
+const PostsPage = lazy(() => import("./pages/PostsPage"));
 const AIPage = lazy(() => import("./pages/AIPage"));
 const AIChat = lazy(() => import("./pages/AIChat"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
@@ -56,6 +57,7 @@ const AdminStripeOrders = lazy(() => import("./pages/AdminStripeOrders"));
 const AdminPromotions = lazy(() => import("./pages/AdminPromotions"));
 const AdminEmailBroadcast = lazy(() => import("./pages/AdminEmailBroadcast"));
 const AdminEmailAutomation = lazy(() => import("./pages/AdminEmailAutomation"));
+const AdminFeatureFlags = lazy(() => import("./pages/AdminFeatureFlags"));
 // Organization pages
 const OrganizationOnboarding = lazy(() => import("./pages/OrganizationOnboarding"));
 const OrganizationSettings = lazy(() => import("./pages/OrganizationSettings"));
@@ -125,6 +127,14 @@ function AppRoutes() {
               <ProtectedRoute>
                 <PageTransition><Calendar /></PageTransition>
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/posts"
+            element={
+              <RequireVerifiedEmail>
+                <PageTransition><PostsPage /></PageTransition>
+              </RequireVerifiedEmail>
             }
           />
           <Route
@@ -247,6 +257,14 @@ function AppRoutes() {
             element={
               <AdminRoute>
                 <AdminEmailAutomation />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/feature-flags"
+            element={
+              <AdminRoute>
+                <AdminFeatureFlags />
               </AdminRoute>
             }
           />
