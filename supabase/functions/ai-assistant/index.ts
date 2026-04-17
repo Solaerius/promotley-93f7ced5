@@ -1328,6 +1328,14 @@ Vill du implementera denna plan i din kalender? Klicka på "Implementera planen"
           .eq('id', user.id);
         console.log('💸 Plan credits deducted:', planCost, 'remaining:', newCredits);
 
+        // Log credit transaction
+        await supabaseClient.from('credit_transactions').insert({
+          user_id: user.id,
+          function_name: 'ai-assistant/marketing-plan',
+          credits_used: planCost,
+          metadata: { type: 'marketing_plan' },
+        });
+
         return new Response(
           JSON.stringify({ plan, explanation, credits_used: planCost }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
