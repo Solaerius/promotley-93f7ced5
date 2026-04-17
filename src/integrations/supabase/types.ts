@@ -433,14 +433,8 @@ export type Database = {
           description: string | null
           event_type: string
           id: string
-          media_type: string | null
-          media_url: string | null
           organization_id: string | null
           platform: string
-          publish_error: string | null
-          publish_status: string
-          published_at: string | null
-          scheduled_at: string | null
           title: string
           user_id: string
         }
@@ -450,14 +444,8 @@ export type Database = {
           description?: string | null
           event_type?: string
           id?: string
-          media_type?: string | null
-          media_url?: string | null
           organization_id?: string | null
           platform: string
-          publish_error?: string | null
-          publish_status?: string
-          published_at?: string | null
-          scheduled_at?: string | null
           title: string
           user_id: string
         }
@@ -467,14 +455,8 @@ export type Database = {
           description?: string | null
           event_type?: string
           id?: string
-          media_type?: string | null
-          media_url?: string | null
           organization_id?: string | null
           platform?: string
-          publish_error?: string | null
-          publish_status?: string
-          published_at?: string | null
-          scheduled_at?: string | null
           title?: string
           user_id?: string
         }
