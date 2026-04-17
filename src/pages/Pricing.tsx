@@ -157,7 +157,7 @@ const Pricing = () => {
                       className="w-full"
                       size="lg"
                       onClick={() => handleSelectPlan(plan.id)}
-                      disabled={Boolean(isLowerOrSame && currentTier > 0 && !isCurrent === false)}
+                      disabled={isCurrent || (isLowerOrSame && currentTier > 0)}
                     >
                       {isCurrent
                         ? "Nuvarande plan"
