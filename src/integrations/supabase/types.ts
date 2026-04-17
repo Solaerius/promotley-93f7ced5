@@ -954,6 +954,7 @@ export type Database = {
           id: string
           session_id: string
           status: string
+          user_id: string | null
         }
         Insert: {
           closed_at?: string | null
@@ -962,6 +963,7 @@ export type Database = {
           id?: string
           session_id: string
           status?: string
+          user_id?: string | null
         }
         Update: {
           closed_at?: string | null
@@ -970,6 +972,7 @@ export type Database = {
           id?: string
           session_id?: string
           status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
