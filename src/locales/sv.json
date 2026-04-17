@@ -885,7 +885,12 @@
     "count_5": "5 idéer",
     "count_7": "7 idéer",
     "generate_btn": "Generera idéer",
-    "results_heading": "Dina idéer"
+    "results_heading": "Dina idéer",
+    "show_hooks": "Visa {{count}} hook-förslag",
+    "coming_soon_heading": "Mer kommer snart",
+    "cs_trends": "Aktuella TikTok- och Instagram-trender med sökbara nyckelord",
+    "cs_sounds": "Rekommenderade ljud och musik som driver räckvidd just nu",
+    "cs_viral_links": "Direktlänkar till virala referensinlägg du kan bygga på"
   },
   "weekly": {
     "title": "Veckoplanering",

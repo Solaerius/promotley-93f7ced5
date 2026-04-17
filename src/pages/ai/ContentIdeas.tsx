@@ -1,18 +1,22 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, Wand2, Film, Camera, Layout, MessageSquare } from 'lucide-react';
+import { Image, Wand2, ChevronDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAIToolRequest } from '@/hooks/useAIToolRequest';
 import AIToolPageLayout from '@/components/ai/AIToolPageLayout';
+import { ComingSoonBadge } from '@/components/ComingSoonBadge';
 
 interface ContentIdea {
   title: string;
   description: string;
   format: string;
   platform: string;
+  max_length?: string;
+  hooks?: string[];
   day?: string;
 }
 
@@ -21,36 +25,29 @@ interface ContentIdeasResult {
   raw?: string;
 }
 
-const formatIcons: Record<string, any> = {
-  reel: Film,
-  reels: Film,
-  video: Film,
-  story: Camera,
-  stories: Camera,
-  carousel: Layout,
-  post: Image,
-  bild: Image,
-  text: MessageSquare,
-};
+const SYSTEM_PROMPT = `Du är en kreativ content-strateg för svenska UF-företag. Svara ALLTID i JSON.
 
-const SYSTEM_PROMPT = `Du är en kreativ content-strateg. Svara ALLTID i JSON-format.
-Generera content-idéer med varierade format (Reel, Story, Carousel, Post). Varje idé ska vara konkret och genomförbar.
-Format: {"ideas": [{"title": "Kort catchy titel", "description": "Detaljerad beskrivning av innehållet", "format": "Reel/Story/Carousel/Post", "platform": "instagram/tiktok/facebook", "day": "Måndag"}]}`;
+Generera korta, konkreta content-idéer. Varje idé MÅSTE innehålla:
+- title: Catchy titel (max 50 tecken)
+- description: Vad inlägget handlar om (1-2 meningar, max 150 tecken)
+- format: "Reel" | "Story" | "Carousel" | "Post"
+- platform: "instagram" | "tiktok" | "facebook"
+- max_length: Rekommenderad längd ("15-30 sek" för Reel, "5-10 bilder" för Carousel, etc)
+- hooks: Array med 2-3 första-meningar som fångar uppmärksamhet (max 80 tecken vardera)
+
+Skriv på enkel, naturlig svenska. Undvik jargong. Inga emojis i hooks (ser AI-genererat ut).
+
+Format: {"ideas":[{"title":"...","description":"...","format":"Reel","platform":"tiktok","max_length":"15-30 sek","hooks":["...","...","..."]}]}`;
 
 const ContentIdeas = () => {
   const { t } = useTranslation();
   const [platform, setPlatform] = useState('alla');
   const [count, setCount] = useState('5');
+  const [openHooks, setOpenHooks] = useState<Record<number, boolean>>({});
   const { result, loading, error, generate } = useAIToolRequest<ContentIdeasResult>({ toolSystemPrompt: SYSTEM_PROMPT });
 
   const handleGenerate = () => {
-    generate(`Plattform: ${platform === 'alla' ? 'Instagram, TikTok och Facebook' : platform}. Antal idéer: ${count}. Ge konkreta och kreativa idéer för UF-företag.`);
-  };
-
-  const getFormatIcon = (format: string) => {
-    const key = format.toLowerCase();
-    const Icon = formatIcons[key] || Image;
-    return <Icon className="w-4 h-4" />;
+    generate(`Plattform: ${platform === 'alla' ? 'Instagram, TikTok och Facebook' : platform}. Antal idéer: ${count}. Ge konkreta och kreativa idéer för UF-företag med tydliga hooks.`);
   };
 
   return (
@@ -60,7 +57,6 @@ const ContentIdeas = () => {
       icon={Image}
       gradient="from-purple-500 to-pink-500"
     >
-      {/* Loading progress bar */}
       {loading && (
         <div className="h-1 w-full bg-border rounded-full overflow-hidden">
           <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
@@ -112,25 +108,56 @@ const ContentIdeas = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {result.ideas.map((idea, i) => (
               <Card key={i} className="liquid-glass-light hover:shadow-elegant transition-all duration-300">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                      {getFormatIcon(idea.format)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm dashboard-heading-dark truncate">{idea.title}</h3>
-                    </div>
+                <CardContent className="p-4 space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-sm dashboard-heading-dark">{idea.title}</h3>
+                    <p className="text-sm dashboard-subheading-dark mt-1">{idea.description}</p>
                   </div>
-                  <p className="text-sm dashboard-subheading-dark">{idea.description}</p>
+
                   <div className="flex gap-2 flex-wrap">
                     <Badge variant="outline" className="text-xs">{idea.format}</Badge>
                     {idea.platform && <Badge variant="secondary" className="text-xs capitalize">{idea.platform}</Badge>}
+                    {idea.max_length && <Badge variant="secondary" className="text-xs">{idea.max_length}</Badge>}
                     {idea.day && <Badge variant="secondary" className="text-xs">{idea.day}</Badge>}
                   </div>
+
+                  {idea.hooks && idea.hooks.length > 0 && (
+                    <Collapsible
+                      open={openHooks[i]}
+                      onOpenChange={(o) => setOpenHooks(prev => ({ ...prev, [i]: o }))}
+                    >
+                      <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+                        <ChevronDown className={`w-3 h-3 transition-transform ${openHooks[i] ? 'rotate-180' : ''}`} />
+                        {t('content_ideas.show_hooks', { count: idea.hooks.length })}
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pt-2 space-y-1.5">
+                        {idea.hooks.map((hook, hi) => (
+                          <div key={hi} className="text-xs p-2 rounded bg-muted/50 border border-border/50 dashboard-subheading-dark">
+                            "{hook}"
+                          </div>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
                 </CardContent>
               </Card>
             ))}
           </div>
+
+          {/* Coming soon section */}
+          <Card className="liquid-glass-light opacity-70">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold dashboard-heading-dark">{t('content_ideas.coming_soon_heading')}</h3>
+                <ComingSoonBadge />
+              </div>
+              <ul className="text-xs dashboard-subheading-dark space-y-1 pl-4 list-disc">
+                <li>{t('content_ideas.cs_trends')}</li>
+                <li>{t('content_ideas.cs_sounds')}</li>
+                <li>{t('content_ideas.cs_viral_links')}</li>
+              </ul>
+            </CardContent>
+          </Card>
         </div>
       )}
     </AIToolPageLayout>
