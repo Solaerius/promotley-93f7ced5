@@ -1,125 +1,167 @@
-` tags (read-only mode — cannot execute the phased changes). I'll deliver the audit findings AND the proposed fix plan in one approval-ready document.
 
-<lov-plan>
 
-# Plan: Fixa onboarding-persistens + ta bort dubbel "skapa organisation"-prompt
+# Plan: Launch-Ready Sprint — Phase 1 + Phase 2
 
-## Phase 1 — Audit av v2 onboarding-flödet (resultat)
+## Uppdaterade prisplaner
 
-Det finns **tre konkurrerande "skapa organisation"-flöden** i kodbasen. Det är därför företagsdata inte landar där dashboarden tittar.
+| | **Free** | **Starter** | **Growth** | **Max** |
+|---|---|---|---|---|
+| **Pris** | 0 kr | 49 kr/mån | 159 kr/mån | 299 kr/mån |
+| **Krediter/mån** | 30 (max 5/dag) | 250 | 950 | 2000 |
+| AI-chatt | Ja | Ja | Ja | Ja |
+| AI Content-idéer | Basic | Ja | Avancerade | Premium |
+| Caption Generator | 3/mån | Ja | Ja | Ja |
+| Hashtag-förslag | Ja | Ja | Ja | Ja |
+| UF-tips | Ja | Ja | Ja | Ja |
+| Veckoplanering | Nej | Ja | Ja | Ja |
+| Marknadsplaner | Nej | 1/mån | 5/mån | Obegränsat |
+| Säljradar | Nej | Nej | 10/mån | Obegränsat |
+| AI-analys av stats | Nej | Basic | Djup | Premium |
+| Schemaläggning (manuell) | 3/mån | 10/mån | Obegränsat | Obegränsat |
+| Kalender + content planner | Ja | Ja | Ja | Ja |
+| TikTok-koppling (read-only) | Ja | Ja | Ja | Ja |
+| Instagram/Facebook-koppling | Ja | Ja | Ja | Ja |
+| **Video-upload + auto-publish** | Kommer snart | Kommer snart | Kommer snart | Kommer snart |
+| **AI video-analys** | Kommer snart | Kommer snart | Kommer snart | Kommer snart |
+| **Sound-bibliotek från TikTok** | Kommer snart | Kommer snart | Kommer snart | Kommer snart |
+| Organisationer (team) | 1 | 1 | 3 | Obegränsat |
+| Support | Community | E-post | E-post prio | Live chat |
 
-### De tre flödena
+Pricing-sidan visar "Kommer snart"-rader utan ikon, i en dämpad textfärg, utan klickbara element.
 
-| Flöde | Fil | Vad det gör | Skriver till `organization_profiles`? |
-|---|---|---|---|
-| **A. Nytt v2-flöde (4 steg, mode-väljare)** | `src/pages/Onboarding.tsx` (route `/onboarding`) | Skapar org via `createOrganization()` + skriver fält till `ai_profiles` (per-user) | **Nej** |
-| **B. Gammalt flöde (tabbar)** | `src/pages/OrganizationOnboarding.tsx` (route `/organization/onboarding`) | Skapar bara org-namn, inget annat | **Nej** |
-| **C. CreateOrganization (4 steg, separat)** | `src/pages/CreateOrganization.tsx` (route `/organization/new`) | Skapar org + skriver till `organization_profiles` | **Ja** — men med 3 kolumner som inte finns: `linkedin_handle`, `x_handle`, `newsletter_opt_in` (hela insert kraschar) |
+---
 
-### Roten till problemet
+## PHASE 1 — Launch idag (3-5 dagars arbete)
 
-`DashboardLayout.tsx` (rad 39–43) tvångs-redirectar till **flöde B** (`/organization/onboarding`) så fort `useOrganization` rapporterar `needsOnboarding = true` — det baseras enbart på `organization_members`-radens existens.
+Allt nedan kan implementeras direkt utan att vänta på externa godkännanden. När det är klart kan du publicera.
 
-Det betyder:
-- Användare som går igenom det fina nya **flöde A** (`/onboarding`) skapar visserligen en org, men `ai_profiles`-fälten är per-user, inte per-org. Dashboarden bryr sig inte om dem.
-- Om något felar i `createOrganization` → tom org-medlemskapsrad saknas → dashboard skickar tillbaka till **flöde B** → "Skapa organisation"-prompten dyker upp igen.
-- Inget av flödena (utom det trasiga C) skriver något till `organization_profiles`, så företagets profilkolumner är alltid tomma.
+### 1.1 Säkerhet & buggfixar (BLOCKERANDE)
+- Fixa `cleanup-oauth-states` cron (analysera logs, återställ schema)
+- Alla AI-funktioner läser från `organization_profiles` + `ai_profiles` (inte bara user-nivå)
+- Verifiera email-leverans via Resend
+- End-to-end-test av onboarding → dashboard → AI-chat → checkout
+- HIBP **avstängd** per ditt beslut
+- Postgres extension i `public` flyttas till `extensions`-schemat
 
-### Fält-för-fält-tabell (v2-registrering = `Onboarding.tsx`)
+### 1.2 Smart AI Router
+- Ny `_shared/ai-models-catalog.ts` med modell-data (priser, styrkor, best_for, ranking)
+- Router-modell `gemini-2.5-flash-lite` får katalogen + request-info → väljer optimal modell via tool-calling
+- Alla AI edge functions (`ai-assistant`, `generate-suggestion`, `generate-ai-analysis`, `sales-radar`) använder routern
+- Routing loggas i ny tabell `ai_routing_log`
+- Anthropic Claude integreras (Säljradar + djupanalys när routern väljer det)
 
-| Fält | Skriver till nu | Finns kolumn på `organizations` / `organization_profiles`? |
-|---|---|---|
-| `full_name` | `auth.user_metadata.full_name` | n/a (användarmetadata) |
-| `foretagsnamn` | `organizations.name` (via RPC) + `ai_profiles.foretagsnamn` | ✅ `organizations.name` |
-| `branch` | `ai_profiles.branch` | ✅ `organization_profiles.industry` (men skrivs ej dit) |
-| `stad` | `ai_profiles.stad` | ✅ `organization_profiles.city` (skrivs ej dit) |
-| `postnummer` | `ai_profiles.postnummer` | ❌ (saknas på org_profiles) |
-| `land` | `ai_profiles.land` | ❌ (saknas på org_profiles) |
-| `malgrupp` | `ai_profiles.malgrupp` | ✅ `organization_profiles.target_audience` (skrivs ej dit) |
-| `produkt_beskrivning` | `ai_profiles.produkt_beskrivning` | ✅ `organization_profiles.unique_properties` (skrivs ej dit) |
-| `malsattning` | `ai_profiles.malsattning` | ✅ `organization_profiles.goals` (skrivs ej dit) |
-| `prisniva` | `ai_profiles.prisniva` | ❌ (saknas) |
-| `nyckelord` | `ai_profiles.nyckelord` | ❌ (saknas) |
-| `tonalitet` | `ai_profiles.tonalitet` | ✅ `organization_profiles.tone` (skrivs ej dit) |
-| `allman_info` | `ai_profiles.allman_info` | ❌ (saknas) |
-| `acceptedTerms` | ingenstans | n/a |
-| `newsletter` | ingenstans (signup-värdet skrivs till `users.email_newsletter` via `useAuth.signUp`, men onboarding-värdet ignoreras) | ✅ `users.email_newsletter` |
+### 1.3 AI Skills-system
+- `_shared/ai-skills/`: marketing-fundamentals, caption-writing, hashtag-strategy, swedish-tone, data-explanation, tiktok-trends, instagram-best-practices
+- Router väljer 2-4 skills per request → injiceras i system prompt
+- Alla prompts skrivs om för att vara mer specifika och UF-anpassade
 
-## Phase 2 — v1 vs v2 diff (resultat)
+### 1.4 Förbättrade Content-idéer (utan overwhelm)
+- Output: titel + hook-tip + max-längd + 2-3 hook-förslag (collapsable cards)
+- "Kommer snart"-sektion längst ner: trender, sound-rekommendationer, viral-länkar (visas dämpat, ej klickbart)
+- Strikt svensk, enkelt språk
 
-| Aspekt | v1 (`OrganizationOnboarding.tsx` + `CreateOrganization.tsx`) | v2 (`Onboarding.tsx`) |
-|---|---|---|
-| Skapar org | Ja (via samma RPC) | Ja |
-| Skriver `organization_profiles` | C gör det (men trasigt — 3 felaktiga kolumner) | Nej |
-| Skriver `ai_profiles` per användare | Nej | Ja (alla fält) |
-| Dashboard-redirect-mål | `/organization/onboarding` (B) | borde vara `/onboarding` (A) men är fortfarande B |
-| Mode-väljare (skapa/gå med) | Tabbar | Stegbaserad |
-| Postnummer-validering | Nej | Ja (5 siffror) |
-| Termsacceptans | Ja | Ja |
+### 1.5 Dynamiska krediter + historik
+- Ny `creditPricing.ts`: `cost_usd × usd_to_sek_rate × 1.18 / 0.10 = credits`
+- USD→SEK kurs cachas dagligen via `exchangerate.host` i ny `app_settings`-tabell
+- Ny tabell `credit_transactions` (user_id, function, credits, model, created_at)
+- Ny sida `/account/credits` med historik (datum, funktion, krediter — admin ser även USD-kostnad)
 
-**Sammanfattning av luckor:** v2 har snyggare UX men persisterar bara till per-user-tabellen. v1 (C) försöker persistera till org-profilen men kraschar pga schemafel. Inget flöde skriver till båda ställena.
+### 1.6 Nya prisplaner aktiveras
+- `planConfig.ts` skrivs om: free/starter/growth/max med nya krediter
+- `stripe-webhook` uppdateras med nya plan-IDs
+- Pricing-sidan får "Kommer snart"-rader (dämpad färg, ej klickbara)
+- Top-up via Stripe (samma flöde som abonnemang) + Swish behålls parallellt
 
-## Phase 3 — Föreslagen fix
+### 1.7 Plan-gating (HÅRD låsning)
+- Ny `useFeatureAccess`-hook kollar plan via `users.plan`
+- Funktioner som kräver högre plan: knapp är **disabled** + tooltip "Kräver Growth-plan eller högre"
+- Klick på låst funktion öppnar uppgraderings-modal (inte bara passiv prompt)
+- Free-plan blockeras hårt från video/auto-publish (när det kommer) — knappar disabled, ej klickbara
 
-### Steg 1 — Gör `Onboarding.tsx` (flöde A) till sanningskällan
-I `handleSubmit`:
-1. Skapa org (befintligt anrop).
-2. **Lägg till** `upsert` mot `organization_profiles` med dessa mappningar:
-   - `industry` ← `branch`
-   - `city` ← `stad`
-   - `target_audience` ← `malgrupp`
-   - `unique_properties` ← `produkt_beskrivning`
-   - `goals` ← `malsattning`
-   - `tone` ← `tonalitet`
-3. Behåll befintlig `ai_profiles` upsert (AI-systemet läser därifrån — får inte tas bort utan godkännande).
-4. Använd `upsert` med `onConflict: "organization_id"` för att undvika dubbletter.
+### 1.8 "Hantera inlägg"-sida (`/posts`)
+- Lista över `calendar_posts` (filter: status, plattform, datum)
+- Edit-modal: titel, content, datum, plattform, status
+- "Förbättra med AI"-knapp som anropar router
+- "Publicera nu"-knapp = **disabled**, label "Kommer snart"
+- UI matchar dashboard + landing page (samma GlassCard, färger, typografi, ingen ikon)
 
-### Steg 2 — Fixa redirecten i `DashboardLayout.tsx`
-Ändra `navigate("/organization/onboarding")` → `navigate("/onboarding")` så att flöde A blir det enda förstagångsflödet.
+### 1.9 Admin Feature Flags
+- Ny tabell `feature_flags` (per global + per-user override)
+- Ny `/admin/feature-flags`-sida (text-baserad, ingen ikon)
+- Hook `useFeatureFlag('video_upload')` används av Phase 2-features
+- Låsta features visas som "Kommer snart" + disabled för icke-admins
 
-### Steg 3 — Reparera `CreateOrganization.tsx` (flöde C)
-Den är fortfarande länkad från `/organization/new` (används av OAuth-landningssidan). Ta bort de tre kolumnerna som inte finns i `organization_profiles`: `linkedin_handle`, `x_handle`, `newsletter_opt_in`. Behåll resten. Markera v1-filerna med en kommentar — radera ingenting utan godkännande.
+### 1.10 Sentry error monitoring
+- Aktiveras via Student Pack
+- Fångar fel i produktion innan användare rapporterar
+- Secret: `SENTRY_DSN`
 
-### Steg 4 — Persistera fält som saknar org-kolumn
-Fyra fält har inget hem på `organization_profiles`: `postnummer`, `land`, `prisniva`, `nyckelord`, `allman_info`. Två val:
-- **A** (rekommenderat): Lägg till kolumnerna `postal_code`, `country`, `price_level`, `keywords text[]`, `general_info` på `organization_profiles` via migration. Allt företagsdata bor då på org-nivån.
-- **B**: Behåll dem bara i `ai_profiles` (per-user). Snabbare men inkonsekvent.
+### 1.11 i18n
+- Alla nya strängar i `sv.json` + `en.json`
+- "Kommer snart" / "Coming soon" som översättningsbar nyckel
 
-→ Behöver ditt godkännande på A vs B innan migration körs.
+---
 
-## Phase 4 — Supabase RLS-granskning
+## PHASE 2 — Efter Phase 1 (väntar på externa godkännanden)
 
-`organization_profiles` RLS:
-- INSERT/UPDATE kräver roll `founder` eller `admin`. ✅ OK — användaren som precis skapade org blir founder via `create_organization_with_founder` RPC.
-- **Risk:** insert sker direkt efter org-skapande. RLS-checken måste se medlemskapet. Detta fungerar idag eftersom RPC är `SECURITY DEFINER` och commit:ar synkront. Inga ändringar behövs.
+Implementeras efter launch, parallellt med approval-väntan. Funktionalitet syns som "Kommer snart" tills den aktiveras.
 
-Inga edge functions eller triggers rörande org-skapande behöver ändras.
+### 2.1 Video-storage (DigitalOcean Spaces via Student Pack)
+- Spaces-bucket via Student Pack credits
+- Edge function `do-spaces-upload` med signed URLs
+- Auto-cleanup efter publish/30d
+- Sandbox-läge: bara admins kan testa
 
-## Phase 5 — Statistik / nya features
-Ingen påverkan på dashboard-statistik i denna fix. Om det finns mock-data i nya widgets adresseras det separat efter att persistens-buggen är löst.
+### 2.2 Video-upload UI
+- Klient-side validering (TikTok-format mp4/mov/mpeg/3gp/avi/webm, max 10 min, 287MB web / 4GB API)
+- Tydliga felmeddelanden på svenska
+- Progress bar + thumbnails
+- **Synlig bara för admins** tills launch av Phase 2
 
-## Phase 6 — UX/flow-fixar (bundlade)
+### 2.3 AI video-analys
+- Edge function `analyze-video` med ffmpeg-wasm + gemini-2.5-pro multimodal
+- Returnerar ämne, hashtags, caption-förslag, sound-rekommendation
+- Lagras i `calendar_posts.ai_analysis`
 
-1. Förstagångsanvändare (oavsett email/Google) → `/onboarding` (flöde A).
-2. Återkommande användare → `/dashboard` direkt.
-3. "Lägg till ny organisation" från `OrganizationSelector` → `/organization/new` (flöde C, reparerat).
-4. OAuth-landningsskärmen som idag pekar till `/organization/onboarding` (flöde B) → uppdatera till `/onboarding`.
-5. v1-filerna `OrganizationOnboarding.tsx` och `OAuthLandingScreen.tsx` markeras "deprecated — kept for reference per user request" men radeas inte.
+### 2.4 Meta auto-publish (sandbox → live)
+- Edge function `publish-post` mot Meta Graph API
+- pg_cron-jobb varje minut för schemalagda inlägg
+- Sandbox-token testas av admins
+- När Meta App Review godkänns: byt secret + slå på feature flag = live för alla
 
-## Filer som ändras
+### 2.5 TikTok Content Posting + sound-bibliotek
+- Edge function mot TikTok Content Posting API
+- Sound-search + favoriter via `/v2/sound/list/`
+- Sandbox tills approval
 
-- `src/pages/Onboarding.tsx` — lägg till `organization_profiles` upsert i `handleSubmit`
-- `src/components/layouts/DashboardLayout.tsx` — redirect till `/onboarding`
-- `src/pages/CreateOrganization.tsx` — ta bort tre obefintliga kolumner från insert
-- `src/components/OAuthLandingScreen.tsx` — uppdatera "join"-länken till `/onboarding`
-- (Valfritt, kräver godkännande) Ny migration för 5 nya kolumner på `organization_profiles`
+### 2.6 "Publicera med AI" (slutgiltig)
+- Auto-genererar caption + väljer sound + bästa publish-tid
+- Schemaläggs (inte direkt-publish) så användaren ser i kalendern först
+- Bekräftelse innan första gången
 
-## ❓ Frågor som behöver svar innan implementation
+### 2.7 Web-search för Säljradar (Tavily)
+- Tavily integration med URL-validering (HTTPS, ingen localhost/private IP, content-type-check)
+- Aktiveras gradvis (Growth+ får tillgång)
 
-1. **Nya kolumner på `organization_profiles`?** A) Lägg till `postal_code`, `country`, `price_level`, `keywords`, `general_info` (rekommenderat — full org-persistens). B) Behåll bara i `ai_profiles`.
-2. **Ska v1-filerna (`OrganizationOnboarding.tsx`, gamla flödet) raderas eller bara markeras deprecated?** Default per dina regler: bara markera.
-3. **Ska `ai_profiles`-skrivningen behållas parallellt?** Rekommendation: ja, eftersom AI-systemet läser därifrån. Vi dubbel-skriver tills migration till org-only är planerad.
+### 2.8 Senare
+- LinkedIn auto-posting
+- X (kräver betald API)
+- AI-bildgenerering
+- Meta Ads / TikTok Ads-hantering
 
-## 🔧 EXTERNAL STEPS REQUIRED
-Inga externa steg behövs — allt sker via kod + (valfri) databasmigration som körs via approval-flödet i nästa fas.
+---
+
+## Frågor innan jag börjar Phase 1
+
+1. **Stripe top-up vs Swish**: Behåller vi båda parallellt (Swish är populärt i Sverige), eller bara Stripe från och med nu?
+
+2. **Free-plan gränser**: 30 krediter/mån + 5/dag är ganska stramt. Höja till 50/mån + 10/dag för bättre konvertering, eller hålla det stramt för att pusha till Starter?
+
+3. **Anthropic API-key**: Behövs i Phase 1 för Säljradar-djupanalys + routern att kunna välja Claude. Du registrerar på console.anthropic.com → ger mig nyckeln när jag frågar. Bekräftar du?
+
+4. **EXTERNAL STEPS du behöver göra parallellt med Phase 1 (annars blockeras vissa delar)**:
+   - Postgres extension flyttas (Cloud-UI, 1 klick)
+   - Skaffa Anthropic API key
+   - Aktivera Sentry via Student Pack → ge mig `SENTRY_DSN`
+   - **STARTA REDAN NU**: Ansök om Meta App Review + TikTok Content Posting API — tar veckor, så starta processen direkt även om vi inte använder dem i Phase 1
 
