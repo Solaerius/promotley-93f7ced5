@@ -885,7 +885,12 @@
     "count_5": "5 ideas",
     "count_7": "7 ideas",
     "generate_btn": "Generate ideas",
-    "results_heading": "Your ideas"
+    "results_heading": "Your ideas",
+    "show_hooks": "Show {{count}} hook suggestions",
+    "coming_soon_heading": "More coming soon",
+    "cs_trends": "Current TikTok and Instagram trends with searchable keywords",
+    "cs_sounds": "Recommended sounds and music driving reach right now",
+    "cs_viral_links": "Direct links to viral reference posts you can build on"
   },
   "weekly": {
     "title": "Weekly planner",
