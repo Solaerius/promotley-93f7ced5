@@ -1507,6 +1507,12 @@
     "company_missing_desc": "Fill in required company information to use AI tools.",
     "company_fill_btn": "Fill in information"
   },
+  "plan_gating": {
+    "locked_title": "Requires {{plan}} plan",
+    "locked_desc": "{{feature}} is included from the {{required}} plan. You are currently on {{current}}.",
+    "upgrade_btn": "View plans",
+    "coming_soon": "Coming soon"
+  },
   "ai_profile_progress": {
     "title": "Company Information",
     "compact_label": "Company information:",
