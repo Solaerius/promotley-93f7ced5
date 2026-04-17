@@ -158,11 +158,40 @@ export default function Onboarding() {
       const orgId = await createOrganization(formData.foretagsnamn);
       if (!orgId) throw new Error("org_failed");
 
+      const keywordsArray = formData.nyckelord
+        ? formData.nyckelord.split(",").map((k) => k.trim()).filter(Boolean)
+        : null;
+
+      // Persist to organization_profiles (org-level, used by dashboard)
+      const { error: orgProfileError } = await supabase
+        .from("organization_profiles")
+        .upsert(
+          {
+            organization_id: orgId,
+            industry: formData.branch || null,
+            city: formData.stad || null,
+            postal_code: formData.postnummer || null,
+            country: formData.land || null,
+            target_audience: formData.malgrupp || null,
+            unique_properties: formData.produkt_beskrivning || null,
+            goals: formData.malsattning || null,
+            tone: formData.tonalitet || null,
+            price_level: formData.prisniva || null,
+            keywords: keywordsArray,
+            general_info: formData.allman_info || null,
+          },
+          { onConflict: "organization_id" }
+        );
+
+      if (orgProfileError) throw orgProfileError;
+
+      // Also persist to ai_profiles (per-user) — AI system reads from here
       const { error: profileError } = await supabase
         .from("ai_profiles")
         .upsert(
           [{
             user_id: user.id,
+            organization_id: orgId,
             foretagsnamn: formData.foretagsnamn,
             branch: formData.branch,
             stad: formData.stad,
@@ -172,7 +201,7 @@ export default function Onboarding() {
             produkt_beskrivning: formData.produkt_beskrivning,
             malsattning: formData.malsattning || null,
             prisniva: formData.prisniva || null,
-            nyckelord: formData.nyckelord ? (Array.isArray(formData.nyckelord) ? formData.nyckelord : [formData.nyckelord]) : null,
+            nyckelord: keywordsArray,
             tonalitet: formData.tonalitet || null,
             allman_info: formData.allman_info || null,
             onboarding_completed: true,

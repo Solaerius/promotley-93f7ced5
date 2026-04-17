@@ -38,7 +38,7 @@ export default function OAuthLandingScreen() {
 
         {/* Join company */}
         <button
-          onClick={() => navigate("/organization/onboarding")}
+          onClick={() => navigate("/onboarding")}
           className="group flex flex-col items-center gap-4 p-6 rounded-2xl border border-border/50 bg-card hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 text-left"
         >
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">

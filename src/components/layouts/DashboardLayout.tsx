@@ -37,8 +37,14 @@ const DashboardLayout = ({ children, pageTitle, hideFooter }: DashboardLayoutPro
   const location = useLocation();
 
   useEffect(() => {
-    if (!orgLoading && needsOnboarding && !location.pathname.startsWith("/organization")) {
-      navigate("/organization/onboarding");
+    if (
+      !orgLoading &&
+      needsOnboarding &&
+      !location.pathname.startsWith("/organization") &&
+      location.pathname !== "/onboarding"
+    ) {
+      // v2 onboarding flow is the source of truth (see src/pages/Onboarding.tsx)
+      navigate("/onboarding");
     }
   }, [needsOnboarding, orgLoading, navigate, location.pathname]);
 

@@ -1031,13 +1031,18 @@ export type Database = {
       organization_profiles: {
         Row: {
           city: string | null
+          country: string | null
           created_at: string
           facebook_page: string | null
+          general_info: string | null
           goals: string | null
           id: string
           industry: string | null
           instagram_handle: string | null
+          keywords: string[] | null
           organization_id: string
+          postal_code: string | null
+          price_level: string | null
           target_audience: string | null
           tiktok_handle: string | null
           tone: string | null
@@ -1047,13 +1052,18 @@ export type Database = {
         }
         Insert: {
           city?: string | null
+          country?: string | null
           created_at?: string
           facebook_page?: string | null
+          general_info?: string | null
           goals?: string | null
           id?: string
           industry?: string | null
           instagram_handle?: string | null
+          keywords?: string[] | null
           organization_id: string
+          postal_code?: string | null
+          price_level?: string | null
           target_audience?: string | null
           tiktok_handle?: string | null
           tone?: string | null
@@ -1063,13 +1073,18 @@ export type Database = {
         }
         Update: {
           city?: string | null
+          country?: string | null
           created_at?: string
           facebook_page?: string | null
+          general_info?: string | null
           goals?: string | null
           id?: string
           industry?: string | null
           instagram_handle?: string | null
+          keywords?: string[] | null
           organization_id?: string
+          postal_code?: string | null
+          price_level?: string | null
           target_audience?: string | null
           tiktok_handle?: string | null
           tone?: string | null
