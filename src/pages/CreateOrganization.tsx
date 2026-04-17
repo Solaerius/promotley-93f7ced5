@@ -152,7 +152,9 @@ export default function CreateOrganization() {
       const orgId = await createOrganization(form.orgName.trim());
       if (!orgId) throw new Error("Org creation failed");
 
-      const { error: profileError } = await supabase.from("organization_profiles").insert({
+      // NOTE: linkedin_handle, x_handle, newsletter_opt_in are NOT columns on
+      // organization_profiles — removed to prevent insert from crashing.
+      const { error: profileError } = await supabase.from("organization_profiles").upsert({
         organization_id: orgId,
         industry: form.industry || null,
         website: form.website || null,
@@ -163,11 +165,8 @@ export default function CreateOrganization() {
         goals: form.goals || null,
         instagram_handle: form.instagramHandle || null,
         tiktok_handle: form.tiktokHandle || null,
-        facebook_handle: form.facebookHandle || null,
-        linkedin_handle: form.linkedinHandle || null,
-        x_handle: form.xHandle || null,
-        newsletter_opt_in: form.newsletterOptIn,
-      });
+        facebook_page: form.facebookHandle || null,
+      }, { onConflict: "organization_id" });
 
       if (profileError) {
         console.error("Failed to save org profile:", profileError);
