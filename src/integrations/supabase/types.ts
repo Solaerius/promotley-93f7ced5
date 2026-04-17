@@ -230,6 +230,50 @@ export type Database = {
           },
         ]
       }
+      ai_routing_log: {
+        Row: {
+          actual_credits: number | null
+          created_at: string
+          estimated_credits: number | null
+          function_name: string
+          id: string
+          reasoning: string | null
+          selected_model: string
+          skills_injected: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          actual_credits?: number | null
+          created_at?: string
+          estimated_credits?: number | null
+          function_name: string
+          id?: string
+          reasoning?: string | null
+          selected_model: string
+          skills_injected?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          actual_credits?: number | null
+          created_at?: string
+          estimated_credits?: number | null
+          function_name?: string
+          id?: string
+          reasoning?: string | null
+          selected_model?: string
+          skills_injected?: string[] | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_routing_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics: {
         Row: {
           engagement: number | null
@@ -298,6 +342,27 @@ export type Database = {
           id?: string
           metadata?: Json | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
         }
         Relationships: []
       }
@@ -585,6 +650,57 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transactions: {
+        Row: {
+          cost_usd: number | null
+          created_at: string
+          credits_used: number
+          function_name: string
+          id: string
+          metadata: Json | null
+          model: string | null
+          organization_id: string | null
+          user_id: string
+        }
+        Insert: {
+          cost_usd?: number | null
+          created_at?: string
+          credits_used: number
+          function_name: string
+          id?: string
+          metadata?: Json | null
+          model?: string | null
+          organization_id?: string | null
+          user_id: string
+        }
+        Update: {
+          cost_usd?: number | null
+          created_at?: string
+          credits_used?: number
+          function_name?: string
+          id?: string
+          metadata?: Json | null
+          model?: string | null
+          organization_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_automation_logs: {
         Row: {
           email_type: string
@@ -719,6 +835,44 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled_globally: boolean
+          flag_key: string
+          id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled_globally?: boolean
+          flag_key: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled_globally?: boolean
+          flag_key?: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       free_tier_usage: {
         Row: {
@@ -1784,6 +1938,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_feature_enabled: {
+        Args: { _flag_key: string; _user_id?: string }
+        Returns: boolean
+      }
       is_org_member: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
@@ -1841,6 +1999,7 @@ export type Database = {
         | "pro_unlimited"
         | "starter"
         | "growth"
+        | "max"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1977,6 +2136,7 @@ export const Constants = {
         "pro_unlimited",
         "starter",
         "growth",
+        "max",
       ],
     },
   },
