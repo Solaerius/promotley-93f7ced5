@@ -10,11 +10,11 @@ import { toast } from "sonner";
 import { Loader2, Gift, Users, Mail, ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-type UserPlan = "starter" | "growth" | "pro";
+type UserPlan = "starter" | "growth" | "max" | "pro";
 interface User { id: string; email: string; plan: UserPlan; credits_left: number; max_credits: number; renewal_date: string; sponsored_until: string | null; created_at: string; }
 
-const PLAN_NAMES: Record<UserPlan, string> = { starter: "Starter (29 kr)", growth: "Growth (49 kr)", pro: "Pro (99 kr)" };
-const PLAN_CREDITS: Record<UserPlan, number> = { starter: 50, growth: 100, pro: 300 };
+const PLAN_NAMES: Record<UserPlan, string> = { starter: "Starter (49 kr)", growth: "Growth (159 kr)", max: "Max (299 kr)", pro: "Growth (legacy)" };
+const PLAN_CREDITS: Record<UserPlan, number> = { starter: 250, growth: 950, max: 2000, pro: 950 };
 
 export default function AdminUserManagement() {
   const { t } = useTranslation();

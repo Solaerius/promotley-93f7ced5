@@ -11,9 +11,9 @@ interface UpgradePromptOverlayProps {
 }
 
 const plans = [
-  { name: "Starter", price: "29 kr/mån", credits: "50 krediter", icon: Zap },
-  { name: "Growth", price: "49 kr/mån", credits: "100 krediter", icon: Wand2 },
-  { name: "Pro", price: "99 kr/mån", credits: "200 krediter", icon: Brain },
+  { name: "Starter", price: "49 kr/mån", credits: "250 krediter", icon: Zap },
+  { name: "Growth", price: "159 kr/mån", credits: "950 krediter", icon: Wand2 },
+  { name: "Max", price: "299 kr/mån", credits: "2000 krediter", icon: Brain },
 ];
 
 const UpgradePromptOverlay = ({ open, onClose, feature }: UpgradePromptOverlayProps) => {
