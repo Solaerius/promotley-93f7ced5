@@ -1,33 +1,38 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  FileText, 
-  Image, 
-  Hash, 
-  Calendar, 
-  Lightbulb, 
+import {
+  FileText,
+  Image,
+  Hash,
+  Calendar,
+  Lightbulb,
   Target,
   Wand2,
-  ArrowRight
+  ArrowRight,
+  Lock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAIProfile } from "@/hooks/useAIProfile";
+import { useUserCredits } from "@/hooks/useUserCredits";
+import { planHasFeature, minPlanForFeature, type FeatureKey } from "@/lib/planConfig";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const AIToolsContent = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { credits } = useUserCredits();
 
-  const tools = [
-    { icon: FileText, title: t('tools.caption_title'), description: t('tools.caption_desc'), color: "from-orange-500 to-red-500", route: "/ai/caption" },
-    { icon: Hash, title: t('tools.hashtag_title'), description: t('tools.hashtag_desc'), color: "from-blue-500 to-cyan-500", route: "/ai/hashtags" },
-    { icon: Image, title: t('tools.content_title'), description: t('tools.content_desc'), color: "from-purple-500 to-pink-500", route: "/ai/content-ideas" },
-    { icon: Calendar, title: t('tools.weekly_title'), description: t('tools.weekly_desc'), color: "from-green-500 to-emerald-500", route: "/ai/weekly-plan" },
-    { icon: Target, title: t('tools.campaign_title'), description: t('tools.campaign_desc'), color: "from-amber-500 to-orange-500", route: "/ai/campaign" },
-    { icon: Lightbulb, title: t('tools.uf_title'), description: t('tools.uf_desc'), color: "from-indigo-500 to-purple-500", route: "/ai/uf-tips" },
+  const tools: Array<{ icon: any; title: string; description: string; color: string; route: string; feature: FeatureKey }> = [
+    { icon: FileText, title: t('tools.caption_title'), description: t('tools.caption_desc'), color: "from-orange-500 to-red-500", route: "/ai/caption", feature: 'caption_generator' },
+    { icon: Hash, title: t('tools.hashtag_title'), description: t('tools.hashtag_desc'), color: "from-blue-500 to-cyan-500", route: "/ai/hashtags", feature: 'hashtag_suggestions' },
+    { icon: Image, title: t('tools.content_title'), description: t('tools.content_desc'), color: "from-purple-500 to-pink-500", route: "/ai/content-ideas", feature: 'content_ideas_basic' },
+    { icon: Calendar, title: t('tools.weekly_title'), description: t('tools.weekly_desc'), color: "from-green-500 to-emerald-500", route: "/ai/weekly-plan", feature: 'weekly_planner' },
+    { icon: Target, title: t('tools.campaign_title'), description: t('tools.campaign_desc'), color: "from-amber-500 to-orange-500", route: "/ai/campaign", feature: 'marketing_plans' },
+    { icon: Lightbulb, title: t('tools.uf_title'), description: t('tools.uf_desc'), color: "from-indigo-500 to-purple-500", route: "/ai/uf-tips", feature: 'uf_tips' },
   ];
   const { profile: aiProfile, loading: aiProfileLoading } = useAIProfile();
 
@@ -56,24 +61,36 @@ const AIToolsContent = () => {
       )}
 
       <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 ${isAIBlocked ? 'opacity-50 pointer-events-none' : ''}`}>
-        {tools.map((tool) => (
-          <Card 
-            key={tool.title} 
-            className="group cursor-pointer liquid-glass-light hover:shadow-elegant transition-all duration-300 hover:scale-[1.02]"
-            onClick={() => handleToolClick(tool.route)}
-          >
-            <CardHeader className="pb-2">
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-r ${tool.color} flex items-center justify-center mb-2`}>
-                <tool.icon className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-lg flex items-center justify-between dashboard-heading-dark">
-                {tool.title}
-                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-foreground" />
-              </CardTitle>
-              <CardDescription className="dashboard-subheading-dark">{tool.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
+        {tools.map((tool) => {
+          const locked = !planHasFeature(credits?.plan, tool.feature);
+          const requiredPlan = locked ? minPlanForFeature(tool.feature).displayName : '';
+          return (
+            <Card
+              key={tool.title}
+              className="group cursor-pointer liquid-glass-light hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] relative"
+              onClick={() => handleToolClick(tool.route)}
+            >
+              {locked && (
+                <div className="absolute top-3 right-3 z-10">
+                  <Badge variant="outline" className="text-[10px] gap-1 bg-background/80">
+                    <Lock className="w-2.5 h-2.5" />
+                    {requiredPlan}
+                  </Badge>
+                </div>
+              )}
+              <CardHeader className="pb-2">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-r ${tool.color} flex items-center justify-center mb-2 ${locked ? 'opacity-60' : ''}`}>
+                  <tool.icon className="w-6 h-6 text-white" />
+                </div>
+                <CardTitle className="text-lg flex items-center justify-between dashboard-heading-dark">
+                  {tool.title}
+                  <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-foreground" />
+                </CardTitle>
+                <CardDescription className="dashboard-subheading-dark">{tool.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Info Card */}
