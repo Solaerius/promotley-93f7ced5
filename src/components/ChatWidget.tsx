@@ -420,10 +420,14 @@ const ChatWidget = ({ visible = true }: ChatWidgetProps) => {
     const messageText = filtered;
     setInputValue("");
 
-    // Ensure session exists in live_chat_sessions table first
+    // Ensure session exists in live_chat_sessions table first.
+    // Attach the authenticated user's id so they can read their own messages
+    // and subscribe to their own realtime channel.
+    const { data: { user } } = await supabase.auth.getUser();
     const { error: sessionError } = await supabase.from("live_chat_sessions").upsert({
       session_id: sessionId,
       status: 'open',
+      user_id: user?.id ?? null,
     }, { onConflict: 'session_id' });
 
     if (sessionError) {
