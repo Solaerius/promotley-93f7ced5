@@ -1,97 +1,81 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PricingFAQ from "@/components/PricingFAQ";
 import Navbar from "@/components/Navbar";
 import { useUserCredits } from "@/hooks/useUserCredits";
 import { useAuth } from "@/hooks/useAuth";
 import PromoCodeInput from "@/components/PromoCodeInput";
+import { ComingSoonBadge } from "@/components/ComingSoonBadge";
+import { PUBLIC_PLANS, getPlanConfig } from "@/lib/planConfig";
 
-const plans = [
-  {
-    name: "Starter",
-    price: "29",
-    credits: "50",
-    model: "gpt-4o-mini",
-    tier: "starter",
-    dbPlan: "starter",
-    tierLevel: 1,
-    description: "Perfekt för nya UF-företag som precis börjat",
-    features: [
-      "AI-modell: Standard",
-      "50 AI-krediter per månad",
-      "Enkel strategi (2 poster/vecka)",
-      "3 branschtips per månad",
-      "Grundläggande UF-vägledning",
-    ],
-    popular: false,
-  },
-  {
-    name: "Growth",
-    price: "49",
-    credits: "100",
-    model: "gpt-4o-mini",
-    tier: "growth",
-    dbPlan: "growth",
-    tierLevel: 2,
-    description: "Idealisk för snabbväxande UF-team",
-    features: [
-      "AI-modell: Standard",
-      "100 AI-krediter per månad",
-      "Personlig innehållskalender",
-      "5 content-idéer per vecka",
-      "Enkel prestandaanalys",
-    ],
-    popular: true,
-  },
-  {
-    name: "Pro",
-    price: "99",
-    credits: "200",
-    model: "gpt-4.1-mini + gpt-4o",
-    tier: "pro",
-    dbPlan: "pro",
-    tierLevel: 3,
-    description: "För etablerade företag med stora ambitioner",
-    features: [
-      "AI-modell: Premium",
-      "200 AI-krediter per månad",
-      "Premium AI för djupanalyser",
-      "Komplett strategi + kalender",
-      "Konkurrentanalys inkluderad",
-      "Premium rapporter & insikter",
-    ],
-    popular: false,
-  },
+interface FeatureRow {
+  label: string;
+  values: (string | boolean)[]; // one per plan in PUBLIC_PLANS order
+  comingSoon?: boolean;
+}
+
+// Index order matches PUBLIC_PLANS: [Free, Starter, Growth, Max]
+const FEATURE_ROWS: FeatureRow[] = [
+  { label: "AI-chatt", values: [true, true, true, true] },
+  { label: "AI Content-idéer", values: ["Basic", "Ja", "Avancerade", "Premium"] },
+  { label: "Caption Generator", values: ["3/mån", "Ja", "Ja", "Ja"] },
+  { label: "Hashtag-förslag", values: [true, true, true, true] },
+  { label: "UF-tips", values: [true, true, true, true] },
+  { label: "Veckoplanering", values: [false, true, true, true] },
+  { label: "Marknadsplaner", values: [false, "1/mån", "5/mån", "Obegränsat"] },
+  { label: "Säljradar", values: [false, false, "10/mån", "Obegränsat"] },
+  { label: "AI-analys av statistik", values: [false, "Basic", "Djup", "Premium"] },
+  { label: "Schemaläggning (manuell)", values: ["3/mån", "10/mån", "Obegränsat", "Obegränsat"] },
+  { label: "Kalender + content planner", values: [true, true, true, true] },
+  { label: "TikTok-koppling (read-only)", values: [true, true, true, true] },
+  { label: "Instagram & Facebook-koppling", values: [true, true, true, true] },
+  { label: "Video-upload + auto-publicering", values: ["", "", "", ""], comingSoon: true },
+  { label: "AI video-analys", values: ["", "", "", ""], comingSoon: true },
+  { label: "Sound-bibliotek från TikTok", values: ["", "", "", ""], comingSoon: true },
+  { label: "Organisationer (team)", values: ["1", "1", "3", "Obegränsat"] },
+  { label: "Support", values: ["Community", "E-post", "E-post (prio)", "Live chat"] },
 ];
+
+const PLAN_TAGLINES: Record<string, string> = {
+  free_trial: "Testa Promotley utan att betala",
+  starter: "För nya UF-företag som precis börjat",
+  growth: "För snabbväxande UF-team",
+  max: "För etablerade företag med stora ambitioner",
+};
+
+const POPULAR_PLAN_ID = "growth";
+
+const renderValue = (value: string | boolean) => {
+  if (value === true) return <span className="text-foreground">Ja</span>;
+  if (value === false) return <span className="text-muted-foreground/50">—</span>;
+  if (value === "") return <span className="text-muted-foreground/50">—</span>;
+  return <span className="text-foreground">{value}</span>;
+};
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const { credits, getTierLevel, refetch: refetchCredits } = useUserCredits();
+  const { credits, refetch: refetchCredits } = useUserCredits();
   const { user } = useAuth();
 
-  const currentTierLevel = credits?.plan ? getTierLevel(credits.plan) : 0;
+  const currentPlanConfig = getPlanConfig(credits?.plan);
+  const currentTier = currentPlanConfig.tier;
 
-  const handleSelectPlan = (tier: string) => {
-    navigate(`/checkout?plan=${tier}&type=plan`);
-  };
-
-  const isCurrentPlan = (plan: typeof plans[0]) => {
-    return credits?.plan === plan.dbPlan;
-  };
-
-  const isLowerOrSameTier = (plan: typeof plans[0]) => {
-    return plan.tierLevel <= currentTierLevel;
+  const handleSelectPlan = (planId: string) => {
+    if (planId === "free_trial") {
+      navigate(user ? "/dashboard" : "/auth?mode=register");
+      return;
+    }
+    navigate(`/checkout?plan=${planId}&type=plan`);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <section className="py-16 md:py-24 px-4 bg-background font-poppins">
         <div className="container mx-auto">
-          {/* Section header */}
+          {/* Header */}
           <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16 space-y-3 md:space-y-4">
             <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold px-2 leading-tight">
               Enkla priser,{" "}
@@ -104,91 +88,152 @@ const Pricing = () => {
             </p>
           </div>
 
-          {/* Pricing cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-            {plans.map((plan, index) => (
-              <Card
-                key={index}
-                className={`p-6 md:p-8 relative bg-card/50 backdrop-blur-md transition-all duration-300 ${
-                  isCurrentPlan(plan)
-                    ? "border-2 border-primary/50 bg-primary/5"
-                    : plan.popular
-                    ? "border-2 border-primary shadow-glow sm:scale-105 hover:-translate-y-2"
-                    : "border-2 border-border/50 hover:border-primary/30 hover:-translate-y-2"
-                }`}
-              >
-                {isCurrentPlan(plan) && (
-                  <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground px-3 md:px-4 py-1 rounded-full text-xs md:text-sm font-semibold shadow-lg flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" />
-                      Din plan
-                    </span>
-                  </div>
-                )}
-                {!isCurrentPlan(plan) && plan.popular && (
-                  <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground px-3 md:px-4 py-1 rounded-full text-xs md:text-sm font-semibold shadow-lg">
-                      Mest populär
-                    </span>
-                  </div>
-                )}
+          {/* Plan cards */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
+            {PUBLIC_PLANS.map((plan) => {
+              const isCurrent = credits?.plan === plan.id ||
+                (plan.id === "growth" && credits?.plan === "pro") ||
+                (plan.id === "max" && (credits?.plan === "pro_xl" || credits?.plan === "pro_unlimited"));
+              const isLowerOrSame = user && plan.tier <= currentTier;
+              const isPopular = plan.id === POPULAR_PLAN_ID;
 
-                <div className="space-y-5 md:space-y-6">
-                  {/* Plan name */}
-                  <div>
-                    <h3 className="text-xl md:text-2xl font-bold">{plan.name}</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-2">{plan.description}</p>
-                  </div>
+              return (
+                <Card
+                  key={plan.id}
+                  className={`p-6 relative bg-card/50 backdrop-blur-md transition-all duration-300 ${
+                    isCurrent
+                      ? "border-2 border-primary/50 bg-primary/5"
+                      : isPopular
+                      ? "border-2 border-primary shadow-glow lg:scale-105 hover:-translate-y-2"
+                      : "border-2 border-border/50 hover:border-primary/30 hover:-translate-y-2"
+                  }`}
+                >
+                  {isCurrent && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
+                        Din plan
+                      </span>
+                    </div>
+                  )}
+                  {!isCurrent && isPopular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
+                        Mest populär
+                      </span>
+                    </div>
+                  )}
 
-                  {/* Price */}
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl md:text-5xl font-bold">{plan.price}</span>
-                    <span className="text-sm md:text-base text-muted-foreground">kr/mån</span>
-                  </div>
+                  <div className="space-y-5">
+                    <div>
+                      <h3 className="text-xl md:text-2xl font-bold">{plan.displayName}</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-2 min-h-[2.5rem]">
+                        {PLAN_TAGLINES[plan.id]}
+                      </p>
+                    </div>
 
-                  {/* Credits */}
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="text-2xl md:text-3xl font-bold text-primary">
-                      {plan.credits}
-                    </span>
-                    <span className="text-sm md:text-base">krediter/mån</span>
-                  </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl md:text-5xl font-bold">{plan.price}</span>
+                      <span className="text-sm md:text-base text-muted-foreground">
+                        {plan.price === 0 ? "" : "kr/mån"}
+                      </span>
+                    </div>
 
-                  {/* Features */}
-                  <ul className="space-y-2.5 md:space-y-3 py-3 md:py-4">
-                    {plan.features.map((feature, fIndex) => (
-                      <li key={fIndex} className="flex items-start gap-2 md:gap-3">
-                        <Check className="w-4 h-4 md:w-5 md:h-5 text-accent shrink-0 mt-0.5" />
-                        <span className="text-xs md:text-sm">{feature}</span>
-                      </li>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="text-2xl md:text-3xl font-bold text-primary">
+                        {plan.credits}
+                      </span>
+                      <span className="text-sm">
+                        krediter/mån
+                        {plan.dailyCreditCap > 0 && (
+                          <span className="block text-xs text-muted-foreground/70">
+                            (max {plan.dailyCreditCap}/dag)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+
+                    <Button
+                      variant={isCurrent ? "outline" : "gradient"}
+                      className="w-full"
+                      size="lg"
+                      onClick={() => handleSelectPlan(plan.id)}
+                      disabled={Boolean(isLowerOrSame && currentTier > 0 && !isCurrent === false)}
+                    >
+                      {isCurrent
+                        ? "Nuvarande plan"
+                        : isLowerOrSame && currentTier > 0
+                        ? "Ej tillgänglig"
+                        : plan.price === 0
+                        ? "Kom igång gratis"
+                        : `Välj ${plan.displayName}`}
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Comparison table */}
+          <div className="max-w-7xl mx-auto mt-16">
+            <h2 className="text-center text-2xl md:text-3xl font-bold mb-8">
+              Jämför planerna
+            </h2>
+            <div className="overflow-x-auto rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/50">
+                    <th className="text-left p-4 font-semibold text-muted-foreground">Funktion</th>
+                    {PUBLIC_PLANS.map((p) => (
+                      <th
+                        key={p.id}
+                        className={`text-center p-4 font-semibold ${
+                          p.id === POPULAR_PLAN_ID ? "text-primary" : ""
+                        }`}
+                      >
+                        {p.displayName}
+                      </th>
                     ))}
-                  </ul>
-
-                  {/* CTA */}
-                  <Button
-                    variant={isCurrentPlan(plan) ? "outline" : "gradient"}
-                    className="w-full"
-                    size="lg"
-                    onClick={() => handleSelectPlan(plan.tier)}
-                    disabled={isLowerOrSameTier(plan) && currentTierLevel > 0}
-                  >
-                    {isCurrentPlan(plan) 
-                      ? "Nuvarande plan" 
-                      : isLowerOrSameTier(plan) && currentTierLevel > 0
-                      ? "Ej tillgänglig"
-                      : `Välj ${plan.name}`}
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {FEATURE_ROWS.map((row, idx) => (
+                    <tr
+                      key={idx}
+                      className={`border-b border-border/30 last:border-b-0 ${
+                        row.comingSoon ? "opacity-60" : ""
+                      }`}
+                    >
+                      <td className="p-4 text-left">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={row.comingSoon ? "text-muted-foreground" : "text-foreground"}>
+                            {row.label}
+                          </span>
+                          {row.comingSoon && <ComingSoonBadge />}
+                        </div>
+                      </td>
+                      {row.values.map((v, i) => (
+                        <td key={i} className="p-4 text-center">
+                          {row.comingSoon
+                            ? <span className="text-muted-foreground/50 text-xs">—</span>
+                            : renderValue(v)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              Funktioner märkta <span className="font-medium">"Kommer snart"</span> ingår automatiskt i din plan när de släpps.
+            </p>
           </div>
 
           {/* Bottom note */}
-          <p className="text-center text-muted-foreground mt-8 md:mt-12 text-sm md:text-lg px-4">
-            Prova gratis i 7 dagar · Ingen betalmetod krävs · Avsluta när du vill
+          <p className="text-center text-muted-foreground mt-12 text-sm md:text-base px-4">
+            Inga bindningstider · Avsluta när du vill · Top-up tillgängligt
           </p>
 
-          {/* Promo code section */}
+          {/* Promo code */}
           <div className="max-w-md mx-auto mt-8">
             {user ? (
               <PromoCodeInput variant="card" onSuccess={() => refetchCredits()} />
@@ -198,14 +243,13 @@ const Pricing = () => {
                 <p className="text-sm text-muted-foreground">
                   Skapa ett konto först för att lösa in din kod
                 </p>
-                <Button variant="outline" onClick={() => navigate('/auth?mode=register')}>
+                <Button variant="outline" onClick={() => navigate("/auth?mode=register")}>
                   Skapa konto
                 </Button>
               </div>
             )}
           </div>
 
-          {/* FAQ Section */}
           <PricingFAQ />
         </div>
       </section>
